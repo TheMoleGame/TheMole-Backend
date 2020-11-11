@@ -9,7 +9,7 @@ class User(models.Model):
 class Evidence(models.Model):
     Name = models.CharField(max_length=200)
     isTrue = models.BooleanField(default=True)  # optional
-    finder = models.ForeignKey(User, on_delete=models.CASCADE, related_name='finder', default=1)  
+    finder = models.ForeignKey(User, on_delete=models.CASCADE, related_name='finder', default=1)
     sharedWith = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     TYPES_OF_EVIDENCE = [
         ('W', 'Weapon'),
@@ -20,7 +20,7 @@ class Evidence(models.Model):
     evidence_type = models.CharField(
         max_length=2,
         choices=TYPES_OF_EVIDENCE,
-        default=TYPES_OF_EVIDENCE[2],
+        default='W',
     )
 
     def __init__(self, name, evidence_type, *args, **kwargs):

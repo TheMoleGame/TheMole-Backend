@@ -9,8 +9,8 @@ class User(models.Model):
 class Evidence(models.Model):
     Name = models.CharField(max_length=200)
     isTrue = models.BooleanField(default=True)  # optional
-    finder = models.ForeignKey(User, on_delete=models.CASCADE, related_name='finder')  # TODO: check why related_name is necessary
-    sharedWith = models.ForeignKey(User, on_delete=models.CASCADE)
+    finder = models.ForeignKey(User, on_delete=models.CASCADE, related_name='finder', default=1)  # TODO: check why related_name is necessary
+    sharedWith = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     TYPES_OF_EVIDENCE = [
         ('W', 'Weapon'),
         ('L', 'Location'),

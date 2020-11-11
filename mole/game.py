@@ -1,5 +1,5 @@
 from enum import Enum
-from .models import Event  # , Evidence
+from .models import Event, Evidence
 from .game_character import Player
 import random
 
@@ -17,9 +17,9 @@ class Game:
         self.team_pos = Field()
         # create Evidence combination
         self.puzzle = []
-        # self.puzzle.append(Evidence("Frau Tippie", "P"))
-        # self.puzzle.append(Evidence("Bathtub", "L"))
-        # self.puzzle.append(Evidence("Revolver", "W"))
+        self.puzzle.append(Evidence("Frau Tippie", "P"))
+        self.puzzle.append(Evidence("Bathtub", "L"))
+        self.puzzle.append(Evidence("Revolver", "W"))
         self.map = create_map()
 
     def start_game(self, players):

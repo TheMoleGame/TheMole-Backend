@@ -1,1 +1,1 @@
-web: gunicorn mole.wsgi:application --log-file -
+web: gunicorn mole_backend.wsgi:application --log-file -

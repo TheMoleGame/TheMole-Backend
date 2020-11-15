@@ -101,6 +101,7 @@ def create_big_map():
 
     return map_dll
 
+
 class Game:
     def __init__(self):
         self.token = str(random.randrange(1000, 10000))  # type: str
@@ -138,9 +139,17 @@ class Game:
         character.move(distance)
 
     @staticmethod
-    def debug_map(game):
-        #for game.teampos.ne
-        return "dddds-SM"
+    def debug_game_representation(lst: pyllist.dllist):
+        result = ""
+        for node in lst.iternodes():  # iterate over list nodes
+            node: Field
+            if node.has_devil:
+                result += 'D'
+            if node.has_team:
+                result += 'T'
+            result += node.type
+            #  todo add change from numbers to characters
+        return result
 
     def get_player(self, sid):
         for player in self.players:

@@ -1,5 +1,5 @@
 from enum import Enum
-# from .models import Event, Evidence
+from .models import Evidence, Event
 from .game_character import Player
 import random
 import pyllist
@@ -108,13 +108,13 @@ class Game:
         self.position = 0
         self.players = []
         self.running = False
-        self.team_pos = Field()
+        self.map = create_map()
+        self.team_pos: Field = map.nodeat(4)
         # create Evidence combination
         self.puzzle = []
-        # self.puzzle.append(Evidence("Frau Tippie", "P"))
-        # self.puzzle.append(Evidence("Bathtub", "L"))
-        # self.puzzle.append(Evidence("Revolver", "W"))
-        self.map = create_map()
+        self.puzzle.append(Evidence("Frau Tippie", "P"))
+        self.puzzle.append(Evidence("Bathtub", "L"))
+        self.puzzle.append(Evidence("Revolver", "W"))
 
     def start_game(self, players):
         # init players,
@@ -240,5 +240,14 @@ class Field:
 
     def get_next(self):
         if self.shortcut_field is not None:
-            raise NotImplementedError('return Event("Minigame X", "Would you rather mit zwei personen")')
+            return Event("Minigame X", "Would you rather mit zwei personen")
         return self.next_field
+
+    def set_has_team(self, val):
+        #  if we step on a shortcut we have too trigger the minigame
+        if val is True & type == FieldType.Shortcut:
+            #  shortcut or minigame
+            print('nothing')
+            #  triggerEvent
+        else:
+            has_team = val

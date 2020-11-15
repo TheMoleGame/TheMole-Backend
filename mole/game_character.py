@@ -1,5 +1,9 @@
 from abc import ABCMeta, abstractmethod
 
+import pyllist
+
+from mole.game import Game
+
 
 class CharacterInterface(metaclass=ABCMeta):
     @property
@@ -39,6 +43,15 @@ class Player(CharacterInterface):
         if evidence is True:
             return True
         return False
+
+    def move(self, game: Game, distance) :
+        game.team_pos: pyllist.dllist
+
+        #  for i in range(0, distance):
+            #  team_pos.has_Team = False
+            #  team_pos. = team_pos.next_field
+            #  team_pos.has_Team = False
+        pass
 
 
 class Devil(CharacterInterface):

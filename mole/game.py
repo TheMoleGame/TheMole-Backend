@@ -2,11 +2,104 @@ from enum import Enum
 # from .models import Event, Evidence
 from .game_character import Player
 import random
+import pyllist
 
 
 def create_map():
-    return []
+    map_dll = pyllist.dllist()  # double linked List
+    #  First Field
+    init_f = Field(FieldType.DEVIL_FIELD, has_devil=True)
+    map_dll.append(init_f)
 
+    for i in range(0, 3):
+        map_dll.append(Field(FieldType.DEVIL_FIELD))
+
+    map_dll.append(Field(FieldType.WALKABLE, has_team=True))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.Goal))
+
+    return map_dll
+
+
+def create_big_map():
+    map_dll = pyllist.dllist()  # double linked List
+    #  First Field
+    init_f = Field(FieldType.DEVIL_FIELD, has_devil=True)
+    map_dll.append(init_f)
+
+    for i in range(0, 3):
+        map_dll.append(Field(FieldType.DEVIL_FIELD))
+
+    map_dll.append(Field(FieldType.WALKABLE, has_team=True))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.SHORTCUT))  # todo.shortcut_field(Field)
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.SHORTCUT))  # todo.shortcut_field(Field)
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.SHORTCUT))  # todo.shortcut_field(Field)
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.Goal))
+
+    return map_dll
 
 class Game:
     def __init__(self):
@@ -45,7 +138,8 @@ class Game:
         character.move(distance)
 
     @staticmethod
-    def debug_map():
+    def debug_map(game):
+        #for game.teampos.ne
         return "dddds-SM"
 
     def get_player(self, sid):
@@ -123,6 +217,7 @@ class FieldType(Enum):
     MINIGAME = 3
     DEVIL_FIELD = 4
     SHORTCUT = 5
+    Goal = 6
 
 
 class Field:

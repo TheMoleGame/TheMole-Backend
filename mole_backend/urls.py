@@ -16,6 +16,5 @@ admin.autodiscover()
 
 urlpatterns = [
     path("", mole.views.index, name="index"),
-    path("db/", mole.views.db, name="db"),
     path("admin/", admin.site.urls),
 ]

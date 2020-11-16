@@ -1,11 +1,13 @@
 from enum import Enum
+
+from .game_character import *
 from .models import Evidence, Event
-from .game_character import Player
 import random
 import pyllist
 
 
 def create_map():
+    #  https://pythonhosted.org/pyllist/
     map_dll = pyllist.dllist()  # double linked List
     #  First Field
     init_f = Field(FieldType.DEVIL_FIELD, has_devil=True)
@@ -103,21 +105,28 @@ def create_big_map():
 
 
 class Game:
-    def __init__(self):
+    def __init__(self, sid):
         self.token = str(random.randrange(1000, 10000))  # type: str
-        self.position = 0
         self.players = []
+    #  player constructor (self, name, sid, is_mole=False):
+        self.players.append(Player("Host", sid))
+        self.my_turn = Player[0]  # ich bin drann
+
         self.running = False
-        self.map = create_map()
+        self.map = create_map()  # small test map
         self.team_pos: Field = map.nodeat(4)
-        # create Evidence combination
+        self.debug_game_representation(map)  # test case debug
+        #
+        self.move(2, self.players[0])  # test case move
+
+        #  create Evidence combination
         self.puzzle = []
         self.puzzle.append(Evidence("Frau Tippie", "P"))
         self.puzzle.append(Evidence("Bathtub", "L"))
         self.puzzle.append(Evidence("Revolver", "W"))
 
     def start_game(self, players):
-        # init players,
+        # init players, setMole
         # for(player in players):
         #   # player. teampos.
         #    player,player.getMove())
@@ -134,9 +143,9 @@ class Game:
         else:
             pass
 
-    @staticmethod
-    def move(distance, character):
-        character.move(distance)
+    # @staticmethod
+    def move(self, distance, character):
+        character.move(self.team_pos, distance)
 
     @staticmethod
     def debug_game_representation(lst: pyllist.dllist):

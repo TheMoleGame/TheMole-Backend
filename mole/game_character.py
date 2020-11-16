@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 
 import pyllist
 
-from mole.game import Game
+from mole.game import *
 
 
 class CharacterInterface(metaclass=ABCMeta):
@@ -44,13 +44,13 @@ class Player(CharacterInterface):
             return True
         return False
 
-    def move(self, game: Game, distance) :
-        game.team_pos: pyllist.dllist
-
-        #  for i in range(0, distance):
-            #  team_pos.has_Team = False
-            #  team_pos. = team_pos.next_field
-            #  team_pos.has_Team = False
+    def move(self, position: pyllist.dllistnode, distance):
+        for i in range(0, distance):
+            field: Field = position.value
+            field.set_has_team(False)
+            next_pos: pyllist.dllistnode = position.next()
+            field: Field = next_pos.value
+            field.set_has_team(True)
         pass
 
 

@@ -1,20 +1,16 @@
 """
-WSGI config for mole_backend project.
+WSGI config for gettingstarted project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
 For more information on this file, see
-https://docs.djangoproject.com/en/3.1/howto/deployment/wsgi/
+https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 
 import os
-import socketio
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gettingstarted.settings")
 
 from django.core.wsgi import get_wsgi_application
 
-from mole.views import sio
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'mole_backend.settings')
-
-django_app = get_wsgi_application()
-application = socketio.WSGIApp(sio, django_app)
+application = get_wsgi_application()

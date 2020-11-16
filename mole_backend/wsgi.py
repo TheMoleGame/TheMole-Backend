@@ -8,9 +8,13 @@ https://docs.djangoproject.com/en/2.1/howto/deployment/wsgi/
 """
 
 import os
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mole_backend.settings")
+import socketio
 
 from django.core.wsgi import get_wsgi_application
 
-application = get_wsgi_application()
+from mole.views import sio
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "mole_backend.settings")
+
+django_app = get_wsgi_application()
+application = socketio.WSGIApp(sio, django_app)

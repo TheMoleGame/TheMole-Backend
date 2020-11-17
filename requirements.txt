@@ -3,3 +3,4 @@ gunicorn
 django-heroku
 python-socketio
 eventlet
+pyllist

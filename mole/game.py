@@ -1,4 +1,3 @@
-from enum import Enum
 
 from .game_character import *
 from .models import Evidence, Event
@@ -115,7 +114,7 @@ class Game:
         self.running = False
         self.map = create_map()  # small test map
         self.team_pos: Field = self.map.nodeat(4)
-        self.debug_game_representation(map)  # test case debug
+        self.debug_game_representation(self.map)  # test case debug
         #
         self.move(2, self.players[0])  # test case move
 

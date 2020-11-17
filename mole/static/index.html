@@ -11,6 +11,8 @@
 
 <body>
   <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
-  This is our page
+  This is the Mole Project. Have fun :D<br>
+  <input type="button" value="Create Game" onclick="let socket = io.connect(''); socket.emit('create_game', '', data => document.getElementById('token-label').innerText = 'Game Token: ' + data)"><br>
+  <label id="token-label">Game Token:</label>
 </body>
 </html>

@@ -114,7 +114,7 @@ class Game:
 
         self.running = False
         self.map = create_map()  # small test map
-        self.team_pos: Field = map.nodeat(4)
+        self.team_pos: Field = self.map.nodeat(4)
         self.debug_game_representation(map)  # test case debug
         #
         self.move(2, self.players[0])  # test case move
@@ -254,9 +254,9 @@ class Field:
 
     def set_has_team(self, val):
         #  if we step on a shortcut we have too trigger the minigame
-        if val is True & type == FieldType.Shortcut:
+        if val is True and self.type == FieldType.Shortcut:
             #  shortcut or minigame
             print('nothing')
             #  triggerEvent
         else:
-            has_team = val
+            self.has_team = val

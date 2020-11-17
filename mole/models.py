@@ -1,44 +1,54 @@
 from django.db import models
 
 
-class User(models.Model):
-    name = models.CharField(max_length=200)
-    isMole = models.BooleanField(default=False)
+class EvidenceType(models.TextChoices):
+    CRIME_SCENE = 'CS', 'Tatort'
+    MEANS_OF_ESCAPE = 'ME', 'Fluchtmittel'
+    OFFENDER = 'O', 'Täter'
+    TIME_OF_CRIME = 'TC', 'Tatzeit'
+    WEAPON = 'W', 'Waffen'
 
 
-'''
+class EvidenceSubtype(models.TextChoices):
+    CHARACTERISTIC = 'CC', 'Merkmal'
+    CLOTHING = 'CG', 'Kleidung'
+    COLOR = 'CR', 'Farbe'
+    CONDITION = 'CN', 'Zustand'
+    DAYTIME = 'DE', 'Tageszeit'
+    DISTRICT = 'DT', 'Stadtviertel'
+    ESCAPE_ROUTE = 'ER', 'Fluchtweg'
+    LOCATION = 'L', 'Ort'
+    MODEL = 'M', 'Modell'
+    OBJECT = 'O', 'Gegenstand'
+    SIZE = 'S', 'Größe'
+    TEMPERATURE = 'TE', 'Temperatur'
+    TIME = 'TI', 'Uhrzeit'
+    WEEKDAY = 'W', 'Wochentag'
+
+
 class Evidence(models.Model):
-    Name = models.CharField(max_length=200)
-    isTrue = models.BooleanField(default=True)  # optional
-    finder = models.ForeignKey(User, on_delete=models.CASCADE, related_name='finder', default=1)
-    sharedWith = models.ForeignKey(User, on_delete=models.CASCADE)
-    TYPES_OF_EVIDENCE = [
-        ('W', 'Weapon'),
-        ('L', 'Location'),
-        ('P', 'Person'),
-        ('S', 'Statement'),
-    ]
-    evidence_type = models.CharField(
-        max_length=2,
-        choices=TYPES_OF_EVIDENCE,
-        default='W'
-    )
-
-    def __init__(self, name, evidence_type, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = name
-        self.evidence_type = evidence_type
+    name = models.CharField(max_length=200)
+    evidence_type = models.CharField(max_length=2, choices=EvidenceType.choices, default=EvidenceType.WEAPON)
+    evidence_subtype = models.CharField(max_length=2, choices=EvidenceSubtype.choices, default=EvidenceSubtype.OBJECT)
 
 
-class Event(models.Model):
-    Name = models.CharField(max_length=200)
+class EventFieldType(models.TextChoices):
+    MINIGAME = 'M', 'Minigame'
+    OCCASION = 'O', 'Occasion'
+
+
+class EventField(models.Model):
+    name = models.CharField(max_length=50)
     description = models.CharField(max_length=200)
-    initiated_at = models.DateTimeField(auto_now_add=True, blank=True)
-    result_received = models.DateTimeField()
-    result = models.IntegerField()  # maybe factor
+    occasion_type = models.CharField(max_length=2, choices=EventFieldType.choices, default=EventFieldType.OCCASION)
 
-    def __init__(self, name, description, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.name = name
-        self.description = description
-        self.result = -404'''
+
+class WouldYouRatherPair(models.Model):
+    a = models.CharField(max_length=200)
+    b = models.CharField(max_length=200)
+
+
+class MimePair(models.Model):
+    correct_generic_term = models.CharField(max_length=50)
+    terms_to_be_mimed = models.CharField(max_length=200)
+    fake_generic_terms = models.CharField(max_length=200)

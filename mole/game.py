@@ -1,3 +1,6 @@
+from enum import Enum
+
+from pyllist import dllistnode
 
 from .game_character import *
 from .models import Evidence, Event
@@ -100,20 +103,25 @@ def create_big_map():
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.Goal))
 
+    #for map_dll.iternodes(): todo
+
+
     return map_dll
 
 
 class Game:
-    def __init__(self, sid):
+    def __init__(self):
         self.token = str(random.randrange(1000, 10000))  # type: str
         self.players = []
     #  player constructor (self, name, sid, is_mole=False):
-        self.players.append(Player("Host", sid))
-        self.my_turn = Player[0]  # ich bin drann
+        self.players.append(Player("Host", 23))  # fake sid
+        self.my_turn = self.players[0]  # ich bin drann
 
         self.running = False
         self.map = create_map()  # small test map
-        self.team_pos: Field = self.map.nodeat(4)
+        self.team_pos: dllistnode = self.map.nodeat(4)
+        self.devil_pos: dllistnode = self.map.nodeat(0)
+
         self.debug_game_representation(self.map)  # test case debug
         #
         self.move(2, self.players[0])  # test case move
@@ -146,15 +154,15 @@ class Game:
     def move(self, distance, character):
         character.move(self.team_pos, distance)
 
-    @staticmethod
-    def debug_game_representation(lst: pyllist.dllist):
+    #@staticmethod
+    def debug_game_representation(self, lst: pyllist.dllist):
         result = ""
         for node in lst.iternodes():  # iterate over list nodes
-            node: Field
-            if node.has_devil:
-                result += 'D'
-            if node.has_team:
+            if node == self.team_pos:
                 result += 'T'
+            if node == self.devil_pos:
+                result += 'D'
+            node: Field
             result += node.type
             #  todo add change from numbers to characters
         return result
@@ -238,24 +246,8 @@ class FieldType(Enum):
 
 
 class Field:
-    def __init__(self, previous_field=None, next_field=None, shortcut_field=None, field_type=FieldType.WALKABLE, has_team=False, has_devil=False):
-        self.previous_field = previous_field    # type: Field
-        self.next_field = next_field            # type: Field
-        self.shortcut_field = shortcut_field    # type: Field
+    def __init__(self, shortcut_field=None, field_type=FieldType.WALKABLE):
+        # set index?
+        self.shortcut_field = shortcut_field    # type: pyllist.dllist
         self.type = field_type                  # type: FieldType
-        self.has_team = has_team                # type: bool
-        self.has_devil = has_devil              # type: bool
 
-    def get_next(self):
-        if self.shortcut_field is not None:
-            return Event("Minigame X", "Would you rather mit zwei personen")
-        return self.next_field
-
-    def set_has_team(self, val):
-        #  if we step on a shortcut we have too trigger the minigame
-        if val is True and self.type == FieldType.Shortcut:
-            #  shortcut or minigame
-            print('nothing')
-            #  triggerEvent
-        else:
-            self.has_team = val

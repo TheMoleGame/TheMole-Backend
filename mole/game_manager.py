@@ -6,7 +6,7 @@ class GameManager:
         self.games = {}  # maps sids to games
         self.pending_games = []
 
-    def create_game(self, sid):
+    def create_game(self):
         game = Game()
         self.pending_games.append(game)
         return game

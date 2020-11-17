@@ -21,7 +21,7 @@ def disconnect(sid):
 
 @sio.event
 def create_game(sid, _message):
-    game = games.create_game(sid)
+    game = games.create_game()
 
     # game host also joins room for debugging
     sio.enter_room(sid, game.token)

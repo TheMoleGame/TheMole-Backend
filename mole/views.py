@@ -1,4 +1,5 @@
 import os
+import sys
 
 import socketio
 from django.http import HttpResponse
@@ -21,12 +22,19 @@ def disconnect(sid):
 
 @sio.event
 def create_game(sid, _message):
-    game = games.create_game()
+    token = games.create_game(sid)
 
     # game host also joins room for debugging
-    sio.enter_room(sid, game.token)
+    sio.enter_room(sid, token)
 
-    return game.token
+    return token
+
+
+@sio.event
+def start_game(sid, message):
+    assert isinstance(message, str)
+    print('starting game {}'.format(message))
+    games.start_game(sio, sid, token=message)
 
 
 @sio.event
@@ -35,22 +43,20 @@ def join_game(sid, message):
         token = message['token']
         name = message['name']
     except KeyError as e:
-        print('ERROR: invalid login message: {}'.format(repr(e)))  # TODO: rework error message. Maybe with exceptions?
-        return False
+        raise Exception('ERROR: invalid login message: {}'.format(repr(e)))
     except TypeError:
-        print('ERROR: message is not an object. Got {} instead'.format(message))
-        return False
+        raise Exception('ERROR: message is not an object. Got {} instead'.format(message))
 
-    game = games.get_by_token(token)
+    pending_game = games.get_pending_by_token(token)
 
-    if game is None:
-        print('ERROR: invalid token: {}'.format(token))
-        return False
+    if pending_game is None:
+        raise Exception('ERROR: invalid token: {}'.format(token))
 
-    sio.enter_room(sid, game.token)
+    sio.enter_room(sid, pending_game.token)
 
-    games.add_user(game, sid, name)
-    return True
+    pending_game.add_player(sid, name)
+
+    print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 
 
 @sio.event
@@ -58,7 +64,7 @@ def player_choice(sid, message):
     game = games.get(sid)
 
     if game is None:
-        print('ERROR: no game found for sid {}'.format(sid))
+        print('ERROR(player_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
     game.player_choice(sio, sid, message)
@@ -71,8 +77,7 @@ def player_occasion_choice(sid, message):
     game = games.get(sid)
 
     if game is None:
-        print('ERROR: no game found for sid {}'.format(sid))
+        print('ERROR(player_occasion_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
     game.player_occasion_choice(sid, message)
-

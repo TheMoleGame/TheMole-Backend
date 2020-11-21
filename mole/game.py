@@ -3,7 +3,6 @@ from enum import Enum
 from pyllist import dllistnode
 
 from .game_character import *
-#from .models import Evidence, Event
 import random
 import pyllist
 
@@ -18,7 +17,7 @@ def small_map():
     for i in range(0, 3):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
-    map_dll.append(Field(FieldType.WALKABLE))  #  Team should be here
+    map_dll.append(Field(FieldType.WALKABLE))  # Team should be here
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -103,27 +102,38 @@ def create_big_map():
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.Goal))
 
-    #for map_dll.iternodes(): todo
-
+    # for map_dll.iternodes(): todo
 
     return map_dll
 
 
-class Game:
-    def __init__(self):
-        self.token = str(random.randrange(1000, 10000))  # type: str
-        self.players = []
-    #  player constructor (self, name, sid, is_mole=False):
-        self.players.append(Player("Host", 23))  # fake sid
-        self.my_turn = self.players[0]  # ich bin drann
+class TurnState:
+    class PlayerTurnState(Enum):
+        PLAYER_CHOOSING = 0
 
-        self.running = False
+    def __init__(self):
+        self.player_id = 0
+        self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+
+
+class Game:
+    def __init__(self, sio, token, host_sid, player_infos):
+        self.host_sid = host_sid
+        self.token = token
+        self.players = []
+        for player_info in player_infos:
+            self.players.append(Player(player_info['name'], player_info['sid']))
+
+        # Choose random mole
+        random.choice(self.players).is_mole = True
+
+        self.turn_state = TurnState()  # ich bin dran
+
         self.map = small_map()  # small test map
         self.team_pos: dllistnode = self.map.nodeat(4)
         self.devil_pos: dllistnode = self.map.nodeat(0)
 
-        print(self.debug_game_representation(self.map) ) # test case debug
-        #
+        print(self.debug_game_representation())  # test case debug
         self.move(2, self.players[0])  # test case move
 
         #  create Evidence combination
@@ -132,33 +142,20 @@ class Game:
         # self.puzzle.append(Evidence("Bathtub", "L"))
         # self.puzzle.append(Evidence("Revolver", "W"))
 
-    def start_game(self, players):
-        # init players, setMole
-        # for(player in players):
-        #   # player. teampos.
-        #    player,player.getMove())
-        # start a round
-        #   move player1
-        #   move player2
-        #   moveDevil
-        pass
+        # TODO: Serialize Map and send with init packet
+        for player in self.players:
+            sio.emit('init', {'is_mole': player.is_mole, 'map': None}, room=player.sid)
 
-    def add_player(self, sid, name):
-        if self.running is False:
-            player = Player(name, sid)
-            self.players.append(player)
-        else:
-            pass
+        sio.emit('your_turn', '', room=self.players[0].sid)
 
     # @distance the fields to move
     # @character to move
     def move(self, distance, character):
         self.team_pos = character.move(self.team_pos, distance)
 
-    #@staticmethod
-    def debug_game_representation(self, lst: pyllist.dllist):
+    def debug_game_representation(self):
         result = ""
-        for node in lst.iternodes():  # iterate over list nodes
+        for node in self.map.iternodes():  # iterate over list nodes
             field: Field = node.value
             result += ' - '+str(field.type.name)
             if node == self.team_pos:

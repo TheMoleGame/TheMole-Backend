@@ -7,12 +7,48 @@
   <meta name="description" content="The HTML5 Herald">
   <meta name="author" content="SitePoint">
 
+  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 
 <body>
-  <script src="https://cdn.socket.io/socket.io-1.4.5.js"></script>
   This is the Mole Project. Have fun :D<br>
-  <input type="button" value="Create Game" onclick="let socket = io.connect(''); socket.emit('create_game', '', data => document.getElementById('token-label').innerText = 'Game Token: ' + data)"><br>
-  <label id="token-label">Game Token:</label>
+  <input id="create-button" type="button" value="Create Game"><br>
+  <label id="token-label">Game Token:</label><br>
+  <input id="start-button" type="button" value="Start Game"><br>
+  <input id="join-player" type="button" value="Test Player Join"><br>
+
+  <script>
+    $(document).ready(function() {
+      let socket = io.connect('');
+      let token = '';
+      let test_player_id = 0;
+
+      $('#create-button').click(function() {
+        socket.emit('create_game', '', function(data) {
+          $('#token-label').text('Game Token: ' + data);
+          token = data;
+        })
+      });
+
+      $('#start-button').click(function() {
+        socket.emit('start_game', token);
+      });
+
+      $('#join-player').click(function() {
+        if (token === '') {
+          console.error('No game to join!');
+          return;
+        }
+        let player_socket = io.connect('');
+        let name = 'test_player' + test_player_id;
+        player_socket.on('your_turn', () => console.log(name + '\'s turn. Lets do something :)'));
+        player_socket.on('init', data => { console.log(name + '\'s init: '); console.log(data) });
+        player_socket.emit('join_game', {'token': token, 'name': 'test_player' + test_player_id});
+        console.log('player "' + name + '" added');
+        test_player_id += 1;
+      })
+    });
+  </script>
 </body>
 </html>

@@ -122,7 +122,7 @@ class Game:
         self.team_pos: dllistnode = self.map.nodeat(4)
         self.devil_pos: dllistnode = self.map.nodeat(0)
 
-        self.debug_game_representation(self.map)  # test case debug
+        print(self.debug_game_representation(self.map) ) # test case debug
         #
         self.move(2, self.players[0])  # test case move
 
@@ -159,12 +159,12 @@ class Game:
     def debug_game_representation(self, lst: pyllist.dllist):
         result = ""
         for node in lst.iternodes():  # iterate over list nodes
+            field: Field = node.value
+            result += ' - '+str(field.type.name)
             if node == self.team_pos:
-                result += 'T'
+                result += '+ Team'
             if node == self.devil_pos:
-                result += 'D'
-            node: Field
-            result += ''+str(node.type)
+                result += '+ Devil'
             #  todo add change from numbers to characters
         return result
 

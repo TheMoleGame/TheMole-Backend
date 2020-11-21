@@ -33,6 +33,7 @@
 
       $('#start-button').click(function() {
         socket.emit('start_game', token);
+        console.log('game started');
       });
 
       $('#join-player').click(function() {
@@ -43,10 +44,23 @@
         let player_socket = io.connect('');
         let name = 'test_player' + test_player_id;
         player_socket.on('your_turn', () => console.log(name + '\'s turn. Lets do something :)'));
-        player_socket.on('init', data => { console.log(name + '\'s init: '); console.log(data) });
+        player_socket.on('init', data => { console.log(name + ' got init:', data) });
+        player_socket.on('move', data => { console.log(name + ' got move:', data) });
+        player_socket.on('chaser_move', data => { console.log(name + ' got chaser move:', data) });
+
         player_socket.emit('join_game', {'token': token, 'name': 'test_player' + test_player_id});
         console.log('player "' + name + '" added');
         test_player_id += 1;
+
+        const dice_button = $('<input type="button" value="Dice">');
+        dice_button.click(function() {
+          const value = Math.floor(Math.random() * 6) + 1
+          player_socket.emit('player_choice', {'type': 'dice', 'value': value});
+          console.log('diced a', value);
+        })
+        const body = $("body");
+        body.append(dice_button);
+        body.append('<br>');
       })
     });
   </script>

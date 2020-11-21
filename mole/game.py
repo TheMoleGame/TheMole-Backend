@@ -110,9 +110,14 @@ def create_big_map():
 class TurnState:
     class PlayerTurnState(Enum):
         PLAYER_CHOOSING = 0
+        DEVIL_MOVE = 1
 
     def __init__(self):
         self.player_id = 0
+        self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+
+    def diced(self):
+        self.player_id += 1
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
 
 
@@ -127,7 +132,7 @@ class Game:
         # Choose random mole
         random.choice(self.players).is_mole = True
 
-        self.turn_state = TurnState()  # ich bin dran
+        self.turn_state = TurnState()
 
         self.map = small_map()  # small test map
         self.team_pos: dllistnode = self.map.nodeat(4)
@@ -153,6 +158,11 @@ class Game:
     def move(self, distance, character):
         self.team_pos = character.move(self.team_pos, distance)
 
+    def check_end_turn(self, sio):
+        if self.turn_state.player_id == len(self.players):
+            self.turn_state = TurnState()
+            sio.emit('chaser_move', random.randint(1, 6), room=self.token)
+
     def debug_game_representation(self):
         result = ""
         for node in self.map.iternodes():  # iterate over list nodes
@@ -171,7 +181,7 @@ class Game:
                 return player
         return None
 
-    def player_choice(self, sio, _sid, player_choice):
+    def player_choice(self, sio, sid, player_choice):
         """
         This event is called, if a player chose one of:
          - dice:
@@ -203,15 +213,23 @@ class Game:
                 'success': true/false,
             }
         """
+        if not self.players_turn(sid):
+            player = self.get_player(sid)
+            player_name = '<unknown>' if player is None else player.name
+            raise Exception('Got invalid event from player "{}"'.format(player_name))
+
         if player_choice.get('type') == 'dice':
-            self.send_to_all(sio, 'move', int(player_choice.get('value')))
             # TODO: apply movement to own data
+            self.send_to_all(sio, 'move', int(player_choice.get('value')))
+            self.turn_state.diced()
         elif player_choice.get('type') == 'share-evidence':
             pass  # TODO
         elif player_choice.get('type') == 'validate-evidence':
             pass  # TODO
         elif player_choice.get('type') == 'search-evidence':
             pass  # TODO
+
+        self.check_end_turn(sio)
 
     def player_occasion_choice(self, sid, chosen_occasion):
         """
@@ -227,11 +245,13 @@ class Game:
         """
         Sends a message to all players in the game
         """
-        print('sending to room')
         if message is None:
             sio.emit(event, room=self.token)
         else:
             sio.emit(event, message, room=self.token)
+
+    def players_turn(self, sid):
+        return self.players[self.turn_state.player_id].sid == sid
 
 
 class FieldType(Enum):

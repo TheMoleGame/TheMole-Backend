@@ -8,17 +8,17 @@ import random
 import pyllist
 
 
-def create_map():
+def small_map():
     #  https://pythonhosted.org/pyllist/
     map_dll = pyllist.dllist()  # double linked List
     #  First Field
-    init_f = Field(FieldType.DEVIL_FIELD, has_devil=True)
+    init_f = Field(FieldType.DEVIL_FIELD)  # devil should start here
     map_dll.append(init_f)
 
     for i in range(0, 3):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
-    map_dll.append(Field(FieldType.WALKABLE, has_team=True))
+    map_dll.append(Field(FieldType.WALKABLE))  #  Team should be here
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -118,7 +118,7 @@ class Game:
         self.my_turn = self.players[0]  # ich bin drann
 
         self.running = False
-        self.map = create_map()  # small test map
+        self.map = small_map()  # small test map
         self.team_pos: dllistnode = self.map.nodeat(4)
         self.devil_pos: dllistnode = self.map.nodeat(0)
 
@@ -150,9 +150,10 @@ class Game:
         else:
             pass
 
-    # @staticmethod
+    # @distance the fields to move
+    # @character to move
     def move(self, distance, character):
-        character.move(self.team_pos, distance)
+        self.team_pos = character.move(self.team_pos, distance)
 
     #@staticmethod
     def debug_game_representation(self, lst: pyllist.dllist):
@@ -163,7 +164,7 @@ class Game:
             if node == self.devil_pos:
                 result += 'D'
             node: Field
-            result += node.type
+            result += ''+str(node.value.type)
             #  todo add change from numbers to characters
         return result
 
@@ -246,8 +247,11 @@ class FieldType(Enum):
 
 
 class Field:
-    def __init__(self, shortcut_field=None, field_type=FieldType.WALKABLE):
-        # set index?
+    counter = 0
+
+    def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None):
+        self.index = Field.counter
+        Field.counter = Field.counter + 1
         self.shortcut_field = shortcut_field    # type: pyllist.dllist
         self.type = field_type                  # type: FieldType
 

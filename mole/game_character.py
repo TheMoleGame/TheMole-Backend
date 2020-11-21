@@ -44,14 +44,16 @@ class Player(CharacterInterface):
             return True
         return False
 
-    def move(self, position: pyllist.dllistnode, distance):
+    def move(self, my_pos: pyllist.dllistnode, distance):
+        field: Field = my_pos.value
         for i in range(0, distance):
-            field: Field = position.value
-            field.set_has_team(False)
-            next_pos: pyllist.dllistnode = position.next()
-            field: Field = next_pos.value
-            field.set_has_team(True)
-        pass
+            field: Field = my_pos.next()  # get nextfield
+            if field.shortcut_field is not None:
+                print("trigger minigame"+str(field.shortcut_field))
+                # trigger pathchange
+        print("trigger Field " + str(field.index)+": "+str(field.type))
+        # todo what field.type says
+        return field  # newPosition
 
 
 class Devil(CharacterInterface):

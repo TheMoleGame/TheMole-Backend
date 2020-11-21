@@ -6,6 +6,7 @@ class User(models.Model):
     isMole = models.BooleanField(default=False)
 
 
+'''
 class Evidence(models.Model):
     Name = models.CharField(max_length=200)
     isTrue = models.BooleanField(default=True)  # optional
@@ -40,4 +41,4 @@ class Event(models.Model):
         super().__init__(*args, **kwargs)
         self.name = name
         self.description = description
-        self.result = -404
+        self.result = -404'''

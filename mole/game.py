@@ -3,7 +3,7 @@ from enum import Enum
 from pyllist import dllistnode
 
 from .game_character import *
-from .models import Evidence, Event
+#from .models import Evidence, Event
 import random
 import pyllist
 
@@ -33,13 +33,13 @@ def small_map():
 def create_big_map():
     map_dll = pyllist.dllist()  # double linked List
     #  First Field
-    init_f = Field(FieldType.DEVIL_FIELD, has_devil=True)
+    init_f = Field(FieldType.DEVIL_FIELD)  # devil
     map_dll.append(init_f)
 
     for i in range(0, 3):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
-    map_dll.append(Field(FieldType.WALKABLE, has_team=True))
+    map_dll.append(Field(FieldType.WALKABLE))  # team
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -128,9 +128,9 @@ class Game:
 
         #  create Evidence combination
         self.puzzle = []
-        self.puzzle.append(Evidence("Frau Tippie", "P"))
-        self.puzzle.append(Evidence("Bathtub", "L"))
-        self.puzzle.append(Evidence("Revolver", "W"))
+        # self.puzzle.append(Evidence("Frau Tippie", "P"))
+        # self.puzzle.append(Evidence("Bathtub", "L"))
+        # self.puzzle.append(Evidence("Revolver", "W"))
 
     def start_game(self, players):
         # init players, setMole
@@ -164,7 +164,7 @@ class Game:
             if node == self.devil_pos:
                 result += 'D'
             node: Field
-            result += ''+str(node.value.type)
+            result += ''+str(node.type)
             #  todo add change from numbers to characters
         return result
 

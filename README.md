@@ -12,11 +12,13 @@ python3 manage.py runserver
 ```
 
 ## Setup Heroku
-1.  install Heroku cli
-1.  $ heroku login  
-1.  set remotes to git repo
-
+1.  install Heroku [cli](https://devcenter.heroku.com/articles/heroku-cli)
 ```bash
+heroku login
+``` 
+2.  set remotes to git repo
+
+ ```bash 
 heroku git:remote -a testmapbranch
 git remote rename heroku heroku-staging
 heroku git:remote -a ab-backend
@@ -24,16 +26,17 @@ heroku git:remote -a ab-backend
 
 ## Staging new features to Heroku
 
-1. push feat/yourfeat testmapbranch repo to test if the branch works, our staging site
+1. push your branch: feat/yourfeat to the remote staging heroku 
+   The Heroku staging git-repo is called testmapbranch, test if the if the branch works on this repo
 ```bash
 git push heroku-staging feat/yourfeat:master
 ```
 2. check https://testmapbranch.herokuapp.com/ if it works
 3. push to master
-
 ```bash
 git push heroku master
 ```
+4. should be working on master https://ab-backend.herokuapp.com/
 
 
 ## Access from web

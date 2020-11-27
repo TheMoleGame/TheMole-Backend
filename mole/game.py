@@ -1,7 +1,9 @@
+import json
+import random
 from enum import Enum
 import random
 
-from pyllist import dllist, dllistnode
+from pyllist import *
 
 from .game_character import *
 
@@ -143,14 +145,13 @@ class Game:
             self.players.append(Player(player_id, player_info['name'], player_info['sid']))
 
         # Choose random mole
-        random.choice(self.players).is_mole = True
+       # random.choice(self.players).is_mole = True
 
         self.turn_state: TurnState = TurnState()
 
         self.map = small_map()  # small test map
         self.team_pos: dllistnode = self.map.nodeat(4)
         self.devil_pos: dllistnode = self.map.nodeat(0)
-
         print(self.debug_game_representation())  # test case debug
 
         #  create Evidence combination
@@ -161,9 +162,8 @@ class Game:
 
         self.move_multiplier = 1
 
-        # TODO: Serialize Map and send with init packet
         for player in self.players:
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None}, room=player.sid)
+            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': self.map_to_json()}, room=player.sid)
 
         self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
 
@@ -173,6 +173,7 @@ class Game:
         :return: The Field the player is standing on
         """
         return self.team_pos.value
+
 
     def move_player(self, distance: int) -> int or None:
         """
@@ -225,17 +226,29 @@ class Game:
         self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
 
     def debug_game_representation(self):
-        result = []
+        result = ""
+        print('-------------Game-Representation---------------------')
+        print('-----------------------------------------------------')
+        print('Player ' + str(self.turn_state)+'s turn')
         for node in self.map.iternodes():  # iterate over list nodes
             field: Field = node.value
-            field_text = '{}({})'.format(field.type.name, field.index)
+            result += ' - '+str(field.type.name)
             if node == self.team_pos:
-                field_text += '+Team'
+                result += '+Team'
             if node == self.devil_pos:
-                field_text += '+Devil'
-            result.append(field_text)
-            #  todo add change from numbers to characters
-        return ' - '.join(result)
+                result += '+ Devil'
+        print('---------------------------------------------------')
+        print('---------------------------------------------------')
+        return result
+
+
+    def map_to_json(self):
+        json_map = list()
+        for node in self.map.iternodes():  # iterate over list nodes
+            field: Field = node.value
+            json_map.append(field)
+
+        return json.dumps(json_map, indent=4)
 
     def get_player(self, sid):
         for player in self.players:
@@ -406,23 +419,26 @@ class Game:
         return self.get_current_player().sid == sid
 
 
-class FieldType(Enum):
-    WALKABLE = 1
-    OCCASION = 2
-    MINIGAME = 3
-    DEVIL_FIELD = 4
-    SHORTCUT = 5
-    GOAL = 6
+class FieldType(str, Enum):
+    WALKABLE = 'walkable'
+    EVENT = 'event'
+    MINIGAME = 'minigame'
+    DEVIL_FIELD = 'devil_field'
+    SHORTCUT = 'shortcut'
+    Goal = 'goal'
 
 
-class Field:
+class Field(dict):
     counter = 0
 
     def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None):
+        dict.__init__(self, index=Field.counter)
         self.index = Field.counter
         Field.counter = Field.counter + 1
         self.shortcut_field = shortcut_field    # type: dllist
         self.type = field_type                  # type: FieldType
+        dict.__setitem__(self, "shortcut", self.shortcut_field)
+        dict.__setitem__(self, "field_type", self.type)
 
 
 class InvalidUserException(Exception):

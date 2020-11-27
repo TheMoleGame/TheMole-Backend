@@ -37,8 +37,8 @@ class GameManager:
         if pending_game is None:
             raise Exception('No pending game for token: {}. Maybe the game is already running?'.format(token))
 
-        if not pending_game.players:
-            raise Exception('Cannot create game with zero players')
+        if len(pending_game.players) < 3:
+            raise Exception('Cannot start game with less than 3 players')
 
         if not pending_game.host_sid == sid:
             raise Exception('Invalid token sid combination. Only the host can start the game.')

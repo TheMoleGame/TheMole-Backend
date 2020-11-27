@@ -1,5 +1,6 @@
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
+
 def create_event_fields():
     event_fields = [
         EventField(name='Hinweis suchen', description='', occasion_type=EventFieldType.OCCASION),
@@ -14,9 +15,9 @@ def create_event_fields():
         EventField(name='The Lock Picking Game', description='', occasion_type=EventFieldType.MINIGAME)
 
     ]
-
     for field in event_fields:
         field.save()
+    pass
 
 
 def create_weapons():

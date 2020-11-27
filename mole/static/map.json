@@ -1,0 +1,62 @@
+[
+    {
+        "index": 0,
+        "shortcut": null,
+        "type": "devil_field"
+    },
+    {
+        "index": 1,
+        "shortcut": null,
+        "type": "devil_field"
+    },
+    {
+        "index": 2,
+        "shortcut": null,
+        "type": "devil_field"
+    },
+    {
+        "index": 3,
+        "shortcut": null,
+        "type": "devil_field"
+    },
+    {
+        "index": 4,
+        "shortcut": null,
+        "type": "walkable"
+    },
+    {
+        "index": 5,
+        "shortcut": null,
+        "type": "walkable"
+    },
+    {
+        "index": 6,
+        "shortcut": null,
+        "type": "event"
+    },
+    {
+        "index": 7,
+        "shortcut": null,
+        "type": "walkable"
+    },
+    {
+        "index": 8,
+        "shortcut": null,
+        "type": "event"
+    },
+    {
+        "index": 9,
+        "shortcut": null,
+        "type": "walkable"
+    },
+    {
+        "index": 10,
+        "shortcut": null,
+        "type": "minigame"
+    },
+    {
+        "index": 11,
+        "shortcut": null,
+        "type": "goal"
+    }
+]

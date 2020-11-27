@@ -26,8 +26,9 @@ heroku git:remote -a ab-backend
 
 ## Staging new features to Heroku
 
-1. push your branch: feat/yourfeat to the remote staging heroku 
-   The Heroku staging git-repo is called testmapbranch, test if the if the branch works on this repo
+1. push your branch: feat/yourfeat to the remote staging heroku   
+   The Heroku staging git-repo is called testmapbranch.  
+   Test if the branch works on this repo.
 ```bash
 git push heroku-staging feat/yourfeat:master
 ```

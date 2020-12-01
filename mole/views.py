@@ -4,15 +4,15 @@ import sys
 import socketio
 from django.http import HttpResponse
 from .game_manager import GameManager
-from .db_init import *
+# from .db_init import *
 
 
-sio = socketio.Server(async_mode=None)
+sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
 # TODO: Initialize the database the first time
-#db_init()
+# db_init()
 
 
 def index(_request):

@@ -1,15 +1,14 @@
 from enum import Enum
+import random
 
-from pyllist import dllistnode
+from pyllist import dllist, dllistnode
 
 from .game_character import *
-import random
-import pyllist
 
 
 def small_map():
     #  https://pythonhosted.org/pyllist/
-    map_dll = pyllist.dllist()  # double linked List
+    map_dll = dllist()  # double linked List
     #  First Field
     init_f = Field(FieldType.DEVIL_FIELD)  # devil should start here
     map_dll.append(init_f)
@@ -30,7 +29,7 @@ def small_map():
 
 
 def create_big_map():
-    map_dll = pyllist.dllist()  # double linked List
+    map_dll = dllist()  # double linked List
     #  First Field
     init_f = Field(FieldType.DEVIL_FIELD)  # devil
     map_dll.append(init_f)
@@ -269,6 +268,6 @@ class Field:
     def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None):
         self.index = Field.counter
         Field.counter = Field.counter + 1
-        self.shortcut_field = shortcut_field    # type: pyllist.dllist
+        self.shortcut_field = shortcut_field    # type: dllist
         self.type = field_type                  # type: FieldType
 

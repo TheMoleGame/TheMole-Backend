@@ -2,16 +2,16 @@ from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, Evide
 
 def create_event_fields():
     event_fields = [
-        EventField(name='Hinweis suchen', description='Du hast die Möglichkeit einen Hinweis zu finden. Hierfür musst Du versuchen eine sechs zu würfeln. Du hast nur einen Versuch! Gib unten an, ob du es geschafft hast.', occasion_type=EventFieldType.OCCASION),
-        EventField(name='X Felder vor', description='Du hast die Möglichkeit dein Team voranzubringen. Du darfst einmal würfeln. Gib unten die gewürfelte Zahl an.', occasion_type=EventFieldType.OCCASION),
-        EventField(name='Würfeln erleichtern', description='Mit Deiner Hilfe wurde das Würfeln für die nachfolgende Person erleichtert.', occasion_type=EventFieldType.OCCASION),
-        EventField(name='Aussetzen von gewählten Personen', description='Du darfst unten zwei Personen auswählen, die eine Runde aussetzen müssen.', occasion_type=EventFieldType.OCCASION),
-        EventField(name='X Felder zurück', description='Du musst einmal würfeln. Dein Team muss die gewürfelte Zahl an Feldern zurückgehen. Gib unten die gewürfelte Zahl an.', occasion_type=EventFieldType.OCCASION),
+        EventField(name='Hinweis suchen', description='', occasion_type=EventFieldType.OCCASION),
+        EventField(name='X Felder vor', description='', occasion_type=EventFieldType.OCCASION),
+        EventField(name='Würfeln erleichtern', description='', occasion_type=EventFieldType.OCCASION),
+        EventField(name='Aussetzen von gewählten Personen', description='', occasion_type=EventFieldType.OCCASION),
+        EventField(name='X Felder zurück', description='', occasion_type=EventFieldType.OCCASION),
         EventField(name='Würfeln erschweren', description='', occasion_type=EventFieldType.OCCASION),
 
-        EventField(name='The Trust Game', description='Wer ist nur der Maulwurf? Du bist misstrauisch und unterziehst Dein Teammitglied einem Vertrauenstest: dem Trust Game.\nIhr bekommt nun zwei Szenarien vorgestellt, und müsst angeben, was Ihr selbst eher tun würdet, und was Ihr vermutet, was der andere eher tun würde. Korrekte Vermutungen geben Punkte fürs Team. Dein Spielpartner ist', occasion_type=EventFieldType.MINIGAME),
-        EventField(name='The Silence Game', description='Was war das für ein Geräusch? Könnte das Euer Verfolger gewesen sein?\nIhr dürft kein Riskoeingehen, und müsst Euch sofort alle leise verhalten! Trotzdem müsst Ihr im Team weiter kommunizieren.\nDein Team wird dir gleich für 30 Sekunden verschiedene Begriffe mittels Pantomime erklären. Du musst erraten, welcher Oberbegriff gemeint ist, der die einzelnen Begriffe verbindet.', occasion_type=EventFieldType.MINIGAME),
-        EventField(name='The Lock Picking Game',description='Euer Verfolger ist Euch knapp auf den Fersen, aber dieser Weg ist mit einem Schloss versperrt!\nNur gemeinsam könnt ihr es knacken - jeder Spieler ist für einen Stift in der Mechanik verantwortlich, sodass Du die Haarnadel nutzen kannst, um das Schloss zu knacken.\nIhr habt eine Minute - wenn Ihr es nicht schafft, könnt Ihr diesen Weg nicht nutzen ...', occasion_type=EventFieldType.MINIGAME)
+        EventField(name='The Trust Game', description='', occasion_type=EventFieldType.MINIGAME),
+        EventField(name='The Silence Game', description='', occasion_type=EventFieldType.MINIGAME),
+        EventField(name='The Lock Picking Game', description='', occasion_type=EventFieldType.MINIGAME)
 
     ]
 

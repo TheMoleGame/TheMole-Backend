@@ -4,3 +4,4 @@ __pycache__
 /mole/static/admin
 
 *.png
+'.env' 

@@ -4,3 +4,4 @@ django-heroku
 python-socketio
 eventlet
 pyllist
+python-dotenv

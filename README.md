@@ -33,7 +33,8 @@ heroku git:remote -a ab-backend
 git push heroku-staging feat/yourfeat:master
 ```
 2. check https://testmapbranch.herokuapp.com/ if it works
-3. push to master
+3. Merge feature in master
+4. push to master
 ```bash
 git push heroku master
 ```

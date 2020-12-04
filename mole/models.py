@@ -27,7 +27,7 @@ class EvidenceSubtype(models.TextChoices):
 
 
 class Evidence(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     evidence_type = models.CharField(max_length=2, choices=EvidenceType.choices, default=EvidenceType.WEAPON)
     evidence_subtype = models.CharField(max_length=2, choices=EvidenceSubtype.choices, default=EvidenceSubtype.OBJECT)
 
@@ -38,14 +38,14 @@ class EventFieldType(models.TextChoices):
 
 
 class EventField(models.Model):
-    name = models.CharField(max_length=50)
+    name = models.CharField(max_length=50, unique=True)
     description = models.CharField(max_length=200)
     occasion_type = models.CharField(max_length=2, choices=EventFieldType.choices, default=EventFieldType.OCCASION)
 
 
 class WouldYouRatherPair(models.Model):
-    a = models.CharField(max_length=200)
-    b = models.CharField(max_length=200)
+    a = models.CharField(max_length=200, unique=True)
+    b = models.CharField(max_length=200, unique=True)
 
 
 class MimePair(models.Model):

@@ -12,7 +12,7 @@ basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
 # TODO: Initialize the database the first time
-db_init()
+#db_init()
 
 
 def index(_request):

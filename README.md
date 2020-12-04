@@ -38,7 +38,7 @@ git push heroku-staging feat/yourfeat:master
 ```bash
 git push heroku master
 ```
-4. should be working on master https://ab-backend.herokuapp.com/
+5. should be working on master https://ab-backend.herokuapp.com/
 
 
 ## Access from web

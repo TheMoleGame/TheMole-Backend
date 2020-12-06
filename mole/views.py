@@ -84,4 +84,4 @@ def player_occasion_choice(sid, message):
         print('ERROR(player_occasion_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    game.player_occasion_choice(sid, message)
+    game.player_occasion_choice(sio, sid, message)

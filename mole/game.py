@@ -7,6 +7,9 @@ from .game_character import *
 
 
 def small_map():
+    # reset counter
+    Field.counter = 0
+
     #  https://pythonhosted.org/pyllist/
     map_dll = dllist()  # double linked List
     #  First Field
@@ -29,6 +32,9 @@ def small_map():
 
 
 def create_big_map():
+    # reset counter
+    Field.counter = 0
+
     map_dll = dllist()  # double linked List
     #  First Field
     init_f = Field(FieldType.DEVIL_FIELD)  # devil

@@ -27,11 +27,13 @@ class GameManager:
         self.pending_games = []
 
     def create_game(self, host_sid):
+        print("works2")
         pending_game = PendingGame(host_sid)
         self.pending_games.append(pending_game)
         return pending_game.token
 
     def start_game(self, sio, sid, token):
+        print("works")
         pending_game = self.get_pending_by_token(token)
 
         if pending_game is None:
@@ -42,9 +44,7 @@ class GameManager:
 
         if not pending_game.host_sid == sid:
             raise Exception('Invalid token sid combination. Only the host can start the game.')
-
         game = Game(sio, pending_game.token, pending_game.host_sid, pending_game.players)
-
         for player in pending_game.players:
             self.games[player['sid']] = game
 

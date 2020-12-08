@@ -11,7 +11,6 @@ sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
-
 # db_init()
 
 

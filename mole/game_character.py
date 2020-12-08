@@ -21,11 +21,13 @@ class Player(CharacterInterface):
     def name(self):
         return self._name
 
-    def __init__(self, name, sid, is_mole=False):
+    def __init__(self, id, name, sid, is_mole=False):
+        self.id = id
         self._name = name
         self.is_mole = is_mole
         self.inventory = []
         self.sid = sid
+        self.disabled = False
 
     def search_hint(self) -> []:
         # TODO
@@ -39,21 +41,10 @@ class Player(CharacterInterface):
         # TODO
         pass
 
-    def validate(evidence):
+    def validate(self, evidence):
         if evidence is True:
             return True
         return False
-
-    def move(self, my_pos: pyllist.dllistnode, distance):
-        field: Field = my_pos.value
-        for i in range(0, distance):
-            field: Field = my_pos.next()  # get nextfield
-            if field.shortcut_field is not None:
-                print("trigger minigame"+str(field.shortcut_field))
-                # trigger pathchange
-        print("trigger Field " + str(field.index)+": "+str(field.type))
-        # todo what field.type says
-        return field  # newPosition
 
 
 class Devil(CharacterInterface):

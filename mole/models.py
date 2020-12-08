@@ -39,7 +39,7 @@ class EventFieldType(models.TextChoices):
 
 class EventField(models.Model):
     name = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=200)
+    description = models.CharField(max_length=200, default=None, blank=True, null=True)
     occasion_type = models.CharField(max_length=2, choices=EventFieldType.choices, default=EventFieldType.OCCASION)
 
 

@@ -1,5 +1,4 @@
 import random
-import sys
 
 from .game import Game
 
@@ -11,8 +10,17 @@ class PendingGame:
         self.host_sid = host_sid
         self.players = []
 
-    def add_player(self, sid, name):
-        self.players.append({'sid': sid, 'name': name})
+    def add_player(self, sio, sid, name):
+        player_id = len(self.players)
+        self.players.append({'player_id': player_id, 'sid': sid, 'name': name})
+
+        # send player information to all players
+        player_info = list(map(lambda p: {'name': p['name'], 'player_id': p['player_id']}, self.players))
+        sio.emit(
+            'player_infos',
+            player_info,
+            room=self.token
+        )
 
     def __str__(self):
         return 'Game(token={}  num_players={})'.format(self.token, len(self.players))
@@ -27,13 +35,11 @@ class GameManager:
         self.pending_games = []
 
     def create_game(self, host_sid):
-        print("works2")
         pending_game = PendingGame(host_sid)
         self.pending_games.append(pending_game)
         return pending_game.token
 
     def start_game(self, sio, sid, token):
-        print("works")
         pending_game = self.get_pending_by_token(token)
 
         if pending_game is None:
@@ -44,6 +50,7 @@ class GameManager:
 
         if not pending_game.host_sid == sid:
             raise Exception('Invalid token sid combination. Only the host can start the game.')
+
         game = Game(sio, pending_game.token, pending_game.host_sid, pending_game.players)
         for player in pending_game.players:
             self.games[player['sid']] = game
@@ -60,10 +67,7 @@ class GameManager:
 
         return None
 
-    def get(self, sid):
-        """
-        :rtype: Game
-        """
+    def get(self, sid) -> Game:
         return self.games.get(sid)
 
     def remove_user(self, sid):

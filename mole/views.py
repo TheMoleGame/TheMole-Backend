@@ -57,7 +57,7 @@ def join_game(sid, message):
 
     sio.enter_room(sid, pending_game.token)
 
-    pending_game.add_player(sid, name)
+    pending_game.add_player(sio, sid, name)
 
     print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 

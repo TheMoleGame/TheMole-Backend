@@ -78,10 +78,18 @@ class Game:
         for player in self.players:
             sio.emit(
                 'init',
-                {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': self.map_to_json()},
+                {
+                    'player_id': player.player_id,
+                    'players': self._get_player_info(),
+                    'is_mole': player.is_mole,
+                    'map': self.map_to_json()
+                },
                 room=player.sid
             )
         self.send_to_all(sio, 'players_turn', {'player_id': self.players[0].player_id})
+
+    def _get_player_info(self):
+        return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
 
     def get_team_pos(self):
         """

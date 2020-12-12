@@ -17,7 +17,7 @@ class TurnState:
         DEVIL_MOVE = 3
 
     def __init__(self):
-        self.player_id = 0
+        self.player_index = 0
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
         self.occasion_choices = None
 
@@ -78,10 +78,10 @@ class Game:
         for player in self.players:
             sio.emit(
                 'init',
-                {'id': player.id, 'is_mole': player.is_mole, 'map': self.map_to_json()},
+                {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': self.map_to_json()},
                 room=player.sid
             )
-        self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
+        self.send_to_all(sio, 'players_turn', {'player_id': self.players[0].player_id})
 
     def get_team_pos(self):
         """
@@ -117,11 +117,11 @@ class Game:
         return None
 
     def check_end_turn(self, sio):
-        if self.turn_state.player_id == len(self.players):
-            self.turn_state.player_id = 0
+        if self.turn_state.player_index == len(self.players):
+            self.turn_state.player_index = 0
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
             self.send_to_all(sio, 'chaser_move', random.randint(1, 6))
-            self.send_to_all(sio, 'players_turn', {'id': self.get_current_player().id})
+            self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
 
     def next_player(self, sio):
         """
@@ -129,14 +129,14 @@ class Game:
         Removes disabling of all players, that are skipped, because of disable.
         """
         while True:
-            self.turn_state.player_id += 1
-            if self.turn_state.player_id >= len(self.players):
+            self.turn_state.player_index += 1
+            if self.turn_state.player_index >= len(self.players):
                 break
             if self.get_current_player().disabled:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
             else:
-                self.send_to_all(sio, 'players_turn', {'id': self.get_current_player().id})
+                self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
                 break
         self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
 
@@ -250,13 +250,13 @@ class Game:
                 if self.get_current_player().sid == player.sid:
                     sio.emit(
                         'occasion',
-                        {'player_id:': self.get_current_player().id, 'choices': occasion_choices},
+                        {'player_id:': self.get_current_player().player_id, 'choices': occasion_choices},
                         room=player.sid
                     )
                 else:
                     sio.emit(
                         'occasion',
-                        {'player_id:': self.get_current_player().id},
+                        {'player_id:': self.get_current_player().player_id},
                         room=player.sid
                     )
 
@@ -340,7 +340,7 @@ class Game:
             sio.emit(event, message, room=self.token)
 
     def get_current_player(self):
-        return self.players[self.turn_state.player_id]
+        return self.players[self.turn_state.player_index]
 
     def get_player_by_name(self, name):
         for player in self.players:

@@ -1,4 +1,3 @@
-import json
 from enum import Enum
 import random
 import pyllist
@@ -34,6 +33,8 @@ class TurnState:
 
 
 def _random_occasion_choices():
+    choices = random.choices(OCCASIONS, k=2)
+
     def _enrich_choice(choice):
         result = {'type': choice}
         if choice == 'move_forwards':
@@ -42,7 +43,6 @@ def _random_occasion_choices():
             result['name'] = None
         return result
 
-    choices = [random.choice(OCCASIONS), random.choice(OCCASIONS)]
     return list(map(_enrich_choice, choices))
 
 
@@ -162,7 +162,7 @@ class Game:
             field: Field = node.value
             json_map.append(field)
 
-        return json.dumps(json_map, indent=4)
+        return json_map
 
     def get_player(self, sid):
         for player in self.players:
@@ -363,7 +363,7 @@ def _occasion_matches(left, right):
 
 class FieldType(str, Enum):
     WALKABLE = 'walkable'
-    EVENT = 'event'
+    OCCASION = 'occasion'
     MINIGAME = 'minigame'
     DEVIL_FIELD = 'devil_field'
     SHORTCUT = 'shortcut'
@@ -404,10 +404,10 @@ def small_map_shortcut():
 
     map_dll.append(Field(FieldType.WALKABLE))  # Team should be here
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     short = Field(FieldType.SHORTCUT, 12)  #
     map_dll.append(short)
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.MINIGAME))
     map_dll.append(Field(FieldType.Goal))
@@ -434,67 +434,67 @@ def create_big_map():
 
     map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.MINIGAME))
-    map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.SHORTCUT, 40))  # 25
 
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.SHORTCUT, 66))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.SHORTCUT, 70))  # 52
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.EVENT))
+    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.Goal))  # id=62 ?
 
     # Shortcut

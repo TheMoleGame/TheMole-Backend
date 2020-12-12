@@ -1,9 +1,5 @@
 from abc import ABCMeta, abstractmethod
 
-import pyllist
-
-from mole.game import *
-
 
 class CharacterInterface(metaclass=ABCMeta):
     @property
@@ -54,11 +50,9 @@ class Devil(CharacterInterface):
 
     def __init__(self, name):
         self._name = name
-        self.distance_to_team = 3 # ? to define
+        self.distance_to_team = 3  # ? to define
 
     def generate_occasion(self) -> int:
         # TODO
         # speed_up as option
         pass
-
-

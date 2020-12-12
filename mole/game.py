@@ -1,10 +1,12 @@
 import json
-import random
 from enum import Enum
 import random
+import pyllist
 
-from pyllist import *
 from .game_character import *
+
+
+OCCASIONS = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 
 
 class TurnState:
@@ -17,6 +19,7 @@ class TurnState:
     def __init__(self):
         self.player_id = 0
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+        self.occasion_choices = None
 
         # This saves the remaining number of fields which will be gone, after a minigame was finished successfully
         self.remaining_move_distance = 0
@@ -25,8 +28,22 @@ class TurnState:
         self.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
         self.remaining_move_distance = remaining_moves
 
-    def choosing_occasion(self):
+    def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
+        self.occasion_choices = occasion_choices
+
+
+def _random_occasion_choices():
+    def _enrich_choice(choice):
+        result = {'type': choice}
+        if choice == 'move_forwards':
+            result['value'] = random.randint(1, 4)
+        elif choice == 'skip_player':
+            result['name'] = None
+        return result
+
+    choices = [random.choice(OCCASIONS), random.choice(OCCASIONS)]
+    return list(map(_enrich_choice, choices))
 
 
 class Game:
@@ -43,12 +60,12 @@ class Game:
         self.turn_state: TurnState = TurnState()
 
         self.map = small_map_shortcut()  # small test map
-        self.team_pos: dllistnode = self.map.nodeat(4)
-        self.devil_pos: dllistnode = self.map.nodeat(0)
+        self.team_pos: pyllist.dllistnode = self.map.nodeat(4)
+        self.devil_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 
-        # print(self.map_to_json(self.map))
-        #self.move(2, self.players[0])  # test case move
+        # print(self.map_to_json())
+        # self.move(2, self.players[0])  # test case move
 
         #  create Evidence combination
         self.puzzle = []
@@ -59,7 +76,11 @@ class Game:
         self.move_multiplier = 1
 
         for player in self.players:
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': self.map_to_json(self.map)}, room=player.sid)
+            sio.emit(
+                'init',
+                {'id': player.id, 'is_mole': player.is_mole, 'map': self.map_to_json()},
+                room=player.sid
+            )
         self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
 
     def get_team_pos(self):
@@ -135,9 +156,9 @@ class Game:
         print('---------------------------------------------------')
         print('---------------------------------------------------')
 
-    def map_to_json(self, mymap):
+    def map_to_json(self):
         json_map = list()
-        for node in mymap.iternodes():  # iterate over list nodes
+        for node in self.map.iternodes():  # iterate over list nodes
             field: Field = node.value
             json_map.append(field)
 
@@ -224,8 +245,22 @@ class Game:
 
             self.next_player(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
-            self.send_to_all(sio, 'occasion', {'player_id:': self.get_current_player().id})
-            self.turn_state.choosing_occasion()
+            occasion_choices = _random_occasion_choices()
+            for player in self.players:
+                if self.get_current_player().sid == player.sid:
+                    sio.emit(
+                        'occasion',
+                        {'player_id:': self.get_current_player().id, 'choices': occasion_choices},
+                        room=player.sid
+                    )
+                else:
+                    sio.emit(
+                        'occasion',
+                        {'player_id:': self.get_current_player().id},
+                        room=player.sid
+                    )
+
+            self.turn_state.choosing_occasion(occasion_choices)
         else:
             self.next_player(sio)
 
@@ -234,9 +269,9 @@ class Game:
         This event is called, if a player chose an occasion.
 
         :param chosen_occasion: A dictionary containing occasion information. Must contain a field "type", which must be
-        one of: found_evidence, move_forwards, simplify_dicing, skip_player, move_backwards, hinder_dicing
+        one of: found_evidence, move_forwards, simplify_dicing, skip_player, hinder_dicing
 
-        In case of move_forwards/move_backwards there should also be a "value" field containing the number of fields.
+        In case of move_forwards there should also be a "value" field containing the number of fields.
         "value" should always be positive.
         In case of skip player there should also be a "name" field, containing the name of the player
         """
@@ -252,13 +287,21 @@ class Game:
         occasion_type = chosen_occasion.get('type')
         if occasion_type is None:
             raise InvalidMessageException('Invalid occasion choice message from client. Missing "type" in message.')
+
+        if not any(map(lambda oc: _occasion_matches(chosen_occasion, oc), self.turn_state.occasion_choices)):
+            raise InvalidMessageException(
+                'Invalid occasion choice message from client. chosen_occasion does not match any in occasion choices'
+            )
+
         if occasion_type == 'found_evidence':
             # TODO: add evidence and inform client(s)
             self.next_player(sio)
         elif occasion_type == 'move_forwards':
             num_fields = chosen_occasion.get('value')
             if num_fields is None:
-                raise InvalidMessageException('Invalid occasion choice message from client. Missing "value" in move_forwards.')
+                raise InvalidMessageException(
+                    'Invalid occasion choice message from client. Missing "value" in move_forwards.'
+                )
             num_fields = int(num_fields)
             self.handle_movement(sio, num_fields)
         elif occasion_type == 'simplify_dicing':
@@ -267,26 +310,23 @@ class Game:
         elif occasion_type == 'skip_player':
             player_name = chosen_occasion.get('name')
             if player_name is None:
-                raise InvalidMessageException('Invalid occasion choice message from client. Missing "name" in skip_player.')
+                raise InvalidMessageException(
+                    'Invalid occasion choice message from client. Missing "name" in skip_player.'
+                )
             skipped_player = self.get_player_by_name(player_name)
             if skipped_player is None:
                 raise InvalidMessageException('Could not find player with name "{}"'.format(player_name))
             skipped_player.disabled = True
             self.next_player(sio)
-        elif occasion_type == 'move_backwards':
-            num_fields = chosen_occasion.get('value')
-            if num_fields is None:
-                raise InvalidMessageException('Invalid occasion choice message from client. Missing "value" in move_backwards.')
-            num_fields = abs(int(num_fields))
-            self.handle_movement(sio, -num_fields)
         elif occasion_type == 'hinder_dicing':
             self.move_multiplier = 0.5
             self.next_player(sio)
 
         self.check_end_turn(sio)
 
-        # TODO: send more information to clients?
+        self.turn_state.occasion_choices = None  # reset occasion choices
 
+    # noinspection PyMethodMayBeStatic
     def trigger_minigame(self):
         print('Minigames arent implemented yet')
 
@@ -312,6 +352,15 @@ class Game:
         return self.get_current_player().sid == sid
 
 
+def _occasion_matches(left, right):
+    if left['type'] != right['type']:
+        return False
+    if left['type'] == 'move_forwards':
+        if left['value'] != right['value']:
+            return False
+    return True
+
+
 class FieldType(str, Enum):
     WALKABLE = 'walkable'
     EVENT = 'event'
@@ -328,7 +377,7 @@ class Field(dict):
         dict.__init__(self, index=Field.counter)
         self.index = Field.counter
         Field.counter = Field.counter + 1
-        self.shortcut_field = shortcut_field    # type: dllist
+        self.shortcut_field = shortcut_field    # type: pyllist.dllist
         self.type = field_type                  # type: FieldType
         dict.__setitem__(self, "shortcut", self.shortcut_field)
         dict.__setitem__(self, "field_type", self.type)
@@ -404,7 +453,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.SHORTCUT, 40)) #25
+    map_dll.append(Field(FieldType.SHORTCUT, 40))  # 25
 
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
@@ -436,7 +485,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.EVENT))
-    map_dll.append(Field(FieldType.SHORTCUT, 70))  #52
+    map_dll.append(Field(FieldType.SHORTCUT, 70))  # 52
     map_dll.append(Field(FieldType.EVENT))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))

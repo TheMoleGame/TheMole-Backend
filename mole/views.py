@@ -40,6 +40,8 @@ def start_game(sid, message):
     print('starting game {}'.format(message))
     games.start_game(sio, sid, token=message)
 
+    # TODO: start game message to room
+
 
 @sio.event
 def join_game(sid, message):
@@ -61,6 +63,12 @@ def join_game(sid, message):
     pending_game.add_player(sid, name)
 
     print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
+
+
+@sio.event
+def send_evidence(sid, evidence):
+    player_socket = sio.of('/').sockets.get(sid)
+    player_socket.emit('get_evidence', evidence);
 
 
 @sio.event

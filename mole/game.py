@@ -149,6 +149,7 @@ class Game:
             self.players.append(Player(player_id, player_info['name'], player_info['sid'], evidence))
             print(evidence)
 
+
         # Choose random mole
         random.choice(self.players).is_mole = True
 
@@ -448,7 +449,7 @@ class Game:
         evidences.append(random.choice(all_mean_of_escape_daytime))
         evidences.append(random.choice(all_mean_of_escape_districts))
 
-        print(evidences)
+        #print(evidences)
         return evidences
 
 

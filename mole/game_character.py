@@ -21,11 +21,15 @@ class Player(CharacterInterface):
     def name(self):
         return self._name
 
-    def __init__(self, id, name, sid, is_mole=False):
+    def __init__(self, id, name, sid, evidence=None, is_mole=False):
         self.id = id
         self._name = name
         self.is_mole = is_mole
+
         self.inventory = []
+        if evidence is not None:
+            self.inventory.append(evidence)
+
         self.sid = sid
         self.disabled = False
 

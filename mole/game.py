@@ -417,9 +417,9 @@ class Game:
         all_weapon_objects = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT).values_list()
         all_weapon_colors = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.COLOR).values_list()
         all_weapon_conditions = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.CONDITION).values_list()
-        print(all_weapon_objects)
-        print(all_weapon_colors)
-        print(all_weapon_conditions)
+        print(all_weapon_objects is None)
+        print(all_weapon_colors is None)
+        print(all_weapon_conditions is None)
 
         evidences.append(random.choice(all_weapon_objects))
         evidences.append(random.choice(all_weapon_colors))

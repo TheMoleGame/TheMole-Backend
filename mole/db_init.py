@@ -191,12 +191,14 @@ def db_init():
     EventField.objects.all().delete()
     WouldYouRatherPair.objects.all().delete()
     MimePair.objects.all().delete()
+    print("Deleted all db objects")
 
     # Then create data to be able to access them later
     create_event_fields()
     create_evidences()
     create_would_you_rather_pairs()
     create_mime_pairs()
+    print("Created all db objects")
 
 
 def array_2_string(array):

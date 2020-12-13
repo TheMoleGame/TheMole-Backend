@@ -186,6 +186,13 @@ def create_would_you_rather_pairs():
 
 
 def db_init():
+    # First delete data
+    Evidence.objects.all().delete()
+    EventField.objects.all().delete()
+    WouldYouRatherPair.objects.all().delete()
+    MimePair.objects.all().delete()
+
+    # Then create data to be able to access them later
     create_event_fields()
     create_evidences()
     create_would_you_rather_pairs()

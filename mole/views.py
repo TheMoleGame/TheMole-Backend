@@ -11,9 +11,6 @@ sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
-# TODO: Initialize the database the first time
-db_init()
-
 
 def index(_request):
     return HttpResponse(open(os.path.join(basedir, 'static/index.html')))
@@ -26,6 +23,9 @@ def disconnect(sid):
 
 @sio.event
 def create_game(sid, _message):
+    # Initialize the database the first time
+    db_init()
+
     token = games.create_game(sid)
 
     # game host also joins room for debugging

@@ -245,6 +245,7 @@ class Game:
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
         if remaining_moves is not None:  # minigame
+            print("stepped on minigame")
             if not self.get_team_pos().type == FieldType.MINIGAME:
                 raise AssertionError('got remaining moves, but not on minigame field')
             self.turn_state.start_minigame(remaining_moves)
@@ -253,6 +254,7 @@ class Game:
 
             self.next_player(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
+            print("stepped on occasion")
             occasion_choices = _random_occasion_choices()
             for player in self.players:
                 if self.get_current_player().sid == player.sid:
@@ -270,6 +272,7 @@ class Game:
 
             self.turn_state.choosing_occasion(occasion_choices)
         else:
+            print("stepped on normal field")
             self.next_player(sio)
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
@@ -283,6 +286,7 @@ class Game:
         "value" should always be positive.
         In case of skip player there should also be a "name" field, containing the name of the player
         """
+        print("player choosing occasion")
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name

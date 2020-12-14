@@ -152,7 +152,7 @@ class Game:
         result = ""
         print('-------------Game-Representation---------------------')
         print('-----------------------------------------------------')
-        print('Player ' + str(self.turn_state)+'s turn')
+        print('Player ' + str(self.get_current_player().name)+'s turn')
         for node in self.map.iternodes():  # iterate over list nodes
             field: Field = node.value
             result += ' - '+str(field.type.name)

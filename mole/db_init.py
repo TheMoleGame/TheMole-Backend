@@ -1,4 +1,5 @@
-from django.db import connection
+import os
+import psycopg2
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 def create_event_fields():
@@ -194,11 +195,30 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
-    with connection.cursor() as cursor:
-        cursor.execute("SELECT * FROM mole_evidence")
-        row = cursor.fetchone()
-        #test = Evidence.objects.raw('SELECT * FROM mole_evidence')
-        print(row)
+    cmd = """SELECT * FROM mole_evidence"""
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    con = None
+
+    try:
+        # create a new database connection by calling the connect() function
+        con = psycopg2.connect(DATABASE_URL)
+
+        #  create a new cursor
+        cur = con.cursor()
+        test = cur.execute(cmd)
+        print(test)
+
+        # close the communication with the HerokuPostgres
+        cur.close()
+    except Exception as error:
+        print('Could not connect to the Database.')
+        print('Cause: {}'.format(error))
+
+    finally:
+        # close the communication with the database server by calling the close()
+        if con is not None:
+            con.close()
+            print('Database connection closed.')
 
     # Then create data to be able to access them later
     #create_event_fields()

@@ -208,7 +208,7 @@ def db_init():
     try:
         # create a new database connection by calling the connect() function
         #con = psycopg2.connect(DATABASE_URL)
-        con = connections['drqtfsfadvsmd']
+        con = connections['default']
 
         #  create a new cursor
         cur = con.cursor()

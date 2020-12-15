@@ -1,6 +1,6 @@
 import os
 import psycopg2
-from django.db import connections
+from django.db import connection
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 def create_event_fields():
@@ -196,9 +196,7 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
-    print(connections)
-
-    cmd = """SELECT * FROM mole_evidences"""
+    cmd = """SELECT * FROM mole_evidence"""
     cmd_insert = ''' INSERT INTO mole_evidence 
             (name,evidence_type,evidence_subtype) 
             VALUES (%s,%s,%s) '''
@@ -209,10 +207,11 @@ def db_init():
     try:
         # create a new database connection by calling the connect() function
         con = psycopg2.connect(DATABASE_URL)
+        #con = connections['default']
 
         #  create a new cursor
         cur = con.cursor()
-        test = cur.execute(cmd)
+        test = cur.fetchall()
         print(test)
 
         # close the communication with the HerokuPostgres

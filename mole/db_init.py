@@ -1,3 +1,4 @@
+from django.db import connection
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 def create_event_fields():
@@ -193,15 +194,18 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
-    test = Evidence.objects.raw('SELECT * FROM mole_evidence')
-    print(test)
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT * FROM mole_evidence")
+        row = cursor.fetchone()
+        #test = Evidence.objects.raw('SELECT * FROM mole_evidence')
+        print(row)
 
     # Then create data to be able to access them later
-    create_event_fields()
-    create_evidences()
-    create_would_you_rather_pairs()
-    create_mime_pairs()
-    print("Created all db objects")
+    #create_event_fields()
+    #create_evidences()
+    #create_would_you_rather_pairs()
+    #create_mime_pairs()
+    #print("Created all db objects")
 
 
 def array_2_string(array):

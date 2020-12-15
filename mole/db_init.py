@@ -1,5 +1,6 @@
 import os
 import psycopg2
+from django.db import connections
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 def create_event_fields():
@@ -194,6 +195,8 @@ def db_init():
     #WouldYouRatherPair.objects.all().delete()
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
+
+    print(connections)
 
     cmd = """SELECT * FROM mole_evidences"""
     cmd_insert = ''' INSERT INTO mole_evidence 

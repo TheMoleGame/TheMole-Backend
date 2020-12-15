@@ -195,9 +195,13 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
-    cmd = """SELECT * FROM mole_evidence"""
+    cmd = """SELECT * FROM mole_evidences"""
+    cmd_insert = ''' INSERT INTO mole_evidence 
+            (name,evidence_type,evidence_subtype) 
+            VALUES (%s,%s,%s) '''
     DATABASE_URL = os.environ.get('DATABASE_URL')
     con = None
+    Evidence(name='Messer', evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT)
 
     try:
         # create a new database connection by calling the connect() function

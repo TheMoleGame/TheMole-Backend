@@ -193,6 +193,9 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
+    test = Evidence.objects.raw('SELECT * FROM mole_evidence')
+    print(test)
+
     # Then create data to be able to access them later
     create_event_fields()
     create_evidences()

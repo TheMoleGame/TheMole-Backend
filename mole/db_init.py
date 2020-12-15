@@ -1,6 +1,7 @@
 import os
 import psycopg2
 from django.db import connection
+from django.db import connections
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 def create_event_fields():
@@ -206,8 +207,8 @@ def db_init():
 
     try:
         # create a new database connection by calling the connect() function
-        con = psycopg2.connect(DATABASE_URL)
-        #con = connections['default']
+        #con = psycopg2.connect(DATABASE_URL)
+        con = connections['default']
 
         #  create a new cursor
         cur = con.cursor()

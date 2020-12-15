@@ -220,6 +220,7 @@ def db_init():
     except Exception as error:
         print('Could not connect to the Database.')
         print('Cause: {}'.format(error))
+        return
 
     finally:
         # close the communication with the database server by calling the close()

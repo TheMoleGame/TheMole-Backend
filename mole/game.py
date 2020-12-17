@@ -2,14 +2,10 @@ from enum import Enum
 import random
 
 from pyllist import dllist, dllistnode
-import psycopg2, os
 import dj_database_url
-from django.db import connections
-import dotenv
 from .game_character import *
 from .models import *
-from .db_init import *
-from mole_backend.settings import *
+from mole_backend.settings import DATABASES, db_from_env
 
 
 def small_map():

@@ -153,6 +153,8 @@ class Game:
             #  create a new cursor
             cur = con.cursor()
             cur.execute(cmd)
+            test = cur.fetchall()
+            print(test)
 
             # close the communication with the HerokuPostgres
             cur.close()

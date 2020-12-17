@@ -1,4 +1,6 @@
 import os
+import random
+
 import psycopg2
 from django.db import connection
 from django.db import connections
@@ -189,6 +191,56 @@ def create_would_you_rather_pairs():
         wyr_pair.save()
 
 
+evidences = []
+
+
+def generate_solution_evidences():
+    """
+    :rtype: Evidence
+    :return: List of evidences to win the game
+    """
+    evidences = []
+
+    all_weapon_objects = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT).values_list()
+    all_weapon_colors = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.COLOR).values_list()
+    all_weapon_conditions = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.CONDITION).values_list()
+    evidences.append(random.choice(all_weapon_objects))
+    evidences.append(random.choice(all_weapon_colors))
+    evidences.append(random.choice(all_weapon_conditions))
+
+    all_crime_scene_locations = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.LOCATION).values_list()
+    all_crime_scene_temperature = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.TEMPERATURE).values_list()
+    all_crime_scene_districts = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.DISTRICT).values_list()
+    evidences.append(random.choice(all_crime_scene_locations))
+    evidences.append(random.choice(all_crime_scene_temperature))
+    evidences.append(random.choice(all_crime_scene_districts))
+
+    all_offender_escape_clothings = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.CLOTHING).values_list()
+    all_offender_escape_sizes = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.SIZE).values_list()
+    all_offender_escape_characteristics = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.CHARACTERISTIC).values_list()
+    evidences.append(random.choice(all_offender_escape_clothings))
+    evidences.append(random.choice(all_offender_escape_sizes))
+    evidences.append(random.choice(all_offender_escape_characteristics))
+
+    all_time_of_crime_weekdays = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.WEEKDAY).values_list()
+    all_time_of_crime_daytimes = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.DAYTIME).values_list()
+    all_time_of_crime_times = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.TIME).values_list()
+    evidences.append(random.choice(all_time_of_crime_weekdays))
+    evidences.append(random.choice(all_time_of_crime_daytimes))
+    evidences.append(random.choice(all_time_of_crime_times))
+
+    all_mean_of_escape_conditions = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.MODEL).values_list()
+    all_mean_of_escape_daytime = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.COLOR).values_list()
+    all_mean_of_escape_districts = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.ESCAPE_ROUTE).values_list()
+    evidences.append(random.choice(all_mean_of_escape_conditions))
+    evidences.append(random.choice(all_mean_of_escape_daytime))
+    evidences.append(random.choice(all_mean_of_escape_districts))
+
+    #print(evidences)
+    return evidences
+
+
+
 def db_init():
     # First delete data
     Evidence.objects.all().delete()
@@ -197,44 +249,14 @@ def db_init():
     MimePair.objects.all().delete()
     print("Deleted all db objects")
 
-#    cmd = """SELECT * FROM mole_evidence"""
-#    cmd_insert = ''' INSERT INTO mole_evidence
-#            (name,evidence_type,evidence_subtype)
-#            VALUES (%s,%s,%s) '''
-#    DATABASE_URL = os.environ.get('DATABASE_URL')
-#    con = None
-#    Evidence(name='Messer', evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT)
-#
-#    try:
-#        # create a new database connection by calling the connect() function
-#        #con = psycopg2.connect(DATABASE_URL)
-#        con = connections['default']
-#
-#        #  create a new cursor
-#        cur = con.cursor()
-#        cur.execute(cmd)
-#        test = cur.fetchall()
-#        print('\n\n\ntestsdafsggjfjsrsrgdhhsgagfsg\n\n\n')
-#        print(test)
-#        # close the communication with the HerokuPostgres
-#        cur.close()
-#
-#    except Exception as error:
-#        print('Could not connect to the Database.')
-#        print('Cause: {}'.format(error))
-#
-#    finally:
-#        # close the communication with the database server by calling the close()
-#        if con is not None:
-#            con.close()
-#            print('Database connection closed.')
-
     # Then create data to be able to access them later
     create_event_fields()
     create_evidences()
     create_would_you_rather_pairs()
     create_mime_pairs()
     print("Created all db objects")
+
+    evidences = generate_solution_evidences()
 
 
 def array_2_string(array):

@@ -5,6 +5,7 @@ from pyllist import dllist, dllistnode
 
 from .game_character import *
 from .models import *
+from .db_init import *
 
 
 def small_map():
@@ -141,7 +142,7 @@ class Game:
         self.token = token
 
         #  create Evidence combination
-        self.evidences = self.generate_solution_evidences()
+        self.evidences = evidences
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):
@@ -406,55 +407,6 @@ class Game:
 
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
-
-    def generate_solution_evidences(self):
-        """
-        :rtype: Evidence
-        :return: List of evidences to win the game
-        """
-        evidences = []
-
-        all_weapon_objects = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT).values_list()
-        all_weapon_colors = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.COLOR).values_list()
-        all_weapon_conditions = Evidence.objects.filter(evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.CONDITION).values_list()
-        print(all_weapon_objects is None)
-        print(all_weapon_colors is None)
-        print(all_weapon_conditions is None)
-
-        evidences.append(random.choice(all_weapon_objects))
-        evidences.append(random.choice(all_weapon_colors))
-        evidences.append(random.choice(all_weapon_conditions))
-
-        all_crime_scene_locations = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.LOCATION).values_list()
-        all_crime_scene_temperature = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.TEMPERATURE).values_list()
-        all_crime_scene_districts = Evidence.objects.filter(evidence_type=EvidenceType.CRIME_SCENE, evidence_subtype=EvidenceSubtype.DISTRICT).values_list()
-        evidences.append(random.choice(all_crime_scene_locations))
-        evidences.append(random.choice(all_crime_scene_temperature))
-        evidences.append(random.choice(all_crime_scene_districts))
-
-        all_offender_escape_clothings = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.CLOTHING).values_list()
-        all_offender_escape_sizes = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.SIZE).values_list()
-        all_offender_escape_characteristics = Evidence.objects.filter(evidence_type=EvidenceType.OFFENDER, evidence_subtype=EvidenceSubtype.CHARACTERISTIC).values_list()
-        evidences.append(random.choice(all_offender_escape_clothings))
-        evidences.append(random.choice(all_offender_escape_sizes))
-        evidences.append(random.choice(all_offender_escape_characteristics))
-
-        all_time_of_crime_weekdays = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.WEEKDAY).values_list()
-        all_time_of_crime_daytimes = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.DAYTIME).values_list()
-        all_time_of_crime_times = Evidence.objects.filter(evidence_type=EvidenceType.TIME_OF_CRIME, evidence_subtype=EvidenceSubtype.TIME).values_list()
-        evidences.append(random.choice(all_time_of_crime_weekdays))
-        evidences.append(random.choice(all_time_of_crime_daytimes))
-        evidences.append(random.choice(all_time_of_crime_times))
-
-        all_mean_of_escape_conditions = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.MODEL).values_list()
-        all_mean_of_escape_daytime = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.COLOR).values_list()
-        all_mean_of_escape_districts = Evidence.objects.filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE, evidence_subtype=EvidenceSubtype.ESCAPE_ROUTE).values_list()
-        evidences.append(random.choice(all_mean_of_escape_conditions))
-        evidences.append(random.choice(all_mean_of_escape_daytime))
-        evidences.append(random.choice(all_mean_of_escape_districts))
-
-        #print(evidences)
-        return evidences
 
 
 class FieldType(Enum):

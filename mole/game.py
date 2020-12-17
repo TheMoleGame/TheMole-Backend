@@ -151,10 +151,7 @@ class Game:
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):
-            evidence = random.choice(self.evidences)
-            self.players.append(Player(player_id, player_info['name'], player_info['sid'], evidence))
-            print(evidence)
-
+            self.players.append(Player(player_id, player_info['name'], player_info['sid'], random.choice(self.evidences)))
 
         # Choose random mole
         random.choice(self.players).is_mole = True

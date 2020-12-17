@@ -145,7 +145,7 @@ class Game:
         self.evidences = evidences_db
 
         DATABASE_URL = os.environ.get('DATABASE_URL')
-        cmd = """SELECT * FROM mole_evidences"""
+        cmd = """SELECT * FROM mole_evidence"""
         try:
             # create a new database connection by calling the connect() function
             con = psycopg2.connect(DATABASE_URL)

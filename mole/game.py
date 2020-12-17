@@ -3,9 +3,13 @@ import random
 
 from pyllist import dllist, dllistnode
 import psycopg2, os
+import dj_database_url
+from django.db import connections
+import dotenv
 from .game_character import *
 from .models import *
 from .db_init import *
+from mole_backend.settings import *
 
 
 def small_map():
@@ -144,11 +148,14 @@ class Game:
         #  create Evidence combination
         self.evidences = evidences_db
 
+        DATABASES['game'] = db_from_env
+
         DATABASE_URL = os.environ.get('DATABASE_URL')
         cmd = """SELECT * FROM mole_evidence"""
         try:
             # create a new database connection by calling the connect() function
-            con = psycopg2.connect(DATABASE_URL)
+            #con = psycopg2.connect(DATABASE_URL)
+            con = connections['game']
 
             #  create a new cursor
             cur = con.cursor()

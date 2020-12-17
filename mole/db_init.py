@@ -173,7 +173,7 @@ def create_mime_pairs():
         mime_pair.save()
 
 
-def create_would_you_rather_pairs():evidences_db
+def create_would_you_rather_pairs():
     wyr_pairs = [
         WouldYouRatherPair(a='Haut, die farblich Deine Gefühle widerspiegelt', b='Tattoos, die immer besagen, was Du die Nacht zuvor getan hast'),
         WouldYouRatherPair(a='Unsichtbar sein', b='Fliegen können'),

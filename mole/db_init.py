@@ -214,7 +214,7 @@ def db_init():
         #  create a new cursor
         cur = con.cursor()
         test = cur.fetchall()
-
+        print('\n\n\ntestsdafsggjfjsrsrgdhhsgagfsg\n\n\n')
         print(test)
         # close the communication with the HerokuPostgres
         cur.close()

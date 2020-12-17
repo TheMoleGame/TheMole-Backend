@@ -198,36 +198,36 @@ def db_init():
     #MimePair.objects.all().delete()
     #print("Deleted all db objects")
 
-#    cmd = """SELECT * FROM mole_evidence"""
-#    cmd_insert = ''' INSERT INTO mole_evidence
-#            (name,evidence_type,evidence_subtype)
-#            VALUES (%s,%s,%s) '''
-#    DATABASE_URL = os.environ.get('DATABASE_URL')
-#    con = None
-#    Evidence(name='Messer', evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT)
-#
-#    try:
-#        # create a new database connection by calling the connect() function
-#        #con = psycopg2.connect(DATABASE_URL)
-#        con = connections['default']
-#
-#        #  create a new cursor
-#        cur = con.cursor()
-#        test = cur.fetchall()
-#
-#        print(test)
-#        # close the communication with the HerokuPostgres
-#        cur.close()
-#
-#    except Exception as error:
-#        print('Could not connect to the Database.')
-#        print('Cause: {}'.format(error))
-#
-#    finally:
-#        # close the communication with the database server by calling the close()
-#        if con is not None:
-#            con.close()
-#            print('Database connection closed.')
+    cmd = """SELECT * FROM mole_evidence"""
+    cmd_insert = ''' INSERT INTO mole_evidence
+            (name,evidence_type,evidence_subtype)
+            VALUES (%s,%s,%s) '''
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    con = None
+    Evidence(name='Messer', evidence_type=EvidenceType.WEAPON, evidence_subtype=EvidenceSubtype.OBJECT)
+
+    try:
+        # create a new database connection by calling the connect() function
+        #con = psycopg2.connect(DATABASE_URL)
+        con = connections['default']
+
+        #  create a new cursor
+        cur = con.cursor()
+        test = cur.fetchall()
+
+        print(test)
+        # close the communication with the HerokuPostgres
+        cur.close()
+
+    except Exception as error:
+        print('Could not connect to the Database.')
+        print('Cause: {}'.format(error))
+
+    finally:
+        # close the communication with the database server by calling the close()
+        if con is not None:
+            con.close()
+            print('Database connection closed.')
 
     # Then create data to be able to access them later
     #create_event_fields()

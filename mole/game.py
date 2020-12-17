@@ -2,7 +2,7 @@ from enum import Enum
 import random
 
 from pyllist import dllist, dllistnode
-
+from django.db import connections
 from .game_character import *
 from .models import *
 from .db_init import *
@@ -143,6 +143,29 @@ class Game:
 
         #  create Evidence combination
         self.evidences = evidences_db
+
+        cmd = """SELECT * FROM mole_evidences"""
+        try:
+            # create a new database connection by calling the connect() function
+            con = connections['default']
+
+            #  create a new cursor
+            cur = con.cursor()
+            cur.execute(cmd)
+            test = cur.fetchAll()
+            print(test)
+
+            # close the communication with the HerokuPostgres
+            cur.close()
+        except Exception as error:
+            print('Could not connect to the Database.')
+            print('Cause: {}'.format(error))
+
+        finally:
+            # close the communication with the database server by calling the close()
+            if con is not None:
+                con.close()
+                print('Database connection closed.')
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):

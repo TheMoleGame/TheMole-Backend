@@ -1,7 +1,7 @@
 django
 gunicorn
 django-heroku
-python-socketio
+python-socketio=4.6.1
 eventlet
 pyllist
 python-dotenv

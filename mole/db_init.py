@@ -1,5 +1,5 @@
 import os
-from random import random
+import random
 
 import psycopg2
 from django.db import connection

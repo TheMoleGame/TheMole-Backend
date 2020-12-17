@@ -142,7 +142,7 @@ class Game:
         self.token = token
 
         #  create Evidence combination
-        self.evidences = evidences
+        self.evidences = evidences_db
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):

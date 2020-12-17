@@ -190,7 +190,6 @@ def create_would_you_rather_pairs():
 
 
 def db_init():
-    return
     # First delete data
     #Evidence.objects.all().delete()
     #EventField.objects.all().delete()

@@ -2,7 +2,7 @@ from enum import Enum
 import random
 
 from pyllist import dllist, dllistnode
-from django.db import connections
+import psycopg2, os
 from .game_character import *
 from .models import *
 from .db_init import *
@@ -144,10 +144,11 @@ class Game:
         #  create Evidence combination
         self.evidences = evidences_db
 
+        DATABASE_URL = os.environ.get('DATABASE_URL')
         cmd = """SELECT * FROM mole_evidences"""
         try:
             # create a new database connection by calling the connect() function
-            con = connections['default']
+            con = psycopg2.connect(DATABASE_URL)
 
             #  create a new cursor
             cur = con.cursor()

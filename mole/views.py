@@ -4,12 +4,12 @@ import sys
 import socketio
 from django.http import HttpResponse
 from .game_manager import GameManager
-from .db_init import *
 
 
 sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
+
 
 
 def index(_request):
@@ -23,9 +23,6 @@ def disconnect(sid):
 
 @sio.event
 def create_game(sid, _message):
-    # Initialize the database the first time
-    db_init()
-
     token = games.create_game(sid)
 
     # game host also joins room for debugging

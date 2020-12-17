@@ -1,5 +1,5 @@
 import os
-import random
+from random import random
 
 import psycopg2
 from django.db import connection
@@ -173,7 +173,7 @@ def create_mime_pairs():
         mime_pair.save()
 
 
-def create_would_you_rather_pairs():
+def create_would_you_rather_pairs():evidences_db
     wyr_pairs = [
         WouldYouRatherPair(a='Haut, die farblich Deine Gefühle widerspiegelt', b='Tattoos, die immer besagen, was Du die Nacht zuvor getan hast'),
         WouldYouRatherPair(a='Unsichtbar sein', b='Fliegen können'),
@@ -191,7 +191,8 @@ def create_would_you_rather_pairs():
         wyr_pair.save()
 
 
-evidences = []
+global evidences_db
+evidences_db = []
 
 
 def generate_solution_evidences():
@@ -256,7 +257,8 @@ def db_init():
     create_mime_pairs()
     print("Created all db objects")
 
-    evidences = generate_solution_evidences()
+    evidences_db = generate_solution_evidences()
+    print(evidences_db)
 
 
 def array_2_string(array):

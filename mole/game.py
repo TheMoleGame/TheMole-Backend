@@ -145,34 +145,9 @@ class Game:
         self.host_sid = host_sid
         self.token = token
 
+        # Create Evidence combination with new database connection
         DATABASES['game'] = db_from_env
-        #  create Evidence combination
         self.evidences = self.generate_solution_evidences()
-
-        DATABASE_URL = os.environ.get('DATABASE_URL')
-        cmd = """SELECT * FROM mole_evidence"""
-        try:
-            # create a new database connection by calling the connect() function
-            #con = psycopg2.connect(DATABASE_URL)
-            con = connections['game']
-
-            #  create a new cursor
-            cur = con.cursor()
-            cur.execute(cmd)
-            test = cur.fetchall()
-            print(test)
-
-            # close the communication with the HerokuPostgres
-            cur.close()
-        except Exception as error:
-            print('Could not connect to the Database.')
-            print('Cause: {}'.format(error))
-
-        finally:
-            # close the communication with the database server by calling the close()
-            if con is not None:
-                con.close()
-                print('Database connection closed.')
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):
@@ -495,7 +470,6 @@ class Game:
         evidences.append(random.choice(all_mean_of_escape_daytime))
         evidences.append(random.choice(all_mean_of_escape_districts))
 
-        # print(evidences)
         return evidences
 
 

@@ -212,6 +212,7 @@ def db_init():
 
         #  create a new cursor
         cur = con.cursor()
+        cur.execute(cmd)
         test = cur.fetchall()
         print('\n\n\ntestsdafsggjfjsrsrgdhhsgagfsg\n\n\n')
         print(test)

@@ -65,7 +65,7 @@ def join_game(sid, message):
 @sio.event
 def send_evidence(sid, evidence):
     player_socket = sio.of('/').sockets.get(sid)
-    player_socket.emit('get_evidence', evidence);
+    player_socket.emit('get_evidence', evidence)
 
 
 @sio.event

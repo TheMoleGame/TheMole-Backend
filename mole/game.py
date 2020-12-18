@@ -269,6 +269,8 @@ class Game:
                     )
 
             self.turn_state.choosing_occasion(occasion_choices)
+        elif self.get_team_pos().type == FieldType.Goal:  # check occasion field
+            self.game_over(self, sio)
         else:
             self.next_player(sio)
 
@@ -358,6 +360,19 @@ class Game:
 
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
+
+    def game_over(self, sio):
+        # let everybody guess one last time?
+        # check if any players evidences match the goal evidences
+        result = "lose"
+        for player in self.players:
+          # players evidences == puzzle
+          # check if players evidences match solution evidences
+          # as soon as one matches return win
+          if player.
+          result = "win"
+
+        self.send_to_all(sio, 'gameover', result)
 
 
 def _occasion_matches(left, right):

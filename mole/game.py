@@ -164,7 +164,10 @@ class Game:
 
         # TODO: Serialize Map and send with init packet
         for player in self.players:
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None}, room=player.sid)
+            inv = player.inventory[0]
+            evidence = {'name': inv[1], 'type': inv[2], 'subtype': inv[3]}
+            print('evidence: {}'.format(evidence))
+            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence}, room=player.sid)
 
         self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
 

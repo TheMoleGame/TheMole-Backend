@@ -1,8 +1,11 @@
 from enum import Enum
 import random
-import pyllist
 
+from pyllist import dllist, dllistnode
+import dj_database_url
 from .game_character import *
+from .models import *
+from mole_backend.settings import DATABASES
 
 
 OCCASIONS = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
@@ -50,9 +53,14 @@ class Game:
     def __init__(self, sio, token, host_sid, player_infos):
         self.host_sid = host_sid
         self.token = token
+
+        # Create Evidence combination with new database connection
+        DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
+        self.evidences = self.generate_solution_evidences()
+
         self.players = []
         for player_id, player_info in enumerate(player_infos):
-            self.players.append(Player(player_id, player_info['name'], player_info['sid']))
+            self.players.append(Player(player_id, player_info['name'], player_info['sid'], random.choice(self.evidences)))
 
         # Choose random mole
         random.choice(self.players).is_mole = True
@@ -67,14 +75,9 @@ class Game:
         # print(self.map_to_json())
         # self.move(2, self.players[0])  # test case move
 
-        #  create Evidence combination
-        self.puzzle = []
-        # self.puzzle.append(Evidence("Frau Tippie", "P"))
-        # self.puzzle.append(Evidence("Bathtub", "L"))
-        # self.puzzle.append(Evidence("Revolver", "W"))
-
         self.move_multiplier = 1
 
+        # TODO: Serialize Map and send with init packet
         for player in self.players:
             sio.emit(
                 'init',
@@ -87,6 +90,10 @@ class Game:
                 room=player.sid
             )
         self.send_to_all(sio, 'players_turn', {'player_id': self.players[0].player_id})
+            inv = player.inventory[0]
+            evidence = {'name': inv[1], 'type': inv[2], 'subtype': inv[3]}
+            print('evidence: {}'.format(evidence))
+            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence}, room=player.sid)
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -362,6 +369,65 @@ class Game:
 
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
+
+    def generate_solution_evidences(self):
+        """
+        :rtype: Evidence
+        :return: List of evidences to win the game
+        """
+        evidences = []
+
+        all_weapon_objects = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.WEAPON,
+                                                     evidence_subtype=EvidenceSubtype.OBJECT).values_list()
+        all_weapon_colors = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.WEAPON,
+                                                    evidence_subtype=EvidenceSubtype.COLOR).values_list()
+        all_weapon_conditions = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.WEAPON,
+                                                        evidence_subtype=EvidenceSubtype.CONDITION).values_list()
+        evidences.append(random.choice(all_weapon_objects))
+        evidences.append(random.choice(all_weapon_colors))
+        evidences.append(random.choice(all_weapon_conditions))
+
+        all_crime_scene_locations = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.CRIME_SCENE,
+                                                            evidence_subtype=EvidenceSubtype.LOCATION).values_list()
+        all_crime_scene_temperature = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.CRIME_SCENE,
+                                                              evidence_subtype=EvidenceSubtype.TEMPERATURE).values_list()
+        all_crime_scene_districts = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.CRIME_SCENE,
+                                                            evidence_subtype=EvidenceSubtype.DISTRICT).values_list()
+        evidences.append(random.choice(all_crime_scene_locations))
+        evidences.append(random.choice(all_crime_scene_temperature))
+        evidences.append(random.choice(all_crime_scene_districts))
+
+        all_offender_escape_clothings = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.OFFENDER,
+                                                                evidence_subtype=EvidenceSubtype.CLOTHING).values_list()
+        all_offender_escape_sizes = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.OFFENDER,
+                                                            evidence_subtype=EvidenceSubtype.SIZE).values_list()
+        all_offender_escape_characteristics = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.OFFENDER,
+                                                                      evidence_subtype=EvidenceSubtype.CHARACTERISTIC).values_list()
+        evidences.append(random.choice(all_offender_escape_clothings))
+        evidences.append(random.choice(all_offender_escape_sizes))
+        evidences.append(random.choice(all_offender_escape_characteristics))
+
+        all_time_of_crime_weekdays = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.TIME_OF_CRIME,
+                                                             evidence_subtype=EvidenceSubtype.WEEKDAY).values_list()
+        all_time_of_crime_daytimes = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.TIME_OF_CRIME,
+                                                             evidence_subtype=EvidenceSubtype.DAYTIME).values_list()
+        all_time_of_crime_times = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.TIME_OF_CRIME,
+                                                          evidence_subtype=EvidenceSubtype.TIME).values_list()
+        evidences.append(random.choice(all_time_of_crime_weekdays))
+        evidences.append(random.choice(all_time_of_crime_daytimes))
+        evidences.append(random.choice(all_time_of_crime_times))
+
+        all_mean_of_escape_conditions = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
+                                                                evidence_subtype=EvidenceSubtype.MODEL).values_list()
+        all_mean_of_escape_daytime = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
+                                                             evidence_subtype=EvidenceSubtype.COLOR).values_list()
+        all_mean_of_escape_districts = Evidence.objects.using('game_init').filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
+                                                               evidence_subtype=EvidenceSubtype.ESCAPE_ROUTE).values_list()
+        evidences.append(random.choice(all_mean_of_escape_conditions))
+        evidences.append(random.choice(all_mean_of_escape_daytime))
+        evidences.append(random.choice(all_mean_of_escape_districts))
+
+        return evidences
 
 
 def _occasion_matches(left, right):

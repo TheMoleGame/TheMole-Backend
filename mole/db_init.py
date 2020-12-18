@@ -1,3 +1,9 @@
+import os
+import random
+
+import psycopg2
+from django.db import connection
+from django.db import connections
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 
@@ -187,10 +193,19 @@ def create_would_you_rather_pairs():
 
 
 def db_init():
+    # First delete data
+    Evidence.objects.all().delete()
+    EventField.objects.all().delete()
+    WouldYouRatherPair.objects.all().delete()
+    MimePair.objects.all().delete()
+    print("Deleted all db objects")
+
+    # Then create data to be able to access them later
     create_event_fields()
     create_evidences()
     create_would_you_rather_pairs()
     create_mime_pairs()
+    print("Created all db objects")
 
 
 def array_2_string(array):

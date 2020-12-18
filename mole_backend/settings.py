@@ -85,6 +85,8 @@ WSGI_APPLICATION = "mole_backend.wsgi.application"
 DATABASES = {}
 DATABASES['default'] = dj_database_url.config(conn_max_age=600)
 
+DISABLE_SERVER_SIDE_CURSORS = True
+
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 

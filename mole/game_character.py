@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 
 class CharacterInterface(metaclass=ABCMeta):
@@ -19,9 +20,15 @@ class Player(CharacterInterface):
 
     def __init__(self, player_id, name, sid, is_mole=False):
         self.player_id = player_id
+    def __init__(self, id, name, sid, evidence=None, is_mole=False):
+        self.id = id
         self._name = name
         self.is_mole = is_mole
-        self.inventory = []
+
+        self.inventory = []  # type: List[Evidence]
+        if evidence is not None:
+            self.inventory.append(evidence)
+
         self.sid = sid
         self.disabled = False
 
@@ -50,9 +57,11 @@ class Devil(CharacterInterface):
 
     def __init__(self, name):
         self._name = name
-        self.distance_to_team = 3  # ? to define
+        self.distance_to_team = 3 # ? to define
 
     def generate_occasion(self) -> int:
         # TODO
         # speed_up as option
         pass
+
+

@@ -5,7 +5,7 @@ from pyllist import dllist, dllistnode
 import dj_database_url
 from .game_character import *
 from .models import *
-from mole_backend.settings import DATABASES, db_from_env
+from mole_backend.settings import DATABASES
 
 
 def small_map():
@@ -142,7 +142,7 @@ class Game:
         self.token = token
 
         # Create Evidence combination with new database connection
-        DATABASES['game_init'] = db_from_env
+        DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
         self.evidences = self.generate_solution_evidences()
 
         self.players = []

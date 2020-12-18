@@ -11,7 +11,6 @@ basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
 
-
 def index(_request):
     return HttpResponse(open(os.path.join(basedir, 'static/index.html')))
 

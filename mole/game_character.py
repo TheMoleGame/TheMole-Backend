@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+from typing import List
 
 import pyllist
 
@@ -26,7 +27,7 @@ class Player(CharacterInterface):
         self._name = name
         self.is_mole = is_mole
 
-        self.inventory = []
+        self.inventory = []  # type: List[Evidence]
         if evidence is not None:
             self.inventory.append(evidence)
 

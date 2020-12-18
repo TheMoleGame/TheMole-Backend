@@ -270,6 +270,8 @@ class Game:
                     )
 
             self.turn_state.choosing_occasion(occasion_choices)
+        elif self.get_team_pos().type == FieldType.Goal:  # check occasion field
+            self.game_over(self, sio)
         else:
             print("stepped on normal field")
             self.next_player(sio)
@@ -420,6 +422,17 @@ class Game:
         evidences.append(random.choice(all_mean_of_escape_districts))
 
         return evidences
+
+    def game_over(self, sio):
+        # let everybody guess one last time?
+        # check if any players evidences match the goal evidences
+        result = "lose"
+        for player in self.players:
+            if player.inventory == self.evidences:
+                result = "win"
+                break
+
+        self.send_to_all(sio, 'gameover', result)
 
 
 def _occasion_matches(left, right):

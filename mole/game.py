@@ -1,7 +1,7 @@
 from enum import Enum
 import random
 
-from pyllist import dllist, dllistnode
+import pyllist
 import dj_database_url
 from .game_character import *
 from .models import *
@@ -79,21 +79,13 @@ class Game:
 
         # TODO: Serialize Map and send with init packet
         for player in self.players:
-            sio.emit(
-                'init',
-                {
-                    'player_id': player.player_id,
-                    'players': self._get_player_info(),
-                    'is_mole': player.is_mole,
-                    'map': self.map_to_json()
-                },
-                room=player.sid
-            )
-        self.send_to_all(sio, 'players_turn', {'player_id': self.players[0].player_id})
             inv = player.inventory[0]
             evidence = {'name': inv[1], 'type': inv[2], 'subtype': inv[3]}
             print('evidence: {}'.format(evidence))
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence}, room=player.sid)
+            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence},
+                     room=player.sid)
+
+        self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))

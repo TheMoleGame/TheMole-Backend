@@ -3,7 +3,7 @@ import random
 
 import pyllist
 import dj_database_url
-from .game_character import *
+from .game_character import Player
 from .models import *
 from mole_backend.settings import DATABASES
 
@@ -53,7 +53,7 @@ class Game:
     def __init__(self, sio, token, host_sid, player_infos):
         self.host_sid = host_sid
         self.token = token
-
+        self.sio = sio
         # Create Evidence combination with new database connection
         DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
         self.evidences = self.generate_solution_evidences()
@@ -82,10 +82,10 @@ class Game:
             inv = player.inventory[0]
             evidence = {'name': inv[1], 'type': inv[2], 'subtype': inv[3]}
             print('evidence: {}'.format(evidence))
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence},
+            sio.emit('init', {'id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence},
                      room=player.sid)
 
-        self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
+        self.send_to_all(sio, 'players_turn', {'id': self.players[0].player_id})
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -113,14 +113,15 @@ class Game:
             else:
                 self.team_pos = self.team_pos.prev  # get next field
             if self.team_pos is None:
-                raise NotImplementedError('End of map reached')
-            field = self.get_team_pos()
-            if field.type == FieldType.MINIGAME:
-                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
-                remaining_distance = distance - i - 1
-                if not forwards:
-                    remaining_distance = -remaining_distance
-                return remaining_distance
+                self.game_over() #raise NotImplementedError('End of map reached')
+            else:
+                field = self.get_team_pos()
+                if field.type == FieldType.MINIGAME:
+                    self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
+                    remaining_distance = distance - i - 1
+                    if not forwards:
+                        remaining_distance = -remaining_distance
+                    return remaining_distance
         return None
 
     def check_end_turn(self, sio):
@@ -143,7 +144,7 @@ class Game:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
             else:
-                self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
+                self.send_to_all(sio, 'players_turn', {'id': self.get_current_player().player_id})
                 break
         self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
 
@@ -254,27 +255,30 @@ class Game:
             self.next_player(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion")
-            occasion_choices = _random_occasion_choices()
-            for player in self.players:
-                if self.get_current_player().sid == player.sid:
-                    sio.emit(
-                        'occasion',
-                        {'player_id:': self.get_current_player().player_id, 'choices': occasion_choices},
-                        room=player.sid
-                    )
-                else:
-                    sio.emit(
-                        'occasion',
-                        {'player_id:': self.get_current_player().player_id},
-                        room=player.sid
-                    )
+            #occasion_choices = _random_occasion_choices()
+            #for player in self.players:
+            #    if self.get_current_player().sid == player.sid:
+            #        sio.emit(
+            #            'occasion',
+            #            {'player_id:': self.get_current_player().player_id, 'choices': occasion_choices},
+            #            room=player.sid
+            #        )
+            #    else:
+            #        sio.emit(
+            #            'occasion',
+            #            {'player_id:': self.get_current_player().player_id},
+            #            room=player.sid
+            #        )
 
-            self.turn_state.choosing_occasion(occasion_choices)
-        elif self.get_team_pos().type == FieldType.Goal:  # check occasion field
-            self.game_over(self, sio)
+           # self.turn_state.choosing_occasion(occasion_choices)
+        #elif self.get_team_pos().type == FieldType.Goal:  # check occasion field
+            self.game_over()
         else:
             print("stepped on normal field")
             self.next_player(sio)
+
+    def get_current_player(self):
+        return self.players[self.turn_state.player_index]
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
         """
@@ -352,9 +356,6 @@ class Game:
         else:
             sio.emit(event, message, room=self.token)
 
-    def get_current_player(self):
-        return self.players[self.turn_state.player_index]
-
     def get_player_by_name(self, name):
         for player in self.players:
             if player.name == name:
@@ -423,16 +424,20 @@ class Game:
 
         return evidences
 
-    def game_over(self, sio):
+    def game_over(self):
         # let everybody guess one last time?
         # check if any players evidences match the goal evidences
-        result = "lose"
+        result = " lose"
         for player in self.players:
             if player.inventory == self.evidences:
-                result = "win"
+                result = "  win  "
                 break
 
-        self.send_to_all(sio, 'gameover', result)
+        print('---------------------------------------------\n' +
+              '--------------GAME OVER----------------------\n' +
+              '---------------------------------------------\n' +
+              '----------------'+result+'------------------------')
+        self.send_to_all(self.sio, 'gameover', result)
 
 
 def _occasion_matches(left, right):

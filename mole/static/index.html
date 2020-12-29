@@ -48,7 +48,7 @@
         });
         player_socket.on('init', data => { console.log(name + ' got init:', data) });
         player_socket.on('move', data => { console.log(name + ' got move. New position:', data) });
-        player_socket.on('chaser_move', data => { console.log(name + ' got chaser move:', data) });
+        player_socket.on('follower_move', data => { console.log(name + ' got follower move:', data) });
         player_socket.on('minigame', data => { console.log(name + ' got minigame:', data) });
         player_socket.on('occasion', data => { console.log(name + ' got occasion:', data) });
         player_socket.on('player_infos', data => { console.log(name + ' got player infos:', data) });

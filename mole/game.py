@@ -97,6 +97,13 @@ class Game:
         """
         return self.team_pos.value
 
+    def get_follower_pos(self):
+        """
+        :rtype: Field
+        :return: The Field the devil is standing on
+        """
+        return self.devil_pos.value
+
     def move_player(self, distance: int) -> int or None:
         """
         Moves the player over the map. Does not handle occasions.
@@ -127,8 +134,19 @@ class Game:
         if self.turn_state.player_index == len(self.players):
             self.turn_state.player_index = 0
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
-            self.send_to_all(sio, 'chaser_move', random.randint(1, 6))
+            self.follower_move(sio)
             self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
+
+    def follower_move(self, sio):
+        num_fields = random.randint(1, 6)
+        for i in range(num_fields):
+            self.devil_pos = self.devil_pos.next
+            if self.devil_pos is None:
+                raise Exception('Follower reached end of map')  # TODO
+            if self.get_follower_pos().index == self.get_team_pos().index:
+                raise Exception('Follower caught players')  # TODO
+
+            self.send_to_all(sio, 'follower_move', )
 
     def next_player(self, sio):
         """

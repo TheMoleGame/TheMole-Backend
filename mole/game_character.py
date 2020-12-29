@@ -1,6 +1,8 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
+from mole.models import Evidence
+
 
 class CharacterInterface(metaclass=ABCMeta):
     @property
@@ -18,10 +20,8 @@ class Player(CharacterInterface):
     def name(self):
         return self._name
 
-    def __init__(self, player_id, name, sid, is_mole=False):
+    def __init__(self, player_id, name, sid, evidence=None, is_mole=False):
         self.player_id = player_id
-    def __init__(self, id, name, sid, evidence=None, is_mole=False):
-        self.id = id
         self._name = name
         self.is_mole = is_mole
 

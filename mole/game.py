@@ -69,7 +69,7 @@ class Game:
 
         self.map = small_map_shortcut()  # small test map
         self.team_pos: pyllist.dllistnode = self.map.nodeat(4)
-        self.devil_pos: pyllist.dllistnode = self.map.nodeat(0)
+        self.follower_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 
         # print(self.map_to_json())
@@ -102,7 +102,7 @@ class Game:
         :rtype: Field
         :return: The Field the devil is standing on
         """
-        return self.devil_pos.value
+        return self.follower_pos.value
 
     def move_player(self, distance: int) -> int or None:
         """
@@ -140,13 +140,13 @@ class Game:
     def follower_move(self, sio):
         num_fields = random.randint(1, 6)
         for i in range(num_fields):
-            self.devil_pos = self.devil_pos.next
-            if self.devil_pos is None:
+            self.follower_pos = self.follower_pos.next
+            if self.follower_pos is None:
                 raise Exception('Follower reached end of map')  # TODO
             if self.get_follower_pos().index == self.get_team_pos().index:
                 raise Exception('Follower caught players')  # TODO
 
-            self.send_to_all(sio, 'follower_move', )
+        self.send_to_all(sio, 'follower_move', self.get_follower_pos().index)
 
     def next_player(self, sio):
         """
@@ -175,7 +175,7 @@ class Game:
             result += ' - '+str(field.type.name)
             if node == self.team_pos:
                 result += '+Team'
-            if node == self.devil_pos:
+            if node == self.follower_pos:
                 result += '+ Devil'
         print(result)
         print('---------------------------------------------------')

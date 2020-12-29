@@ -1,9 +1,3 @@
-import os
-import random
-
-import psycopg2
-from django.db import connection
-from django.db import connections
 from .models import EventField, EventFieldType, Evidence, EvidenceSubtype, EvidenceType, MimePair, WouldYouRatherPair
 
 

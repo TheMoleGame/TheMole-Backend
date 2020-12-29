@@ -1,13 +1,15 @@
+import os
 from enum import Enum
 import random
 
+from .models import Evidence, EvidenceType, EvidenceSubtype
 import pyllist
 import dj_database_url
 from .game_character import *
-from .models import *
 from mole_backend.settings import DATABASES
 
 
+ON_HEROKU = os.environ.get('ON_HEROKU')
 OCCASIONS = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 
 
@@ -55,8 +57,11 @@ class Game:
         self.token = token
 
         # Create Evidence combination with new database connection
-        DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
-        self.evidences = self.generate_solution_evidences()
+        if ON_HEROKU:
+            DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
+        else:
+            DATABASES['game_init'] = DATABASES['default']
+        self.evidences = Game.generate_solution_evidences()
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):
@@ -82,10 +87,10 @@ class Game:
             inv = player.inventory[0]
             evidence = {'name': inv[1], 'type': inv[2], 'subtype': inv[3]}
             print('evidence: {}'.format(evidence))
-            sio.emit('init', {'id': player.id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence},
+            sio.emit('init', {'id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'evidence': evidence},
                      room=player.sid)
 
-        self.send_to_all(sio, 'players_turn', {'id': self.players[0].id})
+        self.send_to_all(sio, 'players_turn', {'id': self.players[0].player_id})
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -380,7 +385,8 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-    def generate_solution_evidences(self):
+    @staticmethod
+    def generate_solution_evidences():
         """
         :rtype: Evidence
         :return: List of evidences to win the game

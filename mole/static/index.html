@@ -69,11 +69,11 @@
         const occasion_button = $('<input type="button" value="Random Occasion">');
         occasion_button.click(function() {
           const index = Math.floor(Math.random() * 6)
-          const occasion_type = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'move_backwards', 'hinder_dicing'][index]
+          const occasion_type = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing'][index]
           const message = {
             'type': occasion_type
           }
-          if (occasion_type === 'move_forwards' || occasion_type === 'move_backwards') {
+          if (occasion_type === 'move_forwards') {
             message['value'] = Math.floor(Math.random() * 4) + 1;
           }
           if (occasion_type === 'skip_player') {

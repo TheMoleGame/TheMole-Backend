@@ -251,6 +251,7 @@ class Game:
                 move_distance = 1
             self.handle_movement(sio, move_distance)
 
+        # TODO: Eventuell player_id und evidence_id (oder type + subtype) übergeben, anstatt name!
         elif player_choice.get('type') == 'share-evidence':
             player = self.get_player(sid)
 
@@ -276,13 +277,23 @@ class Game:
             pass
 
         elif player_choice.get('type') == 'validate-evidence':
+            player = self.get_player(sid)
+            successful_validation = self.validate_evidence(player_choice.get('evidences'))
+
+            sio.emit(
+                'validation_result',
+                {'successful_validation': successful_validation},
+                room=player.sid
+            )
+
             self.next_player(sio)
-            pass  # TODO
+            pass
         elif player_choice.get('type') == 'search-evidence':
+            player = self.get_player(sid)
+            evidence = None
+
             # Probability of 25 percent
             if random.random() < 0.25:
-                player = self.get_player(sid)
-
                 # Check what evidence the player does not have yet
                 missing_evidences = []
                 for evidence1 in player.inventory:
@@ -293,13 +304,13 @@ class Game:
 
                 evidence = random.choice(missing_evidences)
                 player.inventory.append(evidence)
-
                 evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
-                sio.emit(
-                    'receive_evidence',
-                    {'from:': -1, 'evidence': evidence},
-                    room=player.sid
-                )
+
+            sio.emit(
+                'receive_evidence',
+                {'from:': -1, 'evidence': evidence},
+                room=player.sid
+            )
 
             self.next_player(sio)
             pass
@@ -382,7 +393,6 @@ class Game:
             evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
             sio.emit(
                 'receive_evidence',
-                # TODO: From Scotland Yard! Which ID to use?
                 {'from:': -1, 'evidence': evidence},
                 room=player.sid
             )
@@ -442,6 +452,31 @@ class Game:
 
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
+
+    def validate_evidence(self, evidences):
+        """
+        :rtype: Evidence
+        :return: Bool
+        """
+        evidence_type = evidences[0]['type']
+        evidence_group = []
+
+        # Get all winner evidences with requested evidence type
+        for evidence in self.evidences:
+            if evidence[2] == evidence_type:
+                evidence_group.append(evidence)
+
+        # Check if player has all the evidences needed
+        for evidence in evidences:
+            if evidence['type'] != evidence_type:
+                return False
+
+            result = next((e for e in evidence_group if e[1] == evidence['name']), None)
+            if result is not None:
+                evidence_group.remove(result)
+
+        return len(evidence_group) == 0
+
 
     @staticmethod
     def generate_solution_evidences():

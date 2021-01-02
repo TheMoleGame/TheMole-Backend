@@ -228,6 +228,7 @@ class Game:
                 'success': true/false,
             }
         """
+
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name
@@ -246,12 +247,70 @@ class Game:
             if move_distance == 0:
                 move_distance = 1
             self.handle_movement(sio, move_distance)
+
+        # TODO: Eventuell player_id und evidence_id (oder type + subtype) übergeben, anstatt name!
         elif player_choice.get('type') == 'share-evidence':
-            pass  # TODO
+            player = self.get_player(sid)
+
+            # Get player with whom the evidence should be shared
+            share_with = next((player for player in self.players if player.name == player_choice.get('with')), None)
+            if share_with is None:
+                raise InvalidUserException('Got invalid player name (with: {})'.format(player_choice.get('with')))
+
+            # Get evidence which should be shared
+            share_evidence = next((evidence for evidence in player.inventory if evidence[1] == player_choice.get('evidence')), None)
+            if share_evidence is None:
+                raise InvalidUserException('Got invalid evidence name (evidence: {})'.format(player_choice.get('evidence')))
+            share_with.inventory.append(share_evidence)
+
+            # Share evidence with player
+            share_evidence = {'name': share_evidence[1], 'type': share_evidence[2], 'subtype': share_evidence[3]}
+            sio.emit(
+                'receive_evidence',
+                {'from:': player.player_id, 'evidence': share_evidence},
+                room=share_with.sid
+            )
+            self.next_player(sio)
+            pass
+
         elif player_choice.get('type') == 'validate-evidence':
-            pass  # TODO
+            player = self.get_player(sid)
+            successful_validation = self.validate_evidence(player_choice.get('evidences'))
+
+            sio.emit(
+                'validation_result',
+                {'successful_validation': successful_validation},
+                room=player.sid
+            )
+
+            self.next_player(sio)
+            pass
         elif player_choice.get('type') == 'search-evidence':
-            pass  # TODO
+            player = self.get_player(sid)
+            evidence = None
+
+            # Probability of 25 percent
+            if random.random() < 0.25:
+                # Check what evidence the player does not have yet
+                missing_evidences = []
+                for evidence1 in player.inventory:
+                    for evidence2 in self.evidences:
+                        if evidence1[0] == evidence2[0]:
+                            missing_evidences.append(evidence1)
+                            break
+
+                evidence = random.choice(missing_evidences)
+                player.inventory.append(evidence)
+                evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
+
+            sio.emit(
+                'receive_evidence',
+                {'from:': -1, 'evidence': evidence},
+                room=player.sid
+            )
+
+            self.next_player(sio)
+            pass
 
         self.check_end_turn(sio)
 
@@ -324,8 +383,18 @@ class Game:
             )
 
         if occasion_type == 'found_evidence':
-            # TODO: add evidence and inform client(s)
+            evidence = random.choice(self.evidences)
+            player = self.get_player(sid)
+            player.inventory.append(evidence)
+
+            evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
+            sio.emit(
+                'receive_evidence',
+                {'from:': -1, 'evidence': evidence},
+                room=player.sid
+            )
             self.next_player(sio)
+
         elif occasion_type == 'move_forwards':
             num_fields = chosen_occasion.get('value')
             if num_fields is None:
@@ -381,61 +450,85 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-    def generate_solution_evidences(self):
+    def validate_evidence(self, evidences):
+        """
+        :rtype: Evidence
+        :return: Bool
+        """
+        evidence_type = evidences[0]['type']
+        evidence_group = []
+
+        # Get all winner evidences with requested evidence type
+        for evidence in self.evidences:
+            if evidence[2] == evidence_type:
+                evidence_group.append(evidence)
+
+        # Check if player has all the evidences needed
+        for evidence in evidences:
+            if evidence['type'] != evidence_type:
+                return False
+
+            result = next((e for e in evidence_group if e[1] == evidence['name']), None)
+            if result is not None:
+                evidence_group.remove(result)
+
+        return len(evidence_group) == 0
+
+
+    @staticmethod
+    def generate_solution_evidences():
         """
         :rtype: Evidence
         :return: List of evidences to win the game
         """
         evidences = []
 
-        db_connection_name = 'game_init{}'.format(self.token)
-
-        all_weapon_objects = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.WEAPON,
-                                                     evidence_subtype=EvidenceSubtype.OBJECT).values_list()
-        all_weapon_colors = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.WEAPON,
-                                                    evidence_subtype=EvidenceSubtype.COLOR).values_list()
-        all_weapon_conditions = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.WEAPON,
-                                                        evidence_subtype=EvidenceSubtype.CONDITION).values_list()
+        all_weapon_objects = Evidence.objects.using('game_init').filter(type=EvidenceType.WEAPON,
+                                                                        subtype=EvidenceSubtype.OBJECT).values_list()
+        all_weapon_colors = Evidence.objects.using('game_init').filter(type=EvidenceType.WEAPON,
+                                                    subtype=EvidenceSubtype.COLOR).values_list()
+        all_weapon_conditions = Evidence.objects.using('game_init').filter(type=EvidenceType.WEAPON,
+                                                        subtype=EvidenceSubtype.CONDITION).values_list()
         evidences.append(random.choice(all_weapon_objects))
         evidences.append(random.choice(all_weapon_colors))
         evidences.append(random.choice(all_weapon_conditions))
 
-        all_crime_scene_locations = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.CRIME_SCENE,
-                                                            evidence_subtype=EvidenceSubtype.LOCATION).values_list()
-        all_crime_scene_temperature = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.CRIME_SCENE,
-                                                              evidence_subtype=EvidenceSubtype.TEMPERATURE).values_list()
-        all_crime_scene_districts = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.CRIME_SCENE,
-                                                            evidence_subtype=EvidenceSubtype.DISTRICT).values_list()
+        all_crime_scene_locations = Evidence.objects.using('game_init').filter(type=EvidenceType.CRIME_SCENE,
+                                                            subtype=EvidenceSubtype.LOCATION).values_list()
+        all_crime_scene_temperature = Evidence.objects.using('game_init').filter(type=EvidenceType.CRIME_SCENE,
+                                                              subtype=EvidenceSubtype.TEMPERATURE).values_list()
+        all_crime_scene_districts = Evidence.objects.using('game_init').filter(type=EvidenceType.CRIME_SCENE,
+                                                            subtype=EvidenceSubtype.DISTRICT).values_list()
         evidences.append(random.choice(all_crime_scene_locations))
         evidences.append(random.choice(all_crime_scene_temperature))
         evidences.append(random.choice(all_crime_scene_districts))
 
-        all_offender_escape_clothings = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.OFFENDER,
-                                                                evidence_subtype=EvidenceSubtype.CLOTHING).values_list()
-        all_offender_escape_sizes = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.OFFENDER,
-                                                            evidence_subtype=EvidenceSubtype.SIZE).values_list()
-        all_offender_escape_characteristics = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.OFFENDER,
-                                                                      evidence_subtype=EvidenceSubtype.CHARACTERISTIC).values_list()
+        all_offender_escape_clothings = Evidence.objects.using('game_init').filter(type=EvidenceType.OFFENDER,
+                                                                subtype=EvidenceSubtype.CLOTHING).values_list()
+        all_offender_escape_sizes = Evidence.objects.using('game_init').filter(type=EvidenceType.OFFENDER,
+                                                            subtype=EvidenceSubtype.SIZE).values_list()
+        all_offender_escape_characteristics = Evidence.objects.using('game_init').filter(type=EvidenceType.OFFENDER,
+                                                                      subtype=EvidenceSubtype.CHARACTERISTIC).values_list()
         evidences.append(random.choice(all_offender_escape_clothings))
         evidences.append(random.choice(all_offender_escape_sizes))
         evidences.append(random.choice(all_offender_escape_characteristics))
 
-        all_time_of_crime_weekdays = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.TIME_OF_CRIME,
-                                                             evidence_subtype=EvidenceSubtype.WEEKDAY).values_list()
-        all_time_of_crime_daytimes = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.TIME_OF_CRIME,
-                                                             evidence_subtype=EvidenceSubtype.DAYTIME).values_list()
-        all_time_of_crime_times = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.TIME_OF_CRIME,
-                                                          evidence_subtype=EvidenceSubtype.TIME).values_list()
+        all_time_of_crime_weekdays = Evidence.objects.using('game_init').filter(type=EvidenceType.TIME_OF_CRIME,
+                                                             subtype=EvidenceSubtype.WEEKDAY).values_list()
+        all_time_of_crime_daytimes = Evidence.objects.using('game_init').filter(type=EvidenceType.TIME_OF_CRIME,
+                                                             subtype=EvidenceSubtype.DAYTIME).values_list()
+        all_time_of_crime_times = Evidence.objects.using('game_init').filter(type=EvidenceType.TIME_OF_CRIME,
+                                                          subtype=EvidenceSubtype.TIME).values_list()
         evidences.append(random.choice(all_time_of_crime_weekdays))
         evidences.append(random.choice(all_time_of_crime_daytimes))
         evidences.append(random.choice(all_time_of_crime_times))
 
-        all_mean_of_escape_conditions = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
-                                                                evidence_subtype=EvidenceSubtype.MODEL).values_list()
-        all_mean_of_escape_daytime = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
-                                                             evidence_subtype=EvidenceSubtype.COLOR).values_list()
-        all_mean_of_escape_districts = Evidence.objects.using(db_connection_name).filter(evidence_type=EvidenceType.MEANS_OF_ESCAPE,
-                                                               evidence_subtype=EvidenceSubtype.ESCAPE_ROUTE).values_list()
+        all_mean_of_escape_conditions = Evidence.objects.using('game_init').filter(type=EvidenceType.MEANS_OF_ESCAPE,
+                                                                subtype=EvidenceSubtype.MODEL).values_list()
+        all_mean_of_escape_daytime = Evidence.objects.using('game_init').filter(type=EvidenceType.MEANS_OF_ESCAPE,
+                                                             subtype=EvidenceSubtype.COLOR).values_list()
+        all_mean_of_escape_districts = Evidence.objects.using('game_init').filter(type=EvidenceType.MEANS_OF_ESCAPE,
+                                                               subtype=EvidenceSubtype.ESCAPE_ROUTE).values_list()
         evidences.append(random.choice(all_mean_of_escape_conditions))
         evidences.append(random.choice(all_mean_of_escape_daytime))
         evidences.append(random.choice(all_mean_of_escape_districts))

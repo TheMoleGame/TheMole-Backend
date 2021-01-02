@@ -60,6 +60,7 @@
         player_socket.on('move', data => { console.log(name + ' got move. New position:', data) });
         player_socket.on('follower_move', data => { console.log(name + ' got follower move:', data) });
         player_socket.on('minigame', data => { console.log(name + ' got minigame:', data) });
+        player_socket.on('validation_result', data => { console.log(name + ' got validation result:', data) });
 
         player_socket.on('receive_evidence', data => {
           console.log(name + ' received evidence:', data)

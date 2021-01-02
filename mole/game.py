@@ -17,6 +17,7 @@ class TurnState:
         PLAYER_CHOOSING_OCCASION = 1
         PLAYING_MINIGAME = 2
         DEVIL_MOVE = 3
+        GAME_OVER = 4
 
     def __init__(self):
         self.player_index = 0
@@ -33,6 +34,10 @@ class TurnState:
     def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
         self.occasion_choices = occasion_choices
+
+    def game_over(self, result):
+        self.player_turn_state = TurnState.PlayerTurnState.Game_Over
+        self.occasion_choices = None
 
 
 def _random_occasion_choices():
@@ -255,6 +260,7 @@ class Game:
             self.next_player(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion")
+            # commented by Gameover Branch
             #occasion_choices = _random_occasion_choices()
             #for player in self.players:
             #    if self.get_current_player().sid == player.sid:
@@ -271,7 +277,8 @@ class Game:
             #        )
 
            # self.turn_state.choosing_occasion(occasion_choices)
-        #elif self.get_team_pos().type == FieldType.Goal:  # check occasion field
+            self.game_over()
+        elif self.get_team_pos().type == FieldType.Goal:
             self.game_over()
         else:
             print("stepped on normal field")
@@ -425,14 +432,15 @@ class Game:
         return evidences
 
     def game_over(self):
+        self.turnstate.game_over()
+        # if mole player won
         # let everybody guess one last time?
         # check if any players evidences match the goal evidences
-        result = " lose"
+        result = "Mole wins"
         for player in self.players:
             if player.inventory == self.evidences:
-                result = "  win  "
+                result = "Team wins"
                 break
-
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +

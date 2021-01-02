@@ -9,7 +9,6 @@ from .game_character import *
 from mole_backend.settings import DATABASES
 
 
-ON_HEROKU = os.environ.get('ON_HEROKU')
 OCCASIONS = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 
 
@@ -57,10 +56,8 @@ class Game:
         self.token = token
 
         # Create Evidence combination with new database connection
-        if ON_HEROKU:
-            DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
-        else:
-            DATABASES['game_init'] = DATABASES['default']
+        DATABASES['game_init'] = dj_database_url.config(conn_max_age=600)
+
         self.evidences = Game.generate_solution_evidences()
 
         self.players = []

@@ -231,7 +231,6 @@ class Game:
                 'success': true/false,
             }
         """
-        player = None
 
         if not self.players_turn(sid):
             player = self.get_player(sid)
@@ -253,29 +252,57 @@ class Game:
             self.handle_movement(sio, move_distance)
 
         elif player_choice.get('type') == 'share-evidence':
+            player = self.get_player(sid)
+
             # Get player with whom the evidence should be shared
             share_with = next((player for player in self.players if player.name == player_choice.get('with')), None)
             if share_with is None:
                 raise InvalidUserException('Got invalid player name (with: {})'.format(player_choice.get('with')))
 
             # Get evidence which should be shared
-            share_evidence = next((evidence for evidence in player.inventory if evidence.name == player_choice.get('evidence')), None)
+            share_evidence = next((evidence for evidence in player.inventory if evidence[1] == player_choice.get('evidence')), None)
             if share_evidence is None:
                 raise InvalidUserException('Got invalid evidence name (evidence: {})'.format(player_choice.get('evidence')))
             share_with.inventory.append(share_evidence)
 
+            # Share evidence with player
             share_evidence = {'name': share_evidence[1], 'type': share_evidence[2], 'subtype': share_evidence[3]}
             sio.emit(
                 'receive_evidence',
                 {'from:': player.player_id, 'evidence': share_evidence},
                 room=share_with.sid
             )
+            self.next_player(sio)
             pass
 
         elif player_choice.get('type') == 'validate-evidence':
+            self.next_player(sio)
             pass  # TODO
         elif player_choice.get('type') == 'search-evidence':
-            pass  # TODO wahrscheinlichkeit 25%
+            # Probability of 25 percent
+            if random.random() < 0.25:
+                player = self.get_player(sid)
+
+                # Check what evidence the player does not have yet
+                missing_evidences = []
+                for evidence1 in player.inventory:
+                    for evidence2 in self.evidences:
+                        if evidence1[0] == evidence2[0]:
+                            missing_evidences.append(evidence1)
+                            break
+
+                evidence = random.choice(missing_evidences)
+                player.inventory.append(evidence)
+
+                evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
+                sio.emit(
+                    'receive_evidence',
+                    {'from:': -1, 'evidence': evidence},
+                    room=player.sid
+                )
+
+            self.next_player(sio)
+            pass
 
         self.check_end_turn(sio)
 

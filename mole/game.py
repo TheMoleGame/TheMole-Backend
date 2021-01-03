@@ -134,6 +134,7 @@ class Game:
             self.turn_state.player_index = 0
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
             self.send_to_all(sio, 'chaser_move', random.randint(1, 6))
+            # if( self.game_over()
             self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
 
     def next_player(self, sio):
@@ -261,8 +262,8 @@ class Game:
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion")
             # commented by Gameover Branch
-            #occasion_choices = _random_occasion_choices()
-            #for player in self.players:
+            # occasion_choices = _random_occasion_choices()
+            # for player in self.players:
             #    if self.get_current_player().sid == player.sid:
             #        sio.emit(
             #            'occasion',
@@ -278,6 +279,11 @@ class Game:
 
            # self.turn_state.choosing_occasion(occasion_choices)
             self.game_over()
+        elif self.get_team_pos().type == FieldType.SHORTCUT:
+            # if minigame was won
+            self.team_pos = self.map.nodeat(self.get_team_pos().shortcut_field)
+            # if minigame was lost
+            # do nothing stay at spot
         elif self.get_team_pos().type == FieldType.Goal:
             self.game_over()
         else:

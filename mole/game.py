@@ -18,6 +18,7 @@ class TurnState:
         PLAYER_CHOOSING_OCCASION = 1
         PLAYING_MINIGAME = 2
         DEVIL_MOVE = 3
+        GAME_OVER = 4
 
     def __init__(self):
         self.player_index = 0
@@ -34,6 +35,10 @@ class TurnState:
     def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
         self.occasion_choices = occasion_choices
+
+    def game_over(self):
+        self.player_turn_state = TurnState.PlayerTurnState.Game_Over
+        self.occasion_choices = None
 
 
 def _random_occasion_choices():
@@ -54,7 +59,7 @@ class Game:
     def __init__(self, sio, token, host_sid, player_infos):
         self.host_sid = host_sid
         self.token = token
-
+        self.sio = sio
         # Create Evidence combination with new database connection
         DATABASES['game_init{}'.format(self.token)] = dj_database_url.config(conn_max_age=600)
 
@@ -121,14 +126,15 @@ class Game:
             else:
                 self.team_pos = self.team_pos.prev  # get next field
             if self.team_pos is None:
-                raise NotImplementedError('End of map reached')
-            field = self.get_team_pos()
-            if field.type == FieldType.MINIGAME:
-                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
-                remaining_distance = distance - i - 1
-                if not forwards:
-                    remaining_distance = -remaining_distance
-                return remaining_distance
+                self.game_over() #raise NotImplementedError('End of map reached')
+            else:
+                field = self.get_team_pos()
+                if field.type == FieldType.MINIGAME:
+                    self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
+                    remaining_distance = distance - i - 1
+                    if not forwards:
+                        remaining_distance = -remaining_distance
+                    return remaining_distance
         return None
 
     def check_end_turn(self, sio):
@@ -346,8 +352,15 @@ class Game:
                         {'player_id:': self.get_current_player().player_id},
                         room=player.sid
                     )
-
             self.turn_state.choosing_occasion(occasion_choices)
+        elif self.get_team_pos().type == FieldType.SHORTCUT:
+            # todo
+            # if minigame was won
+            self.team_pos = self.map.nodeat(self.get_team_pos().shortcut_field)
+            # if minigame was lost
+            # do nothing stay at spot or walk remaining moves
+        elif self.get_team_pos().type == FieldType.Goal:
+            self.game_over()
         else:
             print("stepped on normal field")
             self.next_player(sio)
@@ -474,7 +487,6 @@ class Game:
 
         return len(evidence_group) == 0
 
-
     def generate_solution_evidences(self):
         """
         :rtype: Evidence
@@ -534,6 +546,22 @@ class Game:
         evidences.append(random.choice(all_mean_of_escape_districts))
 
         return evidences
+
+    def game_over(self):
+        self.turn_state.game_over()
+        # if mole player won
+        # let everybody guess one last time?
+        # check if any players evidences match the goal evidences
+        result = "Mole wins"
+        for player in self.players:
+            if self.validate_evidence(player.inventory):
+                result = "Team wins"
+                break
+        print('---------------------------------------------\n' +
+              '--------------GAME OVER----------------------\n' +
+              '---------------------------------------------\n' +
+              '----------------'+result+'------------------------')
+        self.send_to_all(self.sio, 'gameover', result)
 
 
 def _occasion_matches(left, right):

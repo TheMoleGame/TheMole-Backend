@@ -90,6 +90,7 @@
         });
 
         player_socket.on('player_infos', data => { console.log(name + ' got player infos:', data) });
+        player_socket.on('gameover', data => { console.log(name + ' got player infos:', data) });
 
         player_socket.emit('join_game', {'token': token, 'name': 'test_player' + test_player_id});
         console.log('player "' + name + '" added');

@@ -1,4 +1,3 @@
-import os
 from enum import Enum
 import random
 
@@ -42,7 +41,7 @@ class TurnState:
 
 
 def _random_occasion_choices():
-    choices = random.choices(OCCASIONS, k=2)
+    choices = random.sample(OCCASIONS, 2)
 
     def _enrich_choice(choice):
         result = {'type': choice}
@@ -277,7 +276,6 @@ class Game:
                 room=share_with.sid
             )
             self.next_player(sio)
-            pass
 
         elif player_choice.get('type') == 'validate-evidence':
             player = self.get_player(sid)
@@ -290,7 +288,6 @@ class Game:
             )
 
             self.next_player(sio)
-            pass
         elif player_choice.get('type') == 'search-evidence':
             player = self.get_player(sid)
             evidence = None
@@ -316,7 +313,6 @@ class Game:
             )
 
             self.next_player(sio)
-            pass
 
         self.check_end_turn(sio)
 

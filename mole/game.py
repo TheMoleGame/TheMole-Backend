@@ -39,6 +39,14 @@ class TurnState:
         self.player_turn_state = TurnState.PlayerTurnState.Game_Over
         self.occasion_choices = None
 
+    def to_dict(self):
+        return {
+            'player_index': self.player_index,
+            'player_turn_state': self.player_turn_state.name,
+            'occasion_choices': self.occasion_choices,
+            'remaining_move_distance': self.remaining_move_distance,
+        }
+
 
 def _random_occasion_choices():
     choices = random.sample(OCCASIONS, 2)
@@ -125,7 +133,7 @@ class Game:
             else:
                 self.team_pos = self.team_pos.prev  # get next field
             if self.team_pos is None:
-                self.game_over() #raise NotImplementedError('End of map reached')
+                self.game_over()  # raise NotImplementedError('End of map reached')
             else:
                 field = self.get_team_pos()
                 if field.type == FieldType.MINIGAME:
@@ -237,7 +245,13 @@ class Game:
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name
-            raise InvalidUserException('Got invalid event from player "{}"'.format(player_name))
+            raise InvalidUserException(
+                'Got invalid event from player "{}".\nturn state: {}\nplayer event: {}'.format(
+                    player_name,
+                    self.turn_state.to_dict(),
+                    player_choice
+                )
+            )
 
         if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYER_CHOOSING:
             raise InvalidUserException(
@@ -350,12 +364,14 @@ class Game:
                     )
             self.turn_state.choosing_occasion(occasion_choices)
         elif self.get_team_pos().type == FieldType.SHORTCUT:
+            print("stepped on minigame field")
             # todo
             # if minigame was won
             self.team_pos = self.map.nodeat(self.get_team_pos().shortcut_field)
             # if minigame was lost
             # do nothing stay at spot or walk remaining moves
         elif self.get_team_pos().type == FieldType.Goal:
+            print("stepped on goal field")
             self.game_over()
         else:
             print("stepped on normal field")
@@ -388,7 +404,9 @@ class Game:
 
         if not any(map(lambda oc: _occasion_matches(chosen_occasion, oc), self.turn_state.occasion_choices)):
             raise InvalidMessageException(
-                'Invalid occasion choice message from client. chosen_occasion does not match any in occasion choices'
+                'Invalid occasion choice message from client. chosen_occasion does not match any in occasion choices:\n'
+                'possible occasion choices: {}\n'
+                'occasion choice: {}'.format(self.turn_state.occasion_choices, chosen_occasion)
             )
 
         if occasion_type == 'found_evidence':

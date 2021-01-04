@@ -337,7 +337,8 @@ class Game:
         remaining_moves = self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
-        if remaining_moves is not None:  # minigame
+        # TODO remove second condition (self.get_team_pos().type == FieldType.SHORTCUT) to make shortcut fields possible
+        if remaining_moves is not None or self.get_team_pos().type == FieldType.SHORTCUT:
             print("stepped on minigame")
             if not self.get_team_pos().type == FieldType.MINIGAME:
                 raise AssertionError('got remaining moves, but not on minigame field')
@@ -363,7 +364,7 @@ class Game:
                         room=player.sid
                     )
             self.turn_state.choosing_occasion(occasion_choices)
-        elif self.get_team_pos().type == FieldType.SHORTCUT:
+        elif self.get_team_pos().type == FieldType.SHORTCUT:  # TODO: this is currently unreachable. See first condition
             print("stepped on minigame field")
             # todo
             # if minigame was won

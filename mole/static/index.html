@@ -23,6 +23,7 @@
       let socket = io.connect('');
       let token = '';
       let test_player_id = 0;
+      let player_infos = null;
 
       $('#create-button').click(function() {
         socket.emit('create_game', '', function(data) {
@@ -55,6 +56,7 @@
           if (data != null && data.evidence != null) {
             inventory.push(data.evidence)
           }
+        data.players
         });
 
         player_socket.on('move', data => { console.log(name + ' got move. New position:', data) });
@@ -74,22 +76,21 @@
           console.log(name + ' got occasion:', data)
 
           if (data != null && data.choices != null && data.choices.length > 0) {
-            const index = Math.floor(Math.random() * 2)
-            const occasion_type = data.choices[index]
-            const message = occasion_type
-            if (occasion_type.type === 'move_forwards') {
-              message.value = Math.floor(Math.random() * 4) + 1;
-            }
-            if (occasion_type.type === 'skip_player') {
+            const index = Math.floor(Math.random() * data.choices.length)
+            const occasion = data.choices[index]
+            if (occasion.type === 'skip_player') {
               const index = Math.floor(Math.random() * 3)
-              message.name = ['test_player0', 'test_player1', 'test_player2'][index]
+              occasion.name = ['test_player0', 'test_player1', 'test_player2'][index]
             }
-            console.log('send occasion ', message);
-            player_socket.emit('player_occasion_choice', message);
+            console.log('send occasion ', occasion);
+            player_socket.emit('player_occasion_choice', occasion);
           }
         });
 
-        player_socket.on('player_infos', data => { console.log(name + ' got player infos:', data) });
+        player_socket.on('player_infos', data => {
+          console.log(name + ' got player infos:', data);
+          player_infos = data;
+        });
         player_socket.on('gameover', data => { console.log(name + ' got player infos:', data) });
 
         player_socket.emit('join_game', {'token': token, 'name': 'test_player' + test_player_id});
@@ -117,10 +118,11 @@
             message.value = Math.floor(Math.random() * 4) + 1;
           }
           if (player_choice_type === 'share-evidence') {
-            index = Math.floor(Math.random() * 3)
-            message.with = ['test_player0', 'test_player1', 'test_player2'][index]
-            index = Math.floor(Math.random() * inventory.length)
-            message.evidence = inventory[index].name
+            const player_names = player_infos.map(pi => pi.name);
+            const player_index = Math.floor(Math.random() * player_names.length);
+            message.with = player_names[player_index];
+            const inventory_index = Math.floor(Math.random() * inventory.length);
+            message.evidence = inventory[inventory_index].name
           }
           if (player_choice_type === 'validate-evidence') {
              message.evidences = inventory
@@ -129,7 +131,7 @@
              message.success = Math.random() < 0.5
           }
 
-          console.log('send occasion ', message);
+          console.log('send choice ', message);
           player_socket.emit('player_choice', message);
         })
 

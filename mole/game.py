@@ -36,7 +36,7 @@ class TurnState:
         self.occasion_choices = occasion_choices
 
     def game_over(self):
-        self.player_turn_state = TurnState.PlayerTurnState.Game_Over
+        self.player_turn_state = TurnState.PlayerTurnState.GAME_OVER
         self.occasion_choices = None
 
     def to_dict(self):
@@ -340,8 +340,12 @@ class Game:
         # TODO remove second condition (self.get_team_pos().type == FieldType.SHORTCUT) to make shortcut fields possible
         if remaining_moves is not None or self.get_team_pos().type == FieldType.SHORTCUT:
             print("stepped on minigame")
-            if not self.get_team_pos().type == FieldType.MINIGAME:
-                raise AssertionError('got remaining moves, but not on minigame field')
+            if self.get_team_pos().type not in [FieldType.MINIGAME, FieldType.SHORTCUT]:
+                raise AssertionError(
+                    'got remaining moves, but not on minigame field.\ncurrent field type: {}'.format(
+                        self.get_team_pos().type.name
+                    )
+                )
             self.turn_state.start_minigame(remaining_moves)
             self.trigger_minigame()
             self.send_to_all(sio, 'minigame', 'not implemented')
@@ -389,7 +393,12 @@ class Game:
         "value" should always be positive.
         In case of skip player there should also be a "name" field, containing the name of the player
         """
-        print("player choosing occasion")
+        print(
+            'got player occasion choice: {}\npossible occasions: {}'.format(
+                chosen_occasion,
+                self.turn_state.occasion_choices
+            )
+        )
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name
@@ -483,6 +492,8 @@ class Game:
         :rtype: Evidence
         :return: Bool
         """
+        print('evidences[0]: {}'.format(evidences[0]))
+        # TODO: this seems to crash, when reaching end of game. Tuple indices must be integers or slices, not str
         evidence_type = evidences[0]['type']
         evidence_group = []
 

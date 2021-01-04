@@ -1,3 +1,4 @@
+import time
 from enum import Enum
 import random
 
@@ -9,6 +10,8 @@ from mole_backend.settings import DATABASES
 
 
 OCCASIONS = ['found_evidence', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
+
+random.seed(time.time())
 
 
 class TurnState:
@@ -146,7 +149,17 @@ class Game:
 
     def check_end_turn(self, sio):
         if self.turn_state.player_index == len(self.players):
+            # set player_index to first not disabled player
             self.turn_state.player_index = 0
+            while self.get_current_player().disabled:
+                self.get_current_player().disabled = False
+                print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
+                self.turn_state.player_index += 1
+
+                # This only happens, when all players are disabled in a round...
+                if self.turn_state.player_index == len(self.players):
+                    self.turn_state.player_index = 0
+                    self.follower_move(sio)  # in this case the follower moves two times
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
             self.follower_move(sio)
             self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})

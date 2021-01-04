@@ -79,8 +79,9 @@
             const index = Math.floor(Math.random() * data.choices.length)
             const occasion = data.choices[index]
             if (occasion.type === 'skip_player') {
-              const index = Math.floor(Math.random() * 3)
-              occasion.name = ['test_player0', 'test_player1', 'test_player2'][index]
+              const player_names = player_infos.map(pi => pi.name);
+              const player_index = Math.floor(Math.random() * player_names.length);
+              occasion.name = player_names[player_index]
             }
             console.log('send occasion ', occasion);
             player_socket.emit('player_occasion_choice', occasion);

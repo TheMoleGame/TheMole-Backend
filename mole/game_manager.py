@@ -4,9 +4,12 @@ from .game import Game
 
 
 class PendingGame:
-    def __init__(self, host_sid):
-        # TODO: solve token conflicts
-        self.token = str(random.randrange(1000, 10000))  # type: str
+    def __init__(self, host_sid, token):
+        """
+        :type host_sid: str
+        :type token: str
+        """
+        self.token = token
         self.host_sid = host_sid
         self.players = []
 
@@ -33,9 +36,20 @@ class GameManager:
     def __init__(self):
         self.games = {}  # maps sids to games
         self.pending_games = []
+        self.taken_tokens = []  # type: list[int]
+
+    def _create_new_token(self) -> str:
+        def _token_possible(t):
+            return t not in self.taken_tokens
+
+        possible_tokens = list(filter(_token_possible, range(1000, 10000)))  # remove all tokens already used
+        token = random.choice(possible_tokens)
+        self.taken_tokens.append(token)
+        return str(token)
 
     def create_game(self, host_sid):
-        pending_game = PendingGame(host_sid)
+        token = self._create_new_token()
+        pending_game = PendingGame(host_sid, token)
         self.pending_games.append(pending_game)
         return pending_game.token
 

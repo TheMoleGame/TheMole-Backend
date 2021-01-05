@@ -653,20 +653,27 @@ def small_map_shortcut():
     for i in range(0, 3):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
-    map_dll.append(Field(FieldType.WALKABLE))  # Team should be here
+    map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
-    short = Field(FieldType.SHORTCUT, 12)  #
-    map_dll.append(short)
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    short = Field(FieldType.SHORTCUT, 18)
+    map_dll.append(short)
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.Goal))
-
-#    shortcut
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.SHORTCUT, 10))
 
     return map_dll
 
@@ -749,18 +756,18 @@ def create_big_map():
     map_dll.append(Field(FieldType.Goal))  # id=62 ?
 
     # Shortcut
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, 32))
-    # Shortcut 2
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, 45))
-    # Shortcut 3
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, True))
-    map_dll.append(Field(FieldType.WALKABLE, 57))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, 32))
+#   # Shortcut 2
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, 45))
+#   # Shortcut 3
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, True))
+#   map_dll.append(Field(FieldType.WALKABLE, 57))
 
     return map_dll

@@ -528,7 +528,7 @@ class Game:
 
     def generate_solution_evidences(self):
         """
-        :rtype: Evidence
+        :rtype: list[Evidence]
         :return: List of evidences to win the game
         """
         evidences = []

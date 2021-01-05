@@ -653,7 +653,7 @@ def small_map_shortcut():
     for i in range(0, 3):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
-    map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
+    map_dll.append(Field(FieldType.WALKABLE))  # team - [4] fifth
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -663,11 +663,10 @@ def small_map_shortcut():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.SHORTCUT, 18))
     map_dll.append(Field(FieldType.WALKABLE))
-    short = Field(FieldType.SHORTCUT, 18)
-    map_dll.append(short)
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.MINIGAME))
     map_dll.append(Field(FieldType.OCCASION))
@@ -701,14 +700,13 @@ def create_big_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.SHORTCUT, 18))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.MINIGAME))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.SHORTCUT, 40))  # 25

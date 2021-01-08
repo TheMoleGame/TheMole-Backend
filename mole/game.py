@@ -2,7 +2,7 @@ import time
 from enum import Enum
 import random
 
-from .models import Clue, ClueType, ClueSubtype
+from .models import Evidence, ClueType, ClueSubtype
 import pyllist
 import dj_database_url
 from .game_character import *
@@ -70,7 +70,7 @@ class Game:
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
-        # Create Clue combination with new database connection
+        # Create Evidence combination with new database connection
         DATABASES['game_init{}'.format(self.token)] = dj_database_url.config(conn_max_age=600)
 
         self.clues = self.generate_solution_clues()
@@ -506,7 +506,7 @@ class Game:
 
     def get_random_missing_clue(self, clues):
         """
-        :rtype: Clue
+        :rtype: Evidence
         :return: Get a random clue, which the player does not have yet
         """
         missing_clues = []
@@ -558,58 +558,58 @@ class Game:
 
     def generate_solution_clues(self):
         """
-        :rtype: list[Clue]
+        :rtype: list[Evidence]
         :return: List of clues to win the game
         """
         clues = []
         db_connection = 'game_init{}'.format(self.token)
 
-        all_weapon_objects = Clue.objects.using(db_connection).filter(type=ClueType.WEAPON,
-                                                                      subtype=ClueSubtype.OBJECT).values_list()
-        all_weapon_colors = Clue.objects.using(db_connection).filter(type=ClueType.WEAPON,
-                                                                     subtype=ClueSubtype.COLOR).values_list()
-        all_weapon_conditions = Clue.objects.using(db_connection).filter(type=ClueType.WEAPON,
-                                                                         subtype=ClueSubtype.CONDITION).values_list()
+        all_weapon_objects = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
+                                                                          subtype=ClueSubtype.OBJECT).values_list()
+        all_weapon_colors = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
+                                                                         subtype=ClueSubtype.COLOR).values_list()
+        all_weapon_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
+                                                                             subtype=ClueSubtype.CONDITION).values_list()
         clues.append(random.choice(all_weapon_objects))
         clues.append(random.choice(all_weapon_colors))
         clues.append(random.choice(all_weapon_conditions))
 
-        all_crime_scene_locations = Clue.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
-                                                                             subtype=ClueSubtype.LOCATION).values_list()
-        all_crime_scene_temperature = Clue.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
-                                                                               subtype=ClueSubtype.TEMPERATURE).values_list()
-        all_crime_scene_districts = Clue.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
-                                                                             subtype=ClueSubtype.DISTRICT).values_list()
+        all_crime_scene_locations = Evidence.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
+                                                                                 subtype=ClueSubtype.LOCATION).values_list()
+        all_crime_scene_temperature = Evidence.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
+                                                                                   subtype=ClueSubtype.TEMPERATURE).values_list()
+        all_crime_scene_districts = Evidence.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
+                                                                                 subtype=ClueSubtype.DISTRICT).values_list()
         clues.append(random.choice(all_crime_scene_locations))
         clues.append(random.choice(all_crime_scene_temperature))
         clues.append(random.choice(all_crime_scene_districts))
 
-        all_offender_escape_clothings = Clue.objects.using(db_connection).filter(type=ClueType.OFFENDER,
-                                                                                 subtype=ClueSubtype.CLOTHING).values_list()
-        all_offender_escape_sizes = Clue.objects.using(db_connection).filter(type=ClueType.OFFENDER,
-                                                                             subtype=ClueSubtype.SIZE).values_list()
-        all_offender_escape_characteristics = Clue.objects.using(db_connection).filter(type=ClueType.OFFENDER,
-                                                                                       subtype=ClueSubtype.CHARACTERISTIC).values_list()
+        all_offender_escape_clothings = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
+                                                                                     subtype=ClueSubtype.CLOTHING).values_list()
+        all_offender_escape_sizes = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
+                                                                                 subtype=ClueSubtype.SIZE).values_list()
+        all_offender_escape_characteristics = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
+                                                                                           subtype=ClueSubtype.CHARACTERISTIC).values_list()
         clues.append(random.choice(all_offender_escape_clothings))
         clues.append(random.choice(all_offender_escape_sizes))
         clues.append(random.choice(all_offender_escape_characteristics))
 
-        all_time_of_crime_weekdays = Clue.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
-                                                                              subtype=ClueSubtype.WEEKDAY).values_list()
-        all_time_of_crime_daytimes = Clue.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
-                                                                              subtype=ClueSubtype.DAYTIME).values_list()
-        all_time_of_crime_times = Clue.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
-                                                                           subtype=ClueSubtype.TIME).values_list()
+        all_time_of_crime_weekdays = Evidence.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
+                                                                                  subtype=ClueSubtype.WEEKDAY).values_list()
+        all_time_of_crime_daytimes = Evidence.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
+                                                                                  subtype=ClueSubtype.DAYTIME).values_list()
+        all_time_of_crime_times = Evidence.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
+                                                                               subtype=ClueSubtype.TIME).values_list()
         clues.append(random.choice(all_time_of_crime_weekdays))
         clues.append(random.choice(all_time_of_crime_daytimes))
         clues.append(random.choice(all_time_of_crime_times))
 
-        all_mean_of_escape_conditions = Clue.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
-                                                                                 subtype=ClueSubtype.MODEL).values_list()
-        all_mean_of_escape_daytime = Clue.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
-                                                                              subtype=ClueSubtype.COLOR).values_list()
-        all_mean_of_escape_districts = Clue.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
-                                                                                subtype=ClueSubtype.ESCAPE_ROUTE).values_list()
+        all_mean_of_escape_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
+                                                                                     subtype=ClueSubtype.MODEL).values_list()
+        all_mean_of_escape_daytime = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
+                                                                                  subtype=ClueSubtype.COLOR).values_list()
+        all_mean_of_escape_districts = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
+                                                                                    subtype=ClueSubtype.ESCAPE_ROUTE).values_list()
         clues.append(random.choice(all_mean_of_escape_conditions))
         clues.append(random.choice(all_mean_of_escape_daytime))
         clues.append(random.choice(all_mean_of_escape_districts))

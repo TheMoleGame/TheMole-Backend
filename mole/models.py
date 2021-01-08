@@ -26,7 +26,7 @@ class ClueSubtype(models.TextChoices):
     WEEKDAY = 'W', 'Wochentag'
 
 
-class Clue(models.Model):
+class Evidence(models.Model):
     name = models.CharField(max_length=200, unique=True)
     type = models.CharField(max_length=2, choices=ClueType.choices, default=ClueType.WEAPON)
     subtype = models.CharField(max_length=2, choices=ClueSubtype.choices, default=ClueSubtype.OBJECT)

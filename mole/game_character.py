@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from typing import List
 
-from mole.models import Clue
+from mole.models import Evidence
 
 
 class CharacterInterface(metaclass=ABCMeta):
@@ -25,7 +25,7 @@ class Player(CharacterInterface):
         self._name = name
         self.is_mole = is_mole
 
-        self.inventory = []  # type: List[Clue]
+        self.inventory = []  # type: List[Evidence]
         if evidence is not None:
             self.inventory.append(evidence)
 

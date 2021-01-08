@@ -53,8 +53,8 @@
 
         player_socket.on('init', data => {
           console.log(name + ' got init:', data)
-          if (data != null && data.evidence != null) {
-            inventory.push(data.evidence)
+          if (data != null && data.clue != null) {
+            inventory.push(data.clue)
           }
         data.players
         });
@@ -64,10 +64,10 @@
         player_socket.on('minigame', data => { console.log(name + ' got minigame:', data) });
         player_socket.on('validation_result', data => { console.log(name + ' got validation result:', data) });
 
-        player_socket.on('receive_evidence', data => {
-          console.log(name + ' received evidence:', data)
-          if (data != null && data.evidence != null) {
-            inventory.push(data.evidence)
+        player_socket.on('receive_clue', data => {
+          console.log(name + ' received clue:', data)
+          if (data != null && data.clue != null) {
+            inventory.push(data.clue)
           }
         });
 
@@ -110,7 +110,7 @@
         const player_choice_button = $('<input type="button" value="Player Choice">');
         player_choice_button.click(function() {
           let index = Math.floor(Math.random() * 4)
-          const player_choice_type = ['dice', 'share-evidence', 'validate-evidence', 'search-evidence'][index]
+          const player_choice_type = ['dice', 'share-clue', 'validate-clues', 'search-clue'][index]
 
           const message = {
             'type': player_choice_type
@@ -118,17 +118,17 @@
           if (player_choice_type === 'dice') {
             message.value = Math.floor(Math.random() * 4) + 1;
           }
-          if (player_choice_type === 'share-evidence') {
+          if (player_choice_type === 'share-clue') {
             const player_names = player_infos.map(pi => pi.name);
             const player_index = Math.floor(Math.random() * player_names.length);
             message.with = player_names[player_index];
             const inventory_index = Math.floor(Math.random() * inventory.length);
-            message.evidence = inventory[inventory_index].name
+            message.clue = inventory[inventory_index].name
           }
-          if (player_choice_type === 'validate-evidence') {
-             message.evidences = inventory
+          if (player_choice_type === 'validate-clues') {
+             message.clues = inventory
           }
-          if (player_choice_type === 'search-evidence') {
+          if (player_choice_type === 'search-clue') {
              message.success = Math.random() < 0.5
           }
 

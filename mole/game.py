@@ -437,6 +437,7 @@ class Game:
             player = self.get_player(sid)
             player.inventory.append(evidence)
 
+            # TODO: 'success' (True/False) hinzufügen
             evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
             sio.emit(
                 'receive_evidence',

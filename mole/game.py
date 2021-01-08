@@ -74,6 +74,8 @@ class Game:
         DATABASES['game_init{}'.format(self.token)] = dj_database_url.config(conn_max_age=600)
 
         self.evidences = self.generate_solution_evidences()
+        self.team_proofs = []
+        self.mole_proofs = []
 
         self.players = []
         for player_id, player_info in enumerate(player_infos):
@@ -306,9 +308,11 @@ class Game:
 
         elif player_choice.get('type') == 'validate-evidence':
             player = self.get_player(sid)
-            successful_validation = self.validate_evidence(player_choice.get('evidences'))
+            clues = player_choice.get('evidences')
+            successful_validation = self.validate_evidence(clues)
 
             if successful_validation:
+                self.add_verified_clues_to_proofs(clues, player.is_mole)
                 self.send_to_all(player.sid, 'validation_result', {'successful_validation': successful_validation})
             else:
                 sio.emit(
@@ -506,8 +510,8 @@ class Game:
 
     def validate_evidence(self, evidences):
         """
-        :rtype: Evidence
-        :return: Bool
+        :rtype: Bool
+        :return: Bool whether the correct clues were found or not
         """
         print('evidences[0]: {}'.format(evidences[0]))
         # TODO: this seems to crash, when reaching end of game. Tuple indices must be integers or slices, not str
@@ -529,6 +533,16 @@ class Game:
                 evidence_group.remove(result)
 
         return len(evidence_group) == 0
+
+
+    def add_verified_clues_to_proofs(self, clues, is_mole):
+        # Check if the verified clues have already been added to the proofs, otherwise add them to the correct proof list
+        for clue in clues:
+            if is_mole is True and next((c for c in self.mole_proofs if c['name'] == clue['name']), None) is None:
+                self.mole_proofs.append(clue)
+            elif is_mole is False and next((c for c in self.team_proofs if c['name'] == clue['name']), None) is None:
+                self.team_proofs.append(clue)
+
 
     def generate_solution_evidences(self):
         """

@@ -285,7 +285,7 @@ class Game:
         # TODO: Eventuell player_id und clue_id (oder type + subtype) übergeben, anstatt name!
         elif player_choice.get('type') == 'share-clue':
             player = self.get_player(sid)
-
+            print('share-clue')
             # Get player with whom the clue should be shared
             share_with = next((player for player in self.players if player.name == player_choice.get('with')), None)
             if share_with is None:
@@ -304,6 +304,7 @@ class Game:
                 {'from:': player.player_id, 'clue': share_clue},
                 room=share_with.sid
             )
+
             self.next_player(sio)
 
         elif player_choice.get('type') == 'validate-clues':
@@ -322,6 +323,7 @@ class Game:
                 )
 
             self.next_player(sio)
+
         elif player_choice.get('type') == 'search-clue':
             player = self.get_player(sid)
             clue = None
@@ -511,12 +513,14 @@ class Game:
         """
         missing_clues = []
 
-        for clue1 in clues:
-            for clue2 in self.clues:
-                if clue1[0] != clue2[0]:
-                    missing_clues.append(clue1)
-                    break
+        for clue in self.clues:
+            c = next((c for c in clues if c[1] != clue[1]), None)
 
+            if c is not None:
+                missing_clues.append(clue)
+                break
+
+        print("missing clues: {}".format(missing_clues))
         return random.choice(missing_clues)
 
 

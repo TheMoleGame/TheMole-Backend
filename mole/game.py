@@ -4,7 +4,6 @@ from enum import Enum
 import random
 import pyllist
 import dj_database_url
-from django.core import serializers
 
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
@@ -239,7 +238,8 @@ class Game:
             player_choice is in the following form:
             {
                 'type': 'share-clue',
-                'with': player_name,
+                'with': player_id,
+                # TODO: Change player_name to player_id - also in index.html
                 'clue': clue_name,
             }
 

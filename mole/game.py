@@ -326,17 +326,8 @@ class Game:
             player = self.get_player(sid)
             evidence = None
 
-            # Probability of 25 percent
-            if random.random() < 0.25:
-                # Check what evidence the player does not have yet
-                missing_evidences = []
-                for evidence1 in player.inventory:
-                    for evidence2 in self.evidences:
-                        if evidence1[0] == evidence2[0]:
-                            missing_evidences.append(evidence1)
-                            break
-
-                evidence = random.choice(missing_evidences)
+            if player_choice.get('success') is True:
+                evidence = self.get_random_missing_clue(player.inventory)
                 player.inventory.append(evidence)
                 evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
 
@@ -412,6 +403,7 @@ class Game:
         In case of move_forwards there should also be a "value" field containing the number of fields.
         "value" should always be positive.
         In case of skip player there should also be a "name" field, containing the name of the player
+        In case of found evidence there should also be a "success" field, containing a Bool. TODO: Rename evidence to clue
         """
         print(
             'got player occasion choice: {}\npossible occasions: {}'.format(
@@ -440,17 +432,20 @@ class Game:
             )
 
         if occasion_type == 'found_evidence':
-            evidence = random.choice(self.evidences)
             player = self.get_player(sid)
-            player.inventory.append(evidence)
+            evidence = None
 
-            # TODO: 'success' (True/False) hinzufügen
-            evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
+            if chosen_occasion.get('success') is True:
+                evidence = self.get_random_missing_clue(player.inventory)
+                player.inventory.append(evidence)
+                evidence = {'name': evidence[1], 'type': evidence[2], 'subtype': evidence[3]}
+
             sio.emit(
                 'receive_evidence',
                 {'from:': -1, 'evidence': evidence},
                 room=player.sid
             )
+
             self.next_player(sio)
 
         elif occasion_type == 'move_forwards':
@@ -507,6 +502,23 @@ class Game:
 
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
+
+
+    def get_random_missing_clue(self, clues):
+        """
+        :rtype: Clue
+        :return: Get a random clue, which the player does not have yet
+        """
+        missing_evidences = []
+
+        for clue1 in clues:
+            for clue2 in self.evidences:
+                if clue1[0] != clue2[0]:
+                    missing_evidences.append(clue1)
+                    break
+
+        return random.choice(missing_evidences)
+
 
     def validate_evidence(self, evidences):
         """

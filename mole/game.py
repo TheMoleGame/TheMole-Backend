@@ -308,11 +308,14 @@ class Game:
             player = self.get_player(sid)
             successful_validation = self.validate_evidence(player_choice.get('evidences'))
 
-            sio.emit(
-                'validation_result',
-                {'successful_validation': successful_validation},
-                room=player.sid
-            )
+            if successful_validation:
+                self.send_to_all(player.sid, 'validation_result', {'successful_validation': successful_validation})
+            else:
+                sio.emit(
+                    'validation_result',
+                    {'successful_validation': successful_validation},
+                    room=player.sid
+                )
 
             self.next_player(sio)
         elif player_choice.get('type') == 'search-evidence':

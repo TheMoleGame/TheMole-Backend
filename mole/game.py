@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import time
 from enum import Enum
 import random
@@ -125,7 +124,11 @@ class Game:
         # TODO: Serialize Map and send with init packet
         for player in self.players:
             clue = player.inventory[0].__dict__
-            sio.emit('init', {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue}, room=player.sid)
+            sio.emit(
+                'init',
+                {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue},
+                room=player.sid
+            )
 
         self.send_players_turn(sio)
 
@@ -512,7 +515,9 @@ class Game:
         elif occasion_type == 'skip_player':
             skip_player = next((p for p in self.players if p.player_id == chosen_occasion.get('player_id')), None)
             if skip_player is None:
-                raise InvalidMessageException('Could not find player with id "{}"'.format(chosen_occasion.get('player_id')))
+                raise InvalidMessageException(
+                    'Could not find player with id "{}"'.format(chosen_occasion.get('player_id'))
+                )
 
             skip_player.disabled = True
             self.end_player_turn(sio)
@@ -548,7 +553,6 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-
     def add_clue(self, received_from, player, clue):
         # Reset received_from and sent_to information
         clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
@@ -556,14 +560,12 @@ class Game:
         player.inventory.append(clue_copy)
         return clue_copy
 
-
     def check_and_add_clue(self, received_from, player, clue):
         for c in player.inventory:
             if c.name == clue.name:
                 return c
 
         return self.add_clue(received_from, player, clue)
-
 
     def get_random_missing_clue(self, clues):
         """
@@ -580,10 +582,8 @@ class Game:
 
         return random.choice(missing_clues)
 
-
     def evidence_2_clue(self, evidence):
         return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
-
 
     def clues_dict_2_object(self, clues):
         """
@@ -596,7 +596,6 @@ class Game:
             converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
 
         return converted_clues
-
 
     def validate_clues(self, clues):
         """
@@ -622,7 +621,6 @@ class Game:
 
         return len(clue_group) == 0
 
-
     def add_verified_clues_to_proofs(self, clues, is_mole):
         # Check if the verified clues have already been added to the other teams proofs or self proofs
         for clue in clues:
@@ -630,7 +628,6 @@ class Game:
                 self.mole_proofs.append(clue)
             elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
                 self.team_proofs.append(clue)
-
 
     def generate_solution_clues(self):
         """
@@ -691,7 +688,6 @@ class Game:
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_districts)))
 
         return clues
-
 
     def game_over(self):
         self.turn_state.game_over()

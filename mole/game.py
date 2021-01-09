@@ -15,6 +15,22 @@ OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'h
 random.seed(time.time())
 
 
+class MoveModifier(Enum):
+    NORMAL = 0
+    HINDER = 1
+    SIMPLIFY = 2
+
+    def get_factor(self):
+        if self == MoveModifier.NORMAL:
+            return 1.0
+        elif self == MoveModifier.HINDER:
+            return 0.5
+        elif self == MoveModifier.SIMPLIFY:
+            return 2.0
+        else:
+            raise Exception('move modifier did not match any of its variants')
+
+
 class TurnState:
     class PlayerTurnState(Enum):
         PLAYER_CHOOSING = 0
@@ -86,6 +102,7 @@ class Game:
         random.choice(self.players).is_mole = True
 
         self.turn_state: TurnState = TurnState()
+        self.move_modifier: MoveModifier = MoveModifier.NORMAL
 
         self.map = small_map_shortcut()  # small test map
         self.team_pos: pyllist.dllistnode = self.map.nodeat(4)
@@ -95,15 +112,12 @@ class Game:
         # print(self.map_to_json())
         # self.move(2, self.players[0])  # test case move
 
-        self.move_multiplier = 1
-
-        # TODO: Serialize Map and send with init packet
         for player in self.players:
             inv = player.inventory[0]
             clue = {'name': inv.name, 'type': inv.type, 'subtype': inv.subtype}
             sio.emit('init', {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue}, room=player.sid)
 
-        self.send_to_all(sio, 'players_turn', {'player_id': self.players[0].player_id})
+        self.send_players_turn(sio)
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -164,7 +178,7 @@ class Game:
                     self.follower_move(sio)  # in this case the follower moves two times
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
             self.follower_move(sio)
-            self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
+            self.send_players_turn(sio)
 
     def follower_move(self, sio):
         num_fields = random.randint(1, 6)
@@ -176,6 +190,13 @@ class Game:
                 raise Exception('Follower caught players')  # TODO
 
         self.send_to_all(sio, 'follower_move', self.get_follower_pos().index)
+
+    def send_players_turn(self, sio):
+        self.send_to_all(
+            sio,
+            'players_turn',
+            {'player_id': self.get_current_player().player_id, 'movement_modifier': self.move_modifier.name.lower()}
+        )
 
     def next_player(self, sio):
         """
@@ -190,7 +211,7 @@ class Game:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
             else:
-                self.send_to_all(sio, 'players_turn', {'player_id': self.get_current_player().player_id})
+                self.send_players_turn(sio)
                 break
         self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
 
@@ -276,7 +297,8 @@ class Game:
         if player_choice.get('type') == 'dice':
             move_distance = int(player_choice.get('value'))
             move_distance = (move_distance - 1) % 3 + 1
-            move_distance = int(move_distance * self.move_multiplier)
+            move_distance = int(move_distance * self.move_modifier.get_factor())
+            self.move_modifier = MoveModifier.NORMAL
             # be merciful
             if move_distance == 0:
                 move_distance = 1
@@ -489,7 +511,7 @@ class Game:
             self.handle_movement(sio, num_fields)
 
         elif occasion_type == 'simplify_dicing':
-            self.move_multiplier = 2
+            self.move_modifier = MoveModifier.SIMPLIFY
             self.next_player(sio)
 
         elif occasion_type == 'skip_player':
@@ -501,7 +523,7 @@ class Game:
             self.next_player(sio)
 
         elif occasion_type == 'hinder_dicing':
-            self.move_multiplier = 0.5
+            self.move_modifier = MoveModifier.HINDER
             self.next_player(sio)
 
         self.check_end_turn(sio)
@@ -532,14 +554,12 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-
     def add_clue(self, player, clue):
         for c in player.inventory:
             if c.name == clue.name:
                 return
 
         player.inventory.append(clue)
-
 
     def get_random_missing_clue(self, clues):
         """

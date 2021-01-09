@@ -23,21 +23,21 @@ def create_event_fields():
 def create_weapons():
     weapons = [
         # Object
-        Evidence(name='Messer', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
-        Evidence(name='Axt', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
-        Evidence(name='Pistole', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
+        Evidence(name='Knife', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
+        Evidence(name='Ax', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
+        Evidence(name='Pistol', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
         Evidence(name='Hammer', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
 
         # Color
         Evidence(name='Bronze', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Kupfer', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Messing', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Silber', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
+        Evidence(name='Copper', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
+        Evidence(name='Brass', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
+        Evidence(name='Silver', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
 
         # Condition
-        Evidence(name='Neu', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION),
-        Evidence(name='Gut', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION),
-        Evidence(name='Abgenutzt', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION)
+        Evidence(name='New', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION),
+        Evidence(name='Good', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION),
+        Evidence(name='Worn out', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION)
     ]
 
     for weapon in weapons:
@@ -47,19 +47,19 @@ def create_weapons():
 def create_crime_scenes():
     crime_scenes = [
         # Location
-        Evidence(name='See', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Höhle', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Schlachterei', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Friedhof', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Brücke', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Kanalisation', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
-        Evidence(name='Wald', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Lake', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Cave', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Butchery', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Cemetery', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Bridge', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Sewer', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
+        Evidence(name='Forest', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.LOCATION),
 
         # Temperature
-        Evidence(name='Eisig', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
-        Evidence(name='Kalt', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
-        Evidence(name='Heiß', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
-        Evidence(name='Schwül', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
+        Evidence(name='Icy', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
+        Evidence(name='Cold', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
+        Evidence(name='Hot', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
+        Evidence(name='Sultry', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.TEMPERATURE),
 
         # District
         Evidence(name='West End', type=ClueType.CRIME_SCENE, subtype=ClueSubtype.DISTRICT),
@@ -73,24 +73,24 @@ def create_crime_scenes():
 def create_offenders():
     offenders = [
         # Cloting
-        Evidence(name='Mantel', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
-        Evidence(name='Hut', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
-        Evidence(name='Umhang', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
-        Evidence(name='Anzug', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
+        Evidence(name='Coat', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
+        Evidence(name='Hat', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
+        Evidence(name='Cape', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
+        Evidence(name='Suit', type=ClueType.OFFENDER, subtype=ClueSubtype.CLOTHING),
 
         # Size
-        Evidence(name='Winzig', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
-        Evidence(name='Klein', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
-        Evidence(name='Durchschnitt', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
-        Evidence(name='Groß', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
-        Evidence(name='Riesig', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
+        Evidence(name='Tiny', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
+        Evidence(name='Small', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
+        Evidence(name='Average', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
+        Evidence(name='Big', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
+        Evidence(name='Huge', type=ClueType.OFFENDER, subtype=ClueSubtype.SIZE),
 
         # Characteristic
-        Evidence(name='Narbe', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
-        Evidence(name='Perücke', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
+        Evidence(name='Scar', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
+        Evidence(name='Wig', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
         Evidence(name='Tattoo', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
-        Evidence(name='Siegelring', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
-        Evidence(name='Leberfleck', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC)
+        Evidence(name='Signet ring', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC),
+        Evidence(name='Mole', type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC)
     ]
 
     for offender in offenders:
@@ -100,13 +100,13 @@ def create_offenders():
 def create_time_of_crimes():
     time_of_crimes = [
         # Weekday
-        Evidence(name='Montag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Dienstag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Mittwoch', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Donnerstag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Freitag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Samstag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
-        Evidence(name='Sonntag', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Monday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Tuesday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Wednesday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Thursday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Friday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Saturday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
+        Evidence(name='Sunday', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.WEEKDAY),
 
         # Weekday
         Evidence(name='am', type=ClueType.TIME_OF_CRIME, subtype=ClueSubtype.DAYTIME),
@@ -129,21 +129,21 @@ def create_means_of_escape():
     means_of_escape = [
         # Model
         Evidence(name='Automobil', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
-        Evidence(name='Kutsche', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
-        Evidence(name='Hochrad', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
-        Evidence(name='Pferd', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
+        Evidence(name='Carriage', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
+        Evidence(name='Penny farthing', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
+        Evidence(name='Horse', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
 
         # Color
-        Evidence(name='Schwarz', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='Weiß', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='Kastanienbraun', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='Rostrot', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
+        Evidence(name='Black', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
+        Evidence(name='White', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
+        Evidence(name='Maroon', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
+        Evidence(name='Rust red', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
 
         # Escape Route
-        Evidence(name='Norden', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
-        Evidence(name='Osten', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
-        Evidence(name='Süden', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
-        Evidence(name='Westen', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
+        Evidence(name='North', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
+        Evidence(name='East', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
+        Evidence(name='South', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
+        Evidence(name='West', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),
     ]
 
     for mean_of_escape in means_of_escape:

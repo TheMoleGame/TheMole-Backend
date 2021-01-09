@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import time
 from enum import Enum
 import random
@@ -75,6 +76,13 @@ class Game:
         DATABASES['game_init{}'.format(self.token)] = dj_database_url.config(conn_max_age=600)
 
         self.clues = self.generate_solution_clues()
+
+        # TODO: Delete later. Frontend needs this for testing
+        clues = []
+        for clue in self.clues:
+            clues.append(clue.__dict__)
+        self.send_to_all(sio, 'solution_clues', {'clues': clues})
+
         self.team_proofs = []
         self.mole_proofs = []
 

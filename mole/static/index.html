@@ -64,6 +64,7 @@
         player_socket.on('minigame', data => { console.log(name + ' got minigame:', data) });
         player_socket.on('validation_result', data => { console.log(name + ' got validation result:', data) });
         player_socket.on('updated_clue', data => { console.log(name + ' got updated clue:', data) });
+        player_socket.on('solution_clues', data => { console.log(name + ' solution clues:', data) });
 
         player_socket.on('receive_clue', data => {
           console.log(name + ' received clue:', data)

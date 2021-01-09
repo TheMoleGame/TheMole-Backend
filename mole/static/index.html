@@ -80,7 +80,7 @@
             const occasion = data.choices[index]
 
             if (occasion.type === 'skip_player') {
-              const player_ids = player_infos.map(pi => pi.player_id);
+              const player_ids = player_infos.map(pi => pi.test_player_id);
               const player_index = Math.floor(Math.random() * player_ids.length);
               occasion.name = player_ids[player_index]
             }
@@ -124,7 +124,7 @@
             message.value = Math.floor(Math.random() * 4) + 1;
           }
           if (player_choice_type === 'share-clue') {
-            const player_ids = player_infos.map(pi => pi.player_id);
+            const player_ids = player_infos.map(pi => pi.test_player_id);
             const player_index = Math.floor(Math.random() * player_ids.length);
             message.with = player_ids[player_index]
             const inventory_index = Math.floor(Math.random() * inventory.length);

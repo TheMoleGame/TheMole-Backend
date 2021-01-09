@@ -575,8 +575,6 @@ class Game:
         :rtype: Bool
         :return: Bool whether the correct clues were found or not
         """
-        print('clues[0]: {}'.format(clues[0]))
-        # TODO: this seems to crash, when reaching end of game. Tuple indices must be integers or slices, not str
         clue_type = clues[0].type
         clue_group = []
 

@@ -570,7 +570,7 @@ class Game:
 
         return converted_clues
 
-    def validate_clues(self, clues):
+    def validate_clues(self, is_mole, clues):
         """
         :rtype: Bool
         :return: Bool whether the correct clues were found or not
@@ -598,11 +598,11 @@ class Game:
 
 
     def add_verified_clues_to_proofs(self, clues, is_mole):
-        # Check if the verified clues have already been added to the proofs, otherwise add them to the correct proof list
+        # Check if the verified clues have already been added to the other teams proofs or self proofs
         for clue in clues:
-            if is_mole is True and next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
+            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
                 self.mole_proofs.append(clue)
-            elif is_mole is False and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
+            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
                 self.team_proofs.append(clue)
 
 

@@ -56,11 +56,10 @@
           if (data != null && data.clue != null) {
             inventory.push(data.clue)
           }
-        data.players
         });
 
         player_socket.on('move', data => { console.log(name + ' got move. New position:', data) });
-        player_socket.on('follower_move', data => { console.log(name + ' got follower move:', data) });
+        player_socket.on('moriarty_move', data => { console.log(name + ' got moriarty move:', data) });
         player_socket.on('minigame', data => { console.log(name + ' got minigame:', data) });
         player_socket.on('validation_result', data => { console.log(name + ' got validation result:', data) });
 
@@ -103,13 +102,24 @@
         console.log('player "' + name + '" added');
         test_player_id += 1;
 
-        // dice button
-        const dice_button = $('<input type="button" value="Dice">');
-        dice_button.click(function() {
-          const value = Math.floor(Math.random() * 6) + 1
-          player_socket.emit('player_choice', {'type': 'dice', 'value': value});
-          console.log('diced a', value);
-        })
+        // dice buttons
+        const dice1_button = $('<input type="button" value="Dice 1">');
+        dice1_button.click(function() {
+          player_socket.emit('player_choice', {'type': 'dice', 'value': 1});
+          console.log(name, ' diced a', 1);
+        });
+
+        const dice2_button = $('<input type="button" value="Dice 2">');
+        dice2_button.click(function() {
+          player_socket.emit('player_choice', {'type': 'dice', 'value': 2});
+          console.log(name, ' diced a', 2);
+        });
+
+        const dice3_button = $('<input type="button" value="Dice 3">');
+        dice3_button.click(function() {
+          player_socket.emit('player_choice', {'type': 'dice', 'value': 3});
+          console.log(name, ' diced a', 3);
+        });
 
         // player choice button
         const player_choice_button = $('<input type="button" value="Player Choice">');
@@ -142,8 +152,10 @@
         })
 
         const body = $("body");
-        body.append(dice_button)
-        body.append(player_choice_button)
+        body.append(dice1_button);
+        body.append(dice2_button);
+        body.append(dice3_button);
+        body.append(player_choice_button);
         body.append('<br>');
       })
     });

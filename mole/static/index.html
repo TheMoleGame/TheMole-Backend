@@ -82,7 +82,7 @@
             if (occasion.type === 'skip_player') {
               const player_ids = player_infos.map(pi => pi.player_id);
               const player_index = Math.floor(Math.random() * player_ids.length);
-              occasion.name = player_ids[player_index]
+              occasion.player_id = player_ids[player_index]
             }
             if (occasion.type === 'found_clue') {
               occasion.success = Math.random() < 0.5

@@ -566,11 +566,10 @@ class Game:
         missing_clues = []
 
         for clue in self.clues:
-            c = next((c for c in clues if c.name != clue.name), None)
+            c = next((c for c in clues if c.name == clue.name), None)
 
-            if c is not None:
+            if c is None:
                 missing_clues.append(clue)
-                break
 
         return random.choice(missing_clues)
 

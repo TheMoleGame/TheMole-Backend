@@ -570,7 +570,7 @@ class Game:
 
         return converted_clues
 
-    def validate_clues(self, is_mole, clues):
+    def validate_clues(self, clues):
         """
         :rtype: Bool
         :return: Bool whether the correct clues were found or not

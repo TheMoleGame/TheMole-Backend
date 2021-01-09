@@ -142,13 +142,8 @@ class Game:
         :param distance: the number of fields to move
         :return: If a minigame field was reached, the number of remaining move distance is returned, otherwise None
         """
-        forwards = distance >= 0
-        distance = abs(distance)
         for i in range(distance):
-            if forwards:
-                self.team_pos = self.team_pos.next  # get next field
-            else:
-                self.team_pos = self.team_pos.prev  # get next field
+            self.team_pos = self.team_pos.next  # get next field
             if self.team_pos is None:
                 self.game_over()  # raise NotImplementedError('End of map reached')
             else:
@@ -156,8 +151,6 @@ class Game:
                 if field.type == FieldType.MINIGAME:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
                     remaining_distance = distance - i - 1
-                    if not forwards:
-                        remaining_distance = -remaining_distance
                     return remaining_distance
         return None
 

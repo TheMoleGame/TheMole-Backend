@@ -239,7 +239,6 @@ class Game:
             {
                 'type': 'share-clue',
                 'with': player_id,
-                # TODO: Change player_name to player_id - also in index.html
                 'clue': clue_name,
             }
 
@@ -283,21 +282,23 @@ class Game:
                 move_distance = 1
             self.handle_movement(sio, move_distance)
 
-        # TODO: Eventuell player_id und clue_id (oder type + subtype) übergeben, anstatt name!
         elif player_choice.get('type') == 'share-clue':
             player = self.get_player(sid)
-            print('share-clue')
 
             # Get player with whom the clue should be shared
-            share_with = next((player for player in self.players if player.name == player_choice.get('with')), None)
+            share_with = next((p for p in self.players if p.player_id == player_choice.get('with')), None)
             if share_with is None:
-                raise InvalidUserException('Got invalid player name (with: {})'.format(player_choice.get('with')))
+                raise InvalidUserException('Got invalid player id (with: {})'.format(player_choice.get('with')))
+
+            print('Got clue {}'.format(player_choice.get('clue')))
 
             # Get clue which should be shared
             share_clue = next((clue for clue in player.inventory if clue.name == player_choice.get('clue')), None)
             if share_clue is None:
                 raise InvalidUserException('Got invalid clue name (clue: {})'.format(player_choice.get('clue')))
-            share_with.inventory.append(share_clue)
+
+            # Check if player already has clue
+            self.add_clue(share_with, share_clue)
 
             # Share clue with player
             share_clue = {'name': share_clue.name, 'type': share_clue.type, 'subtype': share_clue.subtype}
@@ -401,13 +402,38 @@ class Game:
         """
         This event is called, if a player chose an occasion.
 
-        :param chosen_occasion: A dictionary containing occasion information. Must contain a field "type", which must be
-        one of: found_clue, move_forwards, simplify_dicing, skip_player, hinder_dicing
+        - found clue:
+            chosen_occasion is in the following form:
+            {
+                'type': 'found_clue',
+                'success': true/false,
+            }
 
-        In case of move_forwards there should also be a "value" field containing the number of fields.
-        "value" should always be positive.
-        In case of skip player there should also be a "name" field, containing the name of the player
-        In case of found clue there should also be a "success" field, containing a Bool.
+        - move forwards:
+            chosen_occasion is in the following form:
+            {
+                'type': 'move_forwards',
+                'value': 6,
+            }
+
+        - simplify dicing:
+            chosen_occasion is in the following form:
+            {
+                'type': 'simplify_dicing',
+            }
+
+        - skip player:
+            chosen_occasion is in the following form:
+            {
+                'type': 'skip_player',
+                'player_id': player_id,
+            }
+
+        - hinder dicing:
+            chosen_occasion is in the following form:
+            {
+                'type': 'hinder_dicing',
+            }
         """
         print(
             'got player occasion choice: {}\npossible occasions: {}'.format(
@@ -458,28 +484,27 @@ class Game:
                 raise InvalidMessageException(
                     'Invalid occasion choice message from client. Missing "value" in move_forwards.'
                 )
+
             num_fields = int(num_fields)
             self.handle_movement(sio, num_fields)
+
         elif occasion_type == 'simplify_dicing':
             self.move_multiplier = 2
             self.next_player(sio)
+
         elif occasion_type == 'skip_player':
-            player_name = chosen_occasion.get('name')
-            if player_name is None:
-                raise InvalidMessageException(
-                    'Invalid occasion choice message from client. Missing "name" in skip_player.'
-                )
-            skipped_player = self.get_player_by_name(player_name)
-            if skipped_player is None:
-                raise InvalidMessageException('Could not find player with name "{}"'.format(player_name))
-            skipped_player.disabled = True
+            skip_player = next((p for p in self.players if p.player_id == chosen_occasion.get('player_id')), None)
+            if skip_player is None:
+                raise InvalidMessageException('Could not find player with id "{}"'.format(chosen_occasion.get('player_id')))
+
+            skip_player.disabled = True
             self.next_player(sio)
+
         elif occasion_type == 'hinder_dicing':
             self.move_multiplier = 0.5
             self.next_player(sio)
 
         self.check_end_turn(sio)
-
         self.turn_state.occasion_choices = None  # reset occasion choices
 
     # noinspection PyMethodMayBeStatic
@@ -508,6 +533,14 @@ class Game:
         return self.get_current_player().sid == sid
 
 
+    def add_clue(self, player, clue):
+        for c in player.inventory:
+            if c.name == clue.name:
+                return
+
+        player.inventory.append(clue)
+
+
     def get_random_missing_clue(self, clues):
         """
         :rtype: Evidence
@@ -522,7 +555,6 @@ class Game:
                 missing_clues.append(clue)
                 break
 
-        print("missing clues: {}".format(missing_clues))
         return random.choice(missing_clues)
 
 

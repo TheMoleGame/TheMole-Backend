@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -78,11 +78,16 @@
           if (data != null && data.choices != null && data.choices.length > 0) {
             const index = Math.floor(Math.random() * data.choices.length)
             const occasion = data.choices[index]
+
             if (occasion.type === 'skip_player') {
-              const player_names = player_infos.map(pi => pi.name);
-              const player_index = Math.floor(Math.random() * player_names.length);
-              occasion.name = player_names[player_index]
+              const player_ids = player_infos.map(pi => pi.player_id);
+              const player_index = Math.floor(Math.random() * player_ids.length);
+              occasion.name = player_ids[player_index]
             }
+            if (occasion.type === 'found_clue') {
+              occasion.success = Math.random() < 0.5
+            }
+
             console.log('send occasion ', occasion);
             player_socket.emit('player_occasion_choice', occasion);
           }
@@ -119,9 +124,9 @@
             message.value = Math.floor(Math.random() * 4) + 1;
           }
           if (player_choice_type === 'share-clue') {
-            const player_names = player_infos.map(pi => pi.name);
-            const player_index = Math.floor(Math.random() * player_names.length);
-            message.with = player_names[player_index];
+            const player_ids = player_infos.map(pi => pi.player_id);
+            const player_index = Math.floor(Math.random() * player_ids.length);
+            message.with = player_ids[player_index]
             const inventory_index = Math.floor(Math.random() * inventory.length);
             message.clue = inventory[inventory_index].name
           }

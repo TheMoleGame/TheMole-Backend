@@ -11,6 +11,7 @@ from mole_backend.settings import DATABASES
 
 
 OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
+DEFAULT_START_POSITION = 4
 
 random.seed(time.time())
 
@@ -83,7 +84,7 @@ def _random_occasion_choices():
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos):
+    def __init__(self, sio, token, host_sid, player_infos, start_position):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
@@ -112,7 +113,8 @@ class Game:
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
 
         self.map = small_map_shortcut()  # small test map
-        self.team_pos: pyllist.dllistnode = self.map.nodeat(4)
+        start_position = DEFAULT_START_POSITION if start_position is None else start_position
+        self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 

@@ -75,8 +75,6 @@ def _random_occasion_choices():
         result = {'type': choice}
         if choice == 'move_forwards':
             result['value'] = random.randint(1, 4)
-        elif choice == 'skip_player':
-            result['name'] = None
         return result
 
     return list(map(_enrich_choice, choices))

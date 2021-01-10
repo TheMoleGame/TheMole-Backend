@@ -391,12 +391,13 @@ class Game:
         """
         Moves the player while handling turn state, minigames and occasions.
         """
+
         remaining_moves = self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
         # TODO remove second condition (self.get_team_pos().type == FieldType.SHORTCUT) to make shortcut fields possible
-        if remaining_moves is not None or self.get_team_pos().type == FieldType.SHORTCUT:
-            print("stepped on minigame")
+        if remaining_moves is not None: # or self.get_team_pos().type == FieldType.SHORTCUT:
+            print("stepped on minigame, index:" + str(self.get_team_pos().index))
             if self.get_team_pos().type not in [FieldType.MINIGAME, FieldType.SHORTCUT]:
                 raise AssertionError(
                     'got remaining moves, but not on minigame field.\ncurrent field type: {}'.format(
@@ -409,7 +410,7 @@ class Game:
 
             self.next_player(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
-            print("stepped on occasion")
+            print("stepped on occasion, index:" + str(self.get_team_pos().index))
             occasion_choices = _random_occasion_choices()
             for player in self.players:
                 if self.get_current_player().sid == player.sid:
@@ -426,17 +427,19 @@ class Game:
                     )
             self.turn_state.choosing_occasion(occasion_choices)
         elif self.get_team_pos().type == FieldType.SHORTCUT:  # TODO: this is currently unreachable. See first condition
-            print("stepped on minigame field")
             # todo
             # if minigame was won
-            self.team_pos = self.map.nodeat(self.get_team_pos().shortcut_field)
+            jump = self.get_team_pos().shortcut_field - self.get_team_pos().index
+            print("stepped on shortcut field, jump:" + str(jump) + " index:" + str(self.get_team_pos().index))
+            self.move_player(jump)
             # if minigame was lost
             # do nothing stay at spot or walk remaining moves
+            self.next_player(sio)
         elif self.get_team_pos().type == FieldType.Goal:
-            print("stepped on goal field")
+            print("stepped on goal field, index:" + str(self.get_team_pos().index))
             self.game_over()
         else:
-            print("stepped on normal field")
+            print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.next_player(sio)
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
@@ -718,7 +721,6 @@ class Game:
 
         return clues
 
-
     def game_over(self):
         self.turn_state.game_over()
         # if mole player won
@@ -761,7 +763,7 @@ class Field(dict):
         dict.__init__(self, index=Field.counter)
         self.index = Field.counter
         Field.counter = Field.counter + 1
-        self.shortcut_field = shortcut_field    # type: pyllist.dllist
+        self.shortcut_field = shortcut_field    # int
         self.type = field_type                  # type: FieldType
         dict.__setitem__(self, "shortcut", self.shortcut_field)
         dict.__setitem__(self, "field_type", self.type)
@@ -792,7 +794,7 @@ def small_map_shortcut():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
@@ -801,7 +803,7 @@ def small_map_shortcut():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -828,7 +830,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
@@ -837,7 +839,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))

@@ -477,6 +477,8 @@ class Game:
                 'occasion choice: {}'.format(self.turn_state.occasion_choices, chosen_occasion)
             )
 
+        self.turn_state.occasion_choices = None  # reset occasion choices
+
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
             clue = None
@@ -522,8 +524,8 @@ class Game:
         elif occasion_type == 'hinder_dicing':
             self.move_modifier = MoveModifier.HINDER
             self.end_player_turn(sio)
-
-        self.turn_state.occasion_choices = None  # reset occasion choices
+        else:
+            raise InvalidMessageException('type of occasion choice is invalid: "{}"'.format(occasion_type))
 
     # noinspection PyMethodMayBeStatic
     def trigger_minigame(self):

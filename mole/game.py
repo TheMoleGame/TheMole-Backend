@@ -118,11 +118,6 @@ class Game:
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 
-        # print(self.map_to_json())
-        # self.move(2, self.players[0])  # test case move
-
-        self.move_multiplier = 1
-
         # TODO: Serialize Map and send with init packet
         for player in self.players:
             clue = player.inventory[0].__dict__

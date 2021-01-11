@@ -170,10 +170,13 @@ class Game:
         num_fields = random.randint(1, 2)
         for i in range(num_fields):
             if self.moriarty_pos.next is None:
-                raise Exception('Moriarty reached end of map')  # TODO
+                # Should not be possible
+                # raise Exception('Moriarty reached end of map')  # TODO
+                self.game_over() # Maybe allow the Team in the future to stall on the goal field to search for evidences
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
-                raise Exception('Moriarty caught players')  # TODO
+                self.game_over("Mole Wins")
+                # raise Exception('Moriarty caught players')  # TODO
 
         # TODO: remove follower_move, if frontend uses moriarty_move
         self.send_to_all(sio, 'follower_move', self.get_moriarty_pos().index)
@@ -688,16 +691,17 @@ class Game:
 
         return clues
 
-    def game_over(self):
+    def game_over(self, result=None):
         self.turn_state.game_over()
         # if mole player won
         # let everybody guess one last time?
         # check if any players clues match the goal clues
-        result = "Mole wins"
-        for player in self.players:
-            if self.validate_clues(player.inventory):
-                result = "Team wins"
-                break
+        if result is None:
+            result = "Mole wins"
+            for player in self.players:
+                if self.validate_clues(player.inventory):
+                    result = "Team wins"
+                    break
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +

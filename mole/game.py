@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import time
 from enum import Enum
 import random
@@ -12,6 +11,7 @@ from mole_backend.settings import DATABASES
 
 
 OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
+DEFAULT_START_POSITION = 4
 
 random.seed(time.time())
 
@@ -84,7 +84,7 @@ def _random_occasion_choices():
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos):
+    def __init__(self, sio, token, host_sid, player_infos, start_position):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
@@ -113,19 +113,19 @@ class Game:
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
 
         self.map = small_map_shortcut()  # small test map
-        self.team_pos: pyllist.dllistnode = self.map.nodeat(4)
-        self.follower_pos: pyllist.dllistnode = self.map.nodeat(0)
+        start_position = DEFAULT_START_POSITION if start_position is None else start_position
+        self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
+        self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
-
-        # print(self.map_to_json())
-        # self.move(2, self.players[0])  # test case move
-
-        self.move_multiplier = 1
 
         # TODO: Serialize Map and send with init packet
         for player in self.players:
             clue = player.inventory[0].__dict__
-            sio.emit('init', {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue}, room=player.sid)
+            sio.emit(
+                'init',
+                {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue},
+                room=player.sid
+            )
 
         self.send_players_turn(sio)
 
@@ -139,12 +139,12 @@ class Game:
         """
         return self.team_pos.value
 
-    def get_follower_pos(self):
+    def get_moriarty_pos(self):
         """
         :rtype: Field
-        :return: The Field the devil is standing on
+        :return: The Field moriarty is standing on
         """
-        return self.follower_pos.value
+        return self.moriarty_pos.value
 
     def move_player(self, distance: int) -> int or None:
         """
@@ -154,13 +154,8 @@ class Game:
         :param distance: the number of fields to move
         :return: If a minigame field was reached, the number of remaining move distance is returned, otherwise None
         """
-        forwards = distance >= 0
-        distance = abs(distance)
         for i in range(distance):
-            if forwards:
-                self.team_pos = self.team_pos.next  # get next field
-            else:
-                self.team_pos = self.team_pos.prev  # get next field
+            self.team_pos = self.team_pos.next  # get next field
             if self.team_pos is None:
                 self.game_over()  # raise NotImplementedError('End of map reached')
             else:
@@ -168,38 +163,21 @@ class Game:
                 if field.type == FieldType.MINIGAME:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
                     remaining_distance = distance - i - 1
-                    if not forwards:
-                        remaining_distance = -remaining_distance
                     return remaining_distance
         return None
 
-    def check_end_turn(self, sio):
-        if self.turn_state.player_index == len(self.players):
-            # set player_index to first not disabled player
-            self.turn_state.player_index = 0
-            while self.get_current_player().disabled:
-                self.get_current_player().disabled = False
-                print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
-                self.turn_state.player_index += 1
-
-                # This only happens, when all players are disabled in a round...
-                if self.turn_state.player_index == len(self.players):
-                    self.turn_state.player_index = 0
-                    self.follower_move(sio)  # in this case the follower moves two times
-            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
-            self.follower_move(sio)
-            self.send_players_turn(sio)
-
-    def follower_move(self, sio):
-        num_fields = random.randint(1, 6)
+    def moriarty_move(self, sio):
+        num_fields = random.randint(1, 2)
         for i in range(num_fields):
-            self.follower_pos = self.follower_pos.next
-            if self.follower_pos is None:
-                raise Exception('Follower reached end of map')  # TODO
-            if self.get_follower_pos().index == self.get_team_pos().index:
-                raise Exception('Follower caught players')  # TODO
+            if self.moriarty_pos.next is None:
+                raise Exception('Moriarty reached end of map')  # TODO
+            self.moriarty_pos = self.moriarty_pos.next
+            if self.get_moriarty_pos().index == self.get_team_pos().index:
+                raise Exception('Moriarty caught players')  # TODO
 
-        self.send_to_all(sio, 'follower_move', self.get_follower_pos().index)
+        # TODO: remove follower_move, if frontend uses moriarty_move
+        self.send_to_all(sio, 'follower_move', self.get_moriarty_pos().index)
+        self.send_to_all(sio, 'moriarty_move', self.get_moriarty_pos().index)
 
     def send_players_turn(self, sio):
         self.send_to_all(
@@ -208,15 +186,14 @@ class Game:
             {'player_id': self.get_current_player().player_id, 'movement_modifier': self.move_modifier.name.lower()}
         )
 
-    def next_player(self, sio):
+    def end_player_turn(self, sio):
         """
-        Sets turn_state.player_id to a not disabled player or to the len of players.
+        Moves the moriarty. Sets turn_state.player_id to a not disabled player.
         Removes disabling of all players, that are skipped, because of disable.
         """
         while True:
-            self.turn_state.player_index += 1
-            if self.turn_state.player_index >= len(self.players):
-                break
+            self.moriarty_move(sio)
+            self.turn_state.player_index = (self.turn_state.player_index + 1) % len(self.players)
             if self.get_current_player().disabled:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
@@ -235,7 +212,7 @@ class Game:
             result += ' - '+str(field.type.name)
             if node == self.team_pos:
                 result += '+Team'
-            if node == self.follower_pos:
+            if node == self.moriarty_pos:
                 result += '+ Devil'
         print(result)
         print('---------------------------------------------------')
@@ -348,7 +325,7 @@ class Game:
                 room=player.sid
             )
 
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
         elif player_choice.get('type') == 'validate-clues':
             player = self.get_player(sid)
@@ -365,7 +342,7 @@ class Game:
                     room=player.sid
                 )
 
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
         elif player_choice.get('type') == 'search-clue':
             player = self.get_player(sid)
@@ -383,9 +360,7 @@ class Game:
                 room=player.sid
             )
 
-            self.next_player(sio)
-
-        self.check_end_turn(sio)
+            self.end_player_turn(sio)
 
     def handle_movement(self, sio, move_distance: int):
         """
@@ -407,7 +382,7 @@ class Game:
             self.trigger_minigame()
             self.send_to_all(sio, 'minigame', 'not implemented')
 
-            self.next_player(sio)  # TODO: remove this, if minigames are implemented
+            self.end_player_turn(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion")
             occasion_choices = _random_occasion_choices()
@@ -437,7 +412,7 @@ class Game:
             self.game_over()
         else:
             print("stepped on normal field")
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
         """
@@ -502,6 +477,8 @@ class Game:
                 'occasion choice: {}'.format(self.turn_state.occasion_choices, chosen_occasion)
             )
 
+        self.turn_state.occasion_choices = None  # reset occasion choices
+
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
             clue = None
@@ -518,7 +495,7 @@ class Game:
                 room=player.sid
             )
 
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
         elif occasion_type == 'move_forwards':
             num_fields = chosen_occasion.get('value')
@@ -532,22 +509,23 @@ class Game:
 
         elif occasion_type == 'simplify_dicing':
             self.move_modifier = MoveModifier.SIMPLIFY
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
         elif occasion_type == 'skip_player':
             skip_player = next((p for p in self.players if p.player_id == chosen_occasion.get('player_id')), None)
             if skip_player is None:
-                raise InvalidMessageException('Could not find player with id "{}"'.format(chosen_occasion.get('player_id')))
+                raise InvalidMessageException(
+                    'Could not find player with id "{}"'.format(chosen_occasion.get('player_id'))
+                )
 
             skip_player.disabled = True
-            self.next_player(sio)
+            self.end_player_turn(sio)
 
         elif occasion_type == 'hinder_dicing':
             self.move_modifier = MoveModifier.HINDER
-            self.next_player(sio)
-
-        self.check_end_turn(sio)
-        self.turn_state.occasion_choices = None  # reset occasion choices
+            self.end_player_turn(sio)
+        else:
+            raise InvalidMessageException('type of occasion choice is invalid: "{}"'.format(occasion_type))
 
     # noinspection PyMethodMayBeStatic
     def trigger_minigame(self):
@@ -574,7 +552,6 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-
     def add_clue(self, received_from, player, clue):
         # Reset received_from and sent_to information
         clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
@@ -582,14 +559,12 @@ class Game:
         player.inventory.append(clue_copy)
         return clue_copy
 
-
     def check_and_add_clue(self, received_from, player, clue):
         for c in player.inventory:
             if c.name == clue.name:
                 return c
 
         return self.add_clue(received_from, player, clue)
-
 
     def get_random_missing_clue(self, clues):
         """
@@ -606,10 +581,8 @@ class Game:
 
         return random.choice(missing_clues)
 
-
     def evidence_2_clue(self, evidence):
         return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
-
 
     def clues_dict_2_object(self, clues):
         """
@@ -622,7 +595,6 @@ class Game:
             converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
 
         return converted_clues
-
 
     def validate_clues(self, clues):
         """
@@ -648,7 +620,6 @@ class Game:
 
         return len(clue_group) == 0
 
-
     def add_verified_clues_to_proofs(self, clues, is_mole):
         # Check if the verified clues have already been added to the other teams proofs or self proofs
         for clue in clues:
@@ -656,7 +627,6 @@ class Game:
                 self.mole_proofs.append(clue)
             elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
                 self.team_proofs.append(clue)
-
 
     def generate_solution_clues(self):
         """
@@ -717,7 +687,6 @@ class Game:
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_districts)))
 
         return clues
-
 
     def game_over(self):
         self.turn_state.game_over()

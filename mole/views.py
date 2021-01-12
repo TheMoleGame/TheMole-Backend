@@ -32,9 +32,16 @@ def create_game(sid, _message):
 
 @sio.event
 def start_game(sid, message):
-    assert isinstance(message, str)
-    print('starting game {}'.format(message))
-    games.start_game(sio, sid, token=message)
+    token = None
+    start_position = None
+    if isinstance(message, str):
+        token = message
+    elif isinstance(message, dict):
+        token = message.get('token')
+        start_position = message.get('startposition')
+
+    print('starting game {}'.format(token))
+    games.start_game(sio, sid, token=token, start_position=start_position)
 
 
 @sio.event

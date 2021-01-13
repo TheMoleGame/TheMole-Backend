@@ -558,6 +558,7 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
+    # todo move to player
     def add_clue(self, received_from, player, clue):
         # Reset received_from and sent_to information
         clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
@@ -587,9 +588,11 @@ class Game:
 
         return random.choice(missing_clues)
 
+    # todo move to fassade static
     def evidence_2_clue(self, evidence):
         return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
 
+    # todo move to fassade static
     def clues_dict_2_object(self, clues):
         """
         :rtype: list[Evidence]

@@ -340,10 +340,11 @@ class Game:
         elif player_choice.get('type') == 'validate-clues':
             player = self.get_player(sid)
             clues = self.clues_dict_2_object(player_choice.get('clues'))
-            successful_validation = self.validate_clues(clues)
+
+            # Validate only when all clues are available. Guessing is not allowed!
+            successful_validation = self.validate_clues(clues) if self.validation_allowed(self, player.inventory, clues) else False
 
             # Always send back the clues that should be validated
-            # TODO: Nur Validieren, wenn alle Beweise vorhanden sind. Nicht raten!!!
             if successful_validation:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
                 self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation, 'clues': player_choice.get('clues')})
@@ -618,6 +619,24 @@ class Game:
             converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
 
         return converted_clues
+
+
+    def validation_allowed(self, player_clues, clues):
+        clue_type = clues[0].type
+
+        for clue in clues:
+            # The clue type must be the same for all clues
+            if clue.type != clue_type:
+                return False
+
+            # The clues must be in the players inventory
+            result = next((c for c in player_clues if c.name == clue.name), None)
+
+            if result is None:
+                return False
+
+        return True
+
 
     def validate_clues(self, clues):
         """

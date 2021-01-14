@@ -342,15 +342,15 @@ class Game:
             clues = self.clues_dict_2_object(player_choice.get('clues'))
             successful_validation = self.validate_clues(clues)
 
-            # TODO: Immer clues verschicken!
+            # Always send back the clues that should be validated
             # TODO: Nur Validieren, wenn alle Beweise vorhanden sind. Nicht raten!!!
             if successful_validation:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
-                self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation})
+                self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation, 'clues': player_choice.get('clues')})
             else:
                 sio.emit(
                     'validation_result',
-                    {'successful_validation': successful_validation},
+                    {'successful_validation': successful_validation, 'clues': player_choice.get('clues')},
                     room=player.sid
                 )
 

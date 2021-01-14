@@ -56,4 +56,3 @@ git push heroku master
 ## Access from web
 
 See [here](https://gitlab.rz.htw-berlin.de/s0565666/augmented-boardgame/-/wikis/Serververbindung) for more information.
-

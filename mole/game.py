@@ -106,7 +106,7 @@ class Game:
         for player_id, player_info in enumerate(player_infos):
             self.players.append(Player(player_id, player_info['name'], player_info['sid'], random.choice(self.clues)))
 
-        # Choose random mole
+        # TODO: Hinweis nur einmal vergeben
         random.choice(self.players).is_mole = True
 
         self.turn_state: TurnState = TurnState()
@@ -332,6 +332,8 @@ class Game:
             clues = self.clues_dict_2_object(player_choice.get('clues'))
             successful_validation = self.validate_clues(clues)
 
+            # TODO: Immer clues verschicken!
+            # TODO: Nur Validieren, wenn alle Beweise vorhanden sind. Nicht raten!!!
             if successful_validation:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
                 self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation})

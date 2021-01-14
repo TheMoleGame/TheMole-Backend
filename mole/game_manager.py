@@ -25,6 +25,10 @@ class PendingGame:
             room=self.token
         )
 
+    def rejoin_player(self, sio, sid, name):
+        # todo
+        pass
+
     def __str__(self):
         return 'Game(token={}  num_players={})'.format(self.token, len(self.players))
 

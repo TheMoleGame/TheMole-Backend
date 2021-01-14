@@ -170,10 +170,13 @@ class Game:
         num_fields = random.randint(1, 2)
         for i in range(num_fields):
             if self.moriarty_pos.next is None:
-                raise Exception('Moriarty reached end of map')  # TODO
+                # Should not be possible
+                # raise Exception('Moriarty reached end of map')  # TODO
+                self.game_over() # Maybe allow the Team in the future to stall on the goal field to search for evidences
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
-                raise Exception('Moriarty caught players')  # TODO
+                self.game_over("Mole Wins")
+                # raise Exception('Moriarty caught players')  # TODO
 
         # TODO: remove follower_move, if frontend uses moriarty_move
         self.send_to_all(sio, 'follower_move', self.get_moriarty_pos().index)
@@ -368,12 +371,13 @@ class Game:
         """
         Moves the player while handling turn state, minigames and occasions.
         """
+
         remaining_moves = self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
         # TODO remove second condition (self.get_team_pos().type == FieldType.SHORTCUT) to make shortcut fields possible
-        if remaining_moves is not None or self.get_team_pos().type == FieldType.SHORTCUT:
-            print("stepped on minigame")
+        if remaining_moves is not None: # or self.get_team_pos().type == FieldType.SHORTCUT:
+            print("stepped on minigame, index:" + str(self.get_team_pos().index))
             if self.get_team_pos().type not in [FieldType.MINIGAME, FieldType.SHORTCUT]:
                 raise AssertionError(
                     'got remaining moves, but not on minigame field.\ncurrent field type: {}'.format(
@@ -386,7 +390,7 @@ class Game:
 
             self.end_player_turn(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
-            print("stepped on occasion")
+            print("stepped on occasion, index:" + str(self.get_team_pos().index))
             occasion_choices = _random_occasion_choices()
             for player in self.players:
                 if self.get_current_player().sid == player.sid:
@@ -403,17 +407,19 @@ class Game:
                     )
             self.turn_state.choosing_occasion(occasion_choices)
         elif self.get_team_pos().type == FieldType.SHORTCUT:  # TODO: this is currently unreachable. See first condition
-            print("stepped on minigame field")
             # todo
             # if minigame was won
-            self.team_pos = self.map.nodeat(self.get_team_pos().shortcut_field)
+            jump = self.get_team_pos().shortcut_field - self.get_team_pos().index
+            print("stepped on shortcut field, jump:" + str(jump) + " index:" + str(self.get_team_pos().index))
+            self.move_player(jump)
             # if minigame was lost
             # do nothing stay at spot or walk remaining moves
+            self.end_player_turn(sio)
         elif self.get_team_pos().type == FieldType.Goal:
-            print("stepped on goal field")
+            print("stepped on goal field, index:" + str(self.get_team_pos().index))
             self.game_over()
         else:
-            print("stepped on normal field")
+            print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.end_player_turn(sio)
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
@@ -554,6 +560,7 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
+    # todo move to player
     def add_clue(self, received_from, player, clue):
         # Reset received_from and sent_to information
         clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
@@ -583,9 +590,11 @@ class Game:
 
         return random.choice(missing_clues)
 
+    # todo move to fassade static
     def evidence_2_clue(self, evidence):
         return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
 
+    # todo move to fassade static
     def clues_dict_2_object(self, clues):
         """
         :rtype: list[Evidence]
@@ -690,16 +699,17 @@ class Game:
 
         return clues
 
-    def game_over(self):
+    def game_over(self, result=None):
         self.turn_state.game_over()
         # if mole player won
         # let everybody guess one last time?
         # check if any players clues match the goal clues
-        result = "Mole wins"
-        for player in self.players:
-            if self.validate_clues(player.inventory):
-                result = "Team wins"
-                break
+        if result is None:
+            result = "Mole wins"
+            for player in self.players:
+                if self.validate_clues(player.inventory):
+                    result = "Team wins"
+                    break
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
@@ -732,7 +742,7 @@ class Field(dict):
         dict.__init__(self, index=Field.counter)
         self.index = Field.counter
         Field.counter = Field.counter + 1
-        self.shortcut_field = shortcut_field    # type: pyllist.dllist
+        self.shortcut_field = shortcut_field    # int
         self.type = field_type                  # type: FieldType
         dict.__setitem__(self, "shortcut", self.shortcut_field)
         dict.__setitem__(self, "field_type", self.type)
@@ -763,7 +773,7 @@ def small_map_shortcut():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
@@ -772,7 +782,7 @@ def small_map_shortcut():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -799,7 +809,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
@@ -808,7 +818,7 @@ def create_big_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.MINIGAME))
+    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))

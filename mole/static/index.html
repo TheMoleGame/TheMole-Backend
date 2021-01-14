@@ -25,6 +25,10 @@
       let test_player_id = 0;
       let player_infos = null;
 
+      socket.on('occasion_info', data => {
+        console.log('got occasion info: ', data);
+      });
+
       $('#create-button').click(function() {
         socket.emit('create_game', '', function(data) {
           $('#token-label').text('Game Token: ' + data);

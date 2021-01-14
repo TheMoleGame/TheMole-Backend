@@ -487,6 +487,8 @@ class Game:
 
         self.turn_state.occasion_choices = None  # reset occasion choices
 
+        sio.emit('occasion_info', chosen_occasion, room=self.token)
+
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
             clue = None

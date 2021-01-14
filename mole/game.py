@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
+from copy import deepcopy
 from enum import Enum
 import random
 import pyllist
@@ -94,19 +95,25 @@ class Game:
         self.clues = self.generate_solution_clues()
 
         # TODO: Delete later. Frontend needs this for testing
-        clues = []
+        clues_dict = []
         for clue in self.clues:
-            clues.append(clue.__dict__)
-        self.send_to_all(sio, 'solution_clues', {'clues': clues})
+            clues_dict.append(clue.__dict__)
+        self.send_to_all(sio, 'solution_clues', {'clues': clues_dict})
 
         self.team_proofs = []
         self.mole_proofs = []
-
         self.players = []
-        for player_id, player_info in enumerate(player_infos):
-            self.players.append(Player(player_id, player_info['name'], player_info['sid'], random.choice(self.clues)))
 
-        # TODO: Hinweis nur einmal vergeben
+        # Deep copy of the array so that the clue can be deleted when it is assigned to the players. This guarantees that each player is assigned a different proof
+        clues_copy = []
+        for clue in self.clues:
+            clues_copy.append(deepcopy(clue))
+
+        for player_id, player_info in enumerate(player_infos):
+            clue = random.choice(clues_copy)
+            self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
+            clues_copy.remove(clue)
+
         random.choice(self.players).is_mole = True
 
         self.turn_state: TurnState = TurnState()
@@ -589,6 +596,11 @@ class Game:
                 missing_clues.append(clue)
 
         return random.choice(missing_clues)
+
+    def get_clue_by_name(self, clue):
+        for c in self.clues:
+            if c.name == clue.name:
+                return c
 
     # todo move to fassade static
     def evidence_2_clue(self, evidence):

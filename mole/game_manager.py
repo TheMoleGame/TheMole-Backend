@@ -122,6 +122,7 @@ class GameManager:
 
         if pending_game is None:
             if self.handle_rejoin(sio, sid, token, name):
+                sio.enter_room(sid, token)
                 return
             print('pending games: {}'.format(', '.join(map(lambda g: g.token, self.pending_games))))
             raise Exception(

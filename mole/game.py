@@ -360,6 +360,18 @@ class Game:
             move_distance = int(player_choice.get('value'))
             move_distance = (move_distance - 1) % 3 + 1
             move_distance = int(move_distance * self.move_modifier.get_factor())
+            if self.move_modifier == MoveModifier.HINDER:
+                sio.emit(
+                    'occasion_info',
+                    {'type': 'unhinder_dicing', 'player_id': self.get_current_player().player_id},
+                    room=self.host_sid
+                )
+            elif self.move_modifier == MoveModifier.SIMPLIFY:
+                sio.emit(
+                    'occasion_info',
+                    {'type': 'unsimplify_dicing', 'player_id': self.get_current_player().player_id},
+                    room=self.host_sid
+                )
             self.move_modifier = MoveModifier.NORMAL
             # be merciful
             if move_distance == 0:

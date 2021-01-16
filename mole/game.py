@@ -247,12 +247,19 @@ class Game:
         Moves the moriarty. Sets turn_state.player_id to a not disabled player.
         Removes disabling of all players, that are skipped, because of disable.
         """
+        do_moriarty_move = True
         while True:
-            self.moriarty_move(sio)
+            if do_moriarty_move:
+                self.moriarty_move(sio)
+            do_moriarty_move = True
+
             self.turn_state.player_index = (self.turn_state.player_index + 1) % len(self.players)
             if self.get_current_player().disabled:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
+            elif not self.get_current_player().connected:
+                print('skipping player "{}" as he is disconnected'.format(self.get_current_player().name))
+                do_moriarty_move = False  # If we skipped a disconnected player, moriarty also does not move
             else:
                 self.send_players_turn(sio)
                 break

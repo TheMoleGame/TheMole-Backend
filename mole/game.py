@@ -264,6 +264,11 @@ class Game:
             if self.get_current_player().disabled:
                 self.get_current_player().disabled = False
                 print('player "{}" is not longer disabled.'.format(self.get_current_player().name))
+                sio.emit(
+                    'occasion_info',
+                    {'type': 'unskip_player', 'player_id': self.get_current_player().player_id},
+                    room=self.host_sid
+                )
             elif not self.get_current_player().connected:
                 print('skipping player "{}" as he is disconnected'.format(self.get_current_player().name))
                 do_moriarty_move = False  # If we skipped a disconnected player, moriarty also does not move

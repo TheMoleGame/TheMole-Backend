@@ -151,6 +151,13 @@ class Game:
         if player is None:
             print('WARN: got disconnect from player, that could not be found.', file=sys.stderr)
             return
+
+        # handle if current player disconnects
+        if self.get_current_player().sid == sid:
+            self.end_player_turn(sio)
+            self.turn_state.occasion_choices = None
+            self.turn_state.remaining_move_distance = 0
+
         player.connected = False
         sio.emit('player_disconnected', player.player_id, room=self.host_sid)
         print('player {} disconnected'.format(player.name))

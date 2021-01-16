@@ -128,10 +128,16 @@ class Game:
 
         # TODO: Serialize Map and send with init packet
         for player in self.players:
-            clue = player.inventory[0].__dict__
+            clues = list(map(lambda c: c.__dict__, player.inventory))
             sio.emit(
                 'init',
-                {'player_id': player.player_id, 'is_mole': player.is_mole, 'map': None, 'clue': clue},
+                {
+                    'player_id': player.player_id,
+                    'is_mole': player.is_mole,
+                    'map': None,  # TODO: remove this
+                    'clue': clues[0],  # TODO: remove this
+                    'clues': clues
+                },
                 room=player.sid
             )
 
@@ -159,6 +165,18 @@ class Game:
         player.connected = True
 
         sio.emit('player_rejoined', player.player_id, room=self.host_sid)
+        clues = list(map(lambda c: c.__dict__, player.inventory))
+        sio.emit(
+            'init',
+            {
+                'player_id': player.player_id,
+                'is_mole': player.is_mole,
+                'map': None,  # TODO: remove this
+                'clue': clues[0],  # TODO: remove this
+                'clues': clues
+            },
+            room=player.sid
+        )
         print('player {} rejoined'.format(player.name))
 
     def has_disconnected_player(self, name):

@@ -154,7 +154,7 @@ class Game:
 
         # handle if current player disconnects
         if self.get_current_player().sid == sid:
-            self.end_player_turn(sio)
+            self.end_player_turn(sio, do_moriarty_move=False)
             self.turn_state.occasion_choices = None
             self.turn_state.remaining_move_distance = 0
 
@@ -249,12 +249,11 @@ class Game:
             {'player_id': self.get_current_player().player_id, 'movement_modifier': self.move_modifier.name.lower()}
         )
 
-    def end_player_turn(self, sio):
+    def end_player_turn(self, sio, do_moriarty_move=True):
         """
         Moves the moriarty. Sets turn_state.player_id to a not disabled player.
         Removes disabling of all players, that are skipped, because of disable.
         """
-        do_moriarty_move = True
         while True:
             if do_moriarty_move:
                 self.moriarty_move(sio)

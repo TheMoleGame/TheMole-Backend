@@ -56,6 +56,9 @@ def join_game(sid, message):
     except TypeError:
         raise Exception('ERROR: message is not an object. Got {} instead'.format(message))
 
+    if not name:
+        raise Exception('ERROR: Cant join with empty name.')
+
     games.handle_join(sio, sid, token, name)
 
 

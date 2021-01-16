@@ -173,7 +173,7 @@ class Game:
 
         sio.emit('player_rejoined', player.player_id, room=self.host_sid)
         player_info = list(map(lambda p: {'name': p.name, 'player_id': p.player_id}, self.players))
-        sio.emit('player_infos', player_info, room=self.token)
+        sio.emit('player_infos', player_info, room=player.sid)
         clues = list(map(lambda c: c.__dict__, player.inventory))
         sio.emit(
             'init',

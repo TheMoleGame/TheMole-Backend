@@ -227,7 +227,7 @@ class Game:
         return None
 
     def moriarty_move(self, sio):
-        num_fields = random.randint(1, 2)
+        num_fields = random.choice([1, 1, 1, 2])
         for i in range(num_fields):
             if self.moriarty_pos.next is None:
                 # Should not be possible

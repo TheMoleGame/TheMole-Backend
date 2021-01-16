@@ -115,6 +115,7 @@ class GameManager:
             )
             return False
         game.player_rejoin(sio, sid, name)
+        self.games[sid] = game
         return True
 
     def handle_join(self, sio, sid, token, name):

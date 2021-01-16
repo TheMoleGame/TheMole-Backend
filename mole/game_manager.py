@@ -123,17 +123,21 @@ class GameManager:
         if pending_game is None:
             if self.handle_rejoin(sio, sid, token, name):
                 sio.enter_room(sid, token)
-                return
-            print('pending games: {}'.format(', '.join(map(lambda g: g.token, self.pending_games))))
-            raise Exception(
-                'ERROR: join game with token {} could not be found for player with sid {}'.format(token, sid)
-            )
+            else:
+                sio.emit('join_failed', 'No game found with token "{}"!'.format(token), room=sid)
+                raise Exception(
+                    'ERROR: join game with token {} could not be found for player with sid {}'.format(token, sid)
+                )
+        else:
+            if len(pending_game.players) >= 8:
+                sio.emit('join_failed', 'Game "{}" is full!'.format(token), room=sid)
+                raise Exception('ERROR: Player "{}" cannot join game "{}" as it is full.'.format(name, token))
 
-        sio.enter_room(sid, pending_game.token)
+            sio.enter_room(sid, pending_game.token)
 
-        pending_game.add_player(sio, sid, name)
+            pending_game.add_player(sio, sid, name)
 
-        print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
+            print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 
     def handle_disconnect(self, sio, sid):
         # remove from pending games

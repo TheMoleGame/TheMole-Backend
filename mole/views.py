@@ -27,6 +27,8 @@ def create_game(sid, _message):
     # game host also joins room for debugging
     sio.enter_room(sid, token)
 
+    print('Created game "{}"'.format(token), file=sys.stderr)
+
     return token
 
 
@@ -54,16 +56,12 @@ def join_game(sid, message):
     except TypeError:
         raise Exception('ERROR: message is not an object. Got {} instead'.format(message))
 
-    pending_game = games.get_pending_by_token(token)
+    games.handle_join(sio, sid, token, name)
 
-    if pending_game is None:
-        raise Exception('ERROR: invalid token: {}'.format(token))
 
-    sio.enter_room(sid, pending_game.token)
-
-    pending_game.add_player(sio, sid, name)
-
-    print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
+@sio.event
+def disconnect(sid):
+    games.handle_disconnect(sio, sid)
 
 
 @sio.event

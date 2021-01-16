@@ -31,6 +31,7 @@ class Player(CharacterInterface):
 
         self.sid = sid
         self.disabled = False
+        self.connected = True
 
     def search_hint(self) -> []:
         # TODO

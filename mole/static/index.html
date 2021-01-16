@@ -16,7 +16,16 @@
   <input id="create-button" type="button" value="Create Game"><br>
   <label id="token-label">Game Token:</label><br>
   <input id="start-button" type="button" value="Start Game"><br>
-  <input id="join-player" type="button" value="Test Player Join"><br>
+  <input id="join-player" type="button" value="Test Player Join"><br><br>
+  <label id="external-label">Join Extern Games:</label><br>
+
+  <label for="join-extern-token">Game Token: </label>
+  <input id="join-extern-token" type="text" value=""><br>
+
+  <label for="join-extern-name">Player Name: </label>
+  <input id="join-extern-name" type="text" value=""><br>
+
+  <input id="join-extern-player" type="button" value="Extern Test Player Join"><br>
 
   <script>
     $(document).ready(function() {
@@ -28,6 +37,14 @@
       socket.on('occasion_info', data => {
         console.log('got occasion info: ', data);
       });
+
+      socket.on('player_disconnected', data => {
+        console.log('got player disconnect: ', data);
+      })
+
+      socket.on('player_rejoined', data => {
+        console.log('got player rejoin: ', data);
+      })
 
       $('#create-button').click(function() {
         socket.emit('create_game', '', function(data) {
@@ -41,14 +58,13 @@
         console.log('game started');
       });
 
-      $('#join-player').click(function() {
+      function setup_player(name, token) {
         if (token === '') {
           console.error('No game to join!');
           return;
         }
 
         let player_socket = io.connect('');
-        let name = 'test_player' + test_player_id;
         let inventory = []
 
         player_socket.on('players_turn', data => {
@@ -105,9 +121,8 @@
         });
         player_socket.on('gameover', data => { console.log(name + ' got player infos:', data) });
 
-        player_socket.emit('join_game', {'token': token, 'name': 'test_player' + test_player_id});
+        player_socket.emit('join_game', {'token': token, 'name': name});
         console.log('player "' + name + '" added');
-        test_player_id += 1;
 
         // dice buttons
         const dice1_button = $('<input type="button" value="Dice 1">');
@@ -148,14 +163,19 @@
             message.clue = inventory[inventory_index].name
           }
           if (player_choice_type === 'validate-clues') {
-             message.clues = inventory
+            message.clues = inventory
           }
           if (player_choice_type === 'search-clue') {
-             message.success = Math.random() < 0.5
+            message.success = Math.random() < 0.5
           }
 
           console.log('send choice ', message);
           player_socket.emit('player_choice', message);
+        });
+
+        const disconnect_button = $('<input type="button" value="Disconnect">');
+        disconnect_button.click(function() {
+          player_socket.disconnect();
         })
 
         const body = $("body");
@@ -163,7 +183,22 @@
         body.append(dice2_button);
         body.append(dice3_button);
         body.append(player_choice_button);
+        body.append(disconnect_button);
         body.append('<br>');
+      }
+
+      $('#join-player').click(function() {
+        let name = 'test_player' + test_player_id;
+        setup_player(name, token);
+        test_player_id += 1;
+      });
+
+      $('#join-extern-player').click(function() {
+        let name = $('#join-extern-name').val();
+        let token = $('#join-extern-token').val();
+        console.log('name: ', name);
+        console.log('token: ', token);
+        setup_player(name, token);
       })
     });
   </script>

@@ -1,4 +1,6 @@
 import random
+import sys
+from typing import Dict
 
 from .game import Game
 
@@ -12,11 +14,15 @@ class PendingGame:
         self.token = token
         self.host_sid = host_sid
         self.players = []
+        self.next_player_id = 0
 
     def add_player(self, sio, sid, name):
-        player_id = len(self.players)
-        self.players.append({'player_id': player_id, 'sid': sid, 'name': name})
+        self.players.append({'player_id': self.next_player_id, 'sid': sid, 'name': name})
+        self.next_player_id += 1
 
+        self.send_player_infos(sio)
+
+    def send_player_infos(self, sio):
         # send player information to all players
         player_info = list(map(lambda p: {'name': p['name'], 'player_id': p['player_id']}, self.players))
         sio.emit(
@@ -25,9 +31,15 @@ class PendingGame:
             room=self.token
         )
 
-    def rejoin_player(self, sio, sid, name):
-        # todo
-        pass
+    def remove_player(self, sio, sid):
+        # remove player with matching sid
+        removed_players = list(filter(lambda p: p['sid'] == sid, self.players))
+        self.players = list(filter(lambda p: p['sid'] != sid, self.players))
+        self.send_player_infos(sio)
+        for removed_player in removed_players:
+            print('Removed "{}" from game {}'.format(removed_player['name'], self.token))
+        if len(removed_players) >= 2:
+            print('WARN: removed more than one player', file=sys.stderr)
 
     def __str__(self):
         return 'Game(token={}  num_players={})'.format(self.token, len(self.players))
@@ -38,7 +50,7 @@ class PendingGame:
 
 class GameManager:
     def __init__(self):
-        self.games = {}  # maps sids to games
+        self.games: Dict[str, Game] = {}  # maps sids to running games
         self.pending_games = []
         self.taken_tokens = []  # type: list[int]
 
@@ -88,6 +100,57 @@ class GameManager:
     def get(self, sid) -> Game:
         return self.games.get(sid)
 
+    def handle_rejoin(self, sio, sid, token, name):
+        game = None
+        for g in self.games.values():
+            if g.token == token:
+                game = g
+        if game is None:
+            return False
+        if not game.has_disconnected_player(name):
+            print(
+                'Player failed to join game "{}", because of using unknown name "{}"'
+                .format(game.token, name),
+                file=sys.stderr
+            )
+            return False
+        game.player_rejoin(sio, sid, name)
+        return True
+
+    def handle_join(self, sio, sid, token, name):
+        pending_game = self.get_pending_by_token(token)
+
+        if pending_game is None:
+            if self.handle_rejoin(sio, sid, token, name):
+                return
+            print('pending games: {}'.format(', '.join(map(lambda g: g.token, self.pending_games))))
+            raise Exception(
+                'ERROR: join game with token {} could not be found for player with sid {}'.format(token, sid)
+            )
+
+        sio.enter_room(sid, pending_game.token)
+
+        pending_game.add_player(sio, sid, name)
+
+        print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
+
     def remove_user(self, sid):
         if sid in self.games:
             del self.games[sid]
+
+    def handle_disconnect(self, sio, sid):
+        # remove from pending games
+        for pending_game in self.pending_games:
+            for player_index, player in enumerate(pending_game.players):
+                if player['sid'] == sid:
+                    pending_game.remove_player(sio, sid)
+                    break
+
+        # remove from running games
+        game = self.games.get(sid)
+        if game is not None:
+            if game.host_sid == sid:
+                # TODO: Host cannot rejoin at the moment
+                print('Host disconnected for game {}'.format(game.token), file=sys.stderr)
+                return
+            game.player_disconnect(sio, sid)

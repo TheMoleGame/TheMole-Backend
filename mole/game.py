@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import sys
 import time
 from copy import deepcopy
 from enum import Enum
@@ -139,6 +140,33 @@ class Game:
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
 
+    def player_disconnect(self, sio, sid):
+        player = self.get_player(sid)
+        if player is None:
+            print('WARN: got disconnect from player, that could not be found.', file=sys.stderr)
+            return
+        player.connected = False
+        sio.emit('player_disconnected', player.player_id, room=self.host_sid)
+        print('player {} disconnected'.format(player.name))
+
+    def player_rejoin(self, sio, sid, name):
+        player = self.get_player_by_name(name)
+        if player is None:
+            print('WARN: got rejoin from player, that could not be found.', file=sys.stderr)
+            return
+
+        player.sid = sid
+        player.connected = True
+
+        sio.emit('player_rejoined', player.player_id, room=self.host_sid)
+        print('player {} rejoined'.format(player.name))
+
+    def has_disconnected_player(self, name):
+        for p in self.players:
+            if p.name == name and not p.connected:
+                return True
+        return False
+
     def get_team_pos(self):
         """
         :rtype: Field
@@ -236,7 +264,7 @@ class Game:
 
         return json_map
 
-    def get_player(self, sid):
+    def get_player(self, sid) -> Player or None:
         for player in self.players:
             if player.sid == sid:
                 return player
@@ -495,7 +523,7 @@ class Game:
 
         self.turn_state.occasion_choices = None  # reset occasion choices
 
-        sio.emit('occasion_info', chosen_occasion, room=self.token)
+        sio.emit('occasion_info', chosen_occasion, room=self.host_sid)
 
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
@@ -622,7 +650,6 @@ class Game:
 
         return converted_clues
 
-
     def validation_allowed(self, player_clues, clues):
         clue_type = clues[0].type
 
@@ -638,7 +665,6 @@ class Game:
                 return False
 
         return True
-
 
     def validate_clues(self, clues):
         """
@@ -748,6 +774,7 @@ class Game:
               '---------------------------------------------\n' +
               '----------------'+result+'------------------------')
         self.send_to_all(self.sio, 'gameover', result)
+
 
 
 def _occasion_matches(left, right):

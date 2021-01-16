@@ -134,10 +134,6 @@ class GameManager:
 
         print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 
-    def remove_user(self, sid):
-        if sid in self.games:
-            del self.games[sid]
-
     def handle_disconnect(self, sio, sid):
         # remove from pending games
         for pending_game in self.pending_games:

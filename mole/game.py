@@ -543,12 +543,7 @@ class Game:
                 'type': 'hinder_dicing',
             }
         """
-        print(
-            'got player occasion choice: {}\npossible occasions: {}'.format(
-                chosen_occasion,
-                self.turn_state.occasion_choices
-            )
-        )
+        print('got player occasion choice: {}'.format(chosen_occasion))
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name

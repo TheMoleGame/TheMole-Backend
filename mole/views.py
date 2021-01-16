@@ -16,11 +16,6 @@ def index(_request):
 
 
 @sio.event
-def disconnect(sid):
-    games.remove_user(sid)
-
-
-@sio.event
 def create_game(sid, _message):
     token = games.create_game(sid)
 

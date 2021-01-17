@@ -6,6 +6,7 @@ from enum import Enum
 import random
 import pyllist
 import dj_database_url
+from django.db import connections
 
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
@@ -90,9 +91,8 @@ class Game:
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
-        # Create Evidence combination with new database connection
-        DATABASES['game_init{}'.format(self.token)] = dj_database_url.config(conn_max_age=600)
 
+        # Create Evidence combination
         self.clues = self.generate_solution_clues()
 
         # TODO: Delete later. Frontend needs this for testing
@@ -750,8 +750,12 @@ class Game:
         :rtype: list[Evidence]
         :return: List of clues to win the game
         """
-        clues = []
+
+        # Use new database connection
         db_connection = 'game_init{}'.format(self.token)
+        DATABASES[db_connection] = dj_database_url.config(conn_max_age=600)
+
+        clues = []
 
         all_weapon_objects = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                           subtype=ClueSubtype.OBJECT)
@@ -802,6 +806,8 @@ class Game:
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_conditions)))
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_daytime)))
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_districts)))
+
+        connections[db_connection].close()
 
         return clues
 

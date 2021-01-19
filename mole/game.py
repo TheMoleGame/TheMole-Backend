@@ -426,7 +426,7 @@ class Game:
             # Always send back the clues that should be validated
             if successful_validation:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
-                self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation, 'clues': player_choice.get('clues')})
+                self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation, 'player_id': player.player_id, 'clues': player_choice.get('clues')})
             else:
                 sio.emit(
                     'validation_result',

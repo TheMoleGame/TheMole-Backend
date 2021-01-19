@@ -420,8 +420,9 @@ class Game:
             clues = self.clues_dict_2_object(player_choice.get('clues'))
 
             # Validate only when all clues are available. Guessing is not allowed!
-            #successful_validation = self.validate_clues(clues)
-            successful_validation = self.validate_clues(clues) if self.validation_allowed(player.inventory, clues) else False
+            # TODO: Wieder einkommentieren!
+            successful_validation = self.validate_clues(clues)
+            #successful_validation = self.validate_clues(clues) if self.validation_allowed(player.inventory, clues) else False
 
             # Always send back the clues that should be validated
             if successful_validation:

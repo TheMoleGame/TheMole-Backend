@@ -14,12 +14,14 @@ class PendingGame:
         self.token = token
         self.host_sid = host_sid
         self.players = []
-        self.next_player_id = 0
+
+    def _set_player_ids(self):
+        for player_id, player in enumerate(self.players):
+            player['player_id'] = player_id
 
     def add_player(self, sio, sid, name):
-        self.players.append({'player_id': self.next_player_id, 'sid': sid, 'name': name})
-        self.next_player_id += 1
-
+        self.players.append({'player_id': 0, 'sid': sid, 'name': name})
+        self._set_player_ids()
         self.send_player_infos(sio)
 
     def send_player_infos(self, sio):
@@ -35,6 +37,7 @@ class PendingGame:
         # remove player with matching sid
         removed_players = list(filter(lambda p: p['sid'] == sid, self.players))
         self.players = list(filter(lambda p: p['sid'] != sid, self.players))
+        self._set_player_ids()
         self.send_player_infos(sio)
         for removed_player in removed_players:
             print('Removed "{}" from game {}'.format(removed_player['name'], self.token))

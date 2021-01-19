@@ -13,7 +13,8 @@ from .game_character import *
 from mole_backend.settings import DATABASES
 
 
-OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
+# OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
+OCCASIONS = ['move_forwards'] * 2
 DEFAULT_START_POSITION = 4
 
 random.seed(time.time())
@@ -78,7 +79,7 @@ def _random_occasion_choices():
     def _enrich_choice(choice):
         result = {'type': choice}
         if choice == 'move_forwards':
-            result['value'] = random.randint(1, 4)
+            result['value'] = 2  # random.randint(1, 4)
         elif choice == 'skip_player':
             result['name'] = None
         return result

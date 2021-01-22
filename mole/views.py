@@ -114,5 +114,5 @@ def pantomime_choice(sid, message):
         print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    game.pantomime_choice(sid, message)
+    game.pantomime_choice(sio, sid, message)
 

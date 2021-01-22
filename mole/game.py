@@ -627,7 +627,7 @@ class Game:
             else:
                 sio.emit('guess_pantomime', {'words': words, 'category': category}, room=player.sid)
 
-    def pantomime_choice(self, sid, message):
+    def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
             raise InvalidMessageException('Got pantomime choice, but not in minigame\n\tsid: {}'.format(sid))
@@ -638,6 +638,8 @@ class Game:
         player = self.get_player(sid)
         if player is None:
             raise InvalidUserException('Could not find player with sid: {}'.format(sid))
+        if player.sid == self.get_current_player().sid:
+            raise InvalidUserException('Got pantomime choice from hosting player.')
 
         # validate message
         if not isinstance(message, dict):
@@ -653,6 +655,10 @@ class Game:
             )
 
         self.pantomime_state.guesses[player.player_id] = guess
+
+        # evaluate, if everyone has answered
+        if len(self.pantomime_state.guesses) == len(self.players)-1:
+            self.evaluate_pantomime(sio)
 
     def evaluate_pantomime(self, sio):
         player_mistakes = []

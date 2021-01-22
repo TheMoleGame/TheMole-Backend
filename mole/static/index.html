@@ -54,7 +54,7 @@
       });
 
       $('#start-button').click(function() {
-        socket.emit('start_game', token);
+        socket.emit('start_game', {token: token, startposition: 14});
         console.log('game started');
       });
 
@@ -84,6 +84,9 @@
         player_socket.on('validation_result', data => { console.log(name + ' got validation result:', data) });
         player_socket.on('updated_clue', data => { console.log(name + ' got updated clue:', data) });
         player_socket.on('solution_clues', data => { console.log(name + ' solution clues:', data) });
+        player_socket.on('guess_pantomime', data => { console.log(name + ' should guess pantomime:', data) });
+        player_socket.on('host_pantomime', data => { console.log(name + ' should host pantomime:', data) });
+        player_socket.on('pantomime_result', data => { console.log(name + ' got pantomime result:', data) });
 
         player_socket.on('receive_clue', data => {
           console.log(name + ' received clue:', data)
@@ -176,7 +179,15 @@
         const disconnect_button = $('<input type="button" value="Disconnect">');
         disconnect_button.click(function() {
           player_socket.disconnect();
-        })
+        });
+
+        const pantomime_label = $('<label for="pantomime-answer">Pantomime Answer: </label>');
+        const pantomime_edit_field = $('<input id="pantomime-answer" type="text" value="">');
+        const pantomime_submit = $('<input type="button" value="Submit">');
+
+        pantomime_submit.click(function() {
+          player_socket.emit('pantomime_choice', {guess: $('#pantomime-answer').val() })
+        });
 
         const body = $("body");
         body.append(dice1_button);
@@ -184,6 +195,10 @@
         body.append(dice3_button);
         body.append(player_choice_button);
         body.append(disconnect_button);
+        body.append('<br>');
+        body.append(pantomime_label);
+        body.append(pantomime_edit_field);
+        body.append(pantomime_submit);
         body.append('<br>');
       }
 

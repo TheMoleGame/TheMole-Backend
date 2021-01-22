@@ -1,14 +1,34 @@
 import os
 import sys
+import threading
+import time
 
 import socketio
 from django.http import HttpResponse
 from .game_manager import GameManager
 
 
+TICK_INTERVAL = 1.0
+
+
 sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
+
+
+def tick_games():
+    while True:
+        ticked_tokens = set()
+        # tick every game only once
+        for game in games.games.values():
+            if game.token not in ticked_tokens:
+                game.tick(sio)
+                ticked_tokens.add(game.token)
+        time.sleep(TICK_INTERVAL)
+
+
+tick_thread = threading.Thread(target=tick_games)
+tick_thread.start()
 
 
 def index(_request):
@@ -84,3 +104,15 @@ def player_occasion_choice(sid, message):
         return False
 
     game.player_occasion_choice(sio, sid, message)
+
+
+@sio.event
+def pantomime_choice(sid, message):
+    game = games.get(sid)
+
+    if game is None:
+        print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
+        return False
+
+    game.pantomime_choice(sid, message)
+

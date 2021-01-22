@@ -11,7 +11,7 @@ from django.db import connections
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
 from mole_backend.settings import DATABASES
-
+from .pantomime import PANTOMIME_WORDS, PantomimeState, PANTOMIME_DURATION
 
 OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 DEFAULT_START_POSITION = 4
@@ -119,6 +119,7 @@ class Game:
 
         self.turn_state: TurnState = TurnState()
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
+        self.pantomime_state: PantomimeState or None = None
 
         self.map = create_2_sections()  # small test map
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
@@ -142,6 +143,12 @@ class Game:
             )
 
         self.send_players_turn(sio)
+
+    def tick(self, sio):
+        # check minigame time over
+        if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+            if time.time() > self.pantomime_state.start_time + PANTOMIME_DURATION:
+                self.evaluate_pantomime(sio)
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -222,7 +229,7 @@ class Game:
                 self.game_over()  # raise NotImplementedError('End of map reached')
             else:
                 field = self.get_team_pos()
-                if field.type == FieldType.MINIGAME:
+                if field.type == FieldType.SHORTCUT:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
                     remaining_distance = distance - i - 1
                     return remaining_distance
@@ -340,7 +347,6 @@ class Game:
                 'success': true/false,
             }
         """
-
         if not self.players_turn(sid):
             player = self.get_player(sid)
             player_name = '<unknown>' if player is None else player.name
@@ -422,7 +428,7 @@ class Game:
             # Validate only when all clues are available. Guessing is not allowed!
             # TODO: Wieder einkommentieren!
             successful_validation = self.validate_clues(clues)
-            #successful_validation = self.validate_clues(clues) if self.validation_allowed(player.inventory, clues) else False
+            # successful_validation = self.validate_clues(clues) if self.validation_allowed(player.inventory, clues) else False
 
             # Always send back the clues that should be validated
             if successful_validation:
@@ -463,20 +469,12 @@ class Game:
         remaining_moves = self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
-        # TODO remove second condition (self.get_team_pos().type == FieldType.SHORTCUT) to make shortcut fields possible
-        if remaining_moves is not None: # or self.get_team_pos().type == FieldType.SHORTCUT:
-            print("stepped on minigame, index:" + str(self.get_team_pos().index))
-            if self.get_team_pos().type not in [FieldType.MINIGAME, FieldType.SHORTCUT]:
-                raise AssertionError(
-                    'got remaining moves, but not on minigame field.\ncurrent field type: {}'.format(
-                        self.get_team_pos().type.name
-                    )
-                )
+        if self.get_team_pos().type is FieldType.SHORTCUT:
+            print("stepped on shortcut, index:" + str(self.get_team_pos().index))
+            if remaining_moves is None:
+                raise AssertionError('got no remaining moves on shortcut field.')
             self.turn_state.start_minigame(remaining_moves)
-            self.trigger_minigame()
-            self.send_to_all(sio, 'minigame', 'not implemented')
-
-            self.end_player_turn(sio)  # TODO: remove this, if minigames are implemented
+            self.trigger_pantomime(sio)
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
             occasion_choices = _random_occasion_choices()
@@ -494,15 +492,6 @@ class Game:
                         room=player.sid
                     )
             self.turn_state.choosing_occasion(occasion_choices)
-        elif self.get_team_pos().type == FieldType.SHORTCUT:  # TODO: this is currently unreachable. See first condition
-            # todo
-            # if minigame was won
-            jump = self.get_team_pos().shortcut_field - self.get_team_pos().index
-            print("stepped on shortcut field, jump:" + str(jump) + " index:" + str(self.get_team_pos().index))
-            self.move_player(jump)
-            # if minigame was lost
-            # do nothing stay at spot or walk remaining moves
-            self.end_player_turn(sio)
         elif self.get_team_pos().type == FieldType.Goal:
             print("stepped on goal field, index:" + str(self.get_team_pos().index))
             self.game_over()
@@ -620,9 +609,84 @@ class Game:
         else:
             raise InvalidMessageException('type of occasion choice is invalid: "{}"'.format(occasion_type))
 
-    # noinspection PyMethodMayBeStatic
-    def trigger_minigame(self):
-        print('Minigames arent implemented yet')
+    def trigger_pantomime(self, sio):
+        category, words = random.choice(PANTOMIME_WORDS)
+
+        solution_word = random.choice(words)
+        self.pantomime_state = PantomimeState(solution_word, words)
+
+        # inform host
+        sio.emit('guess_pantomime', {'words': words, 'category': category}, room=self.host_sid)
+        for player in self.players:
+            if player.sid == self.get_current_player().sid:
+                sio.emit(
+                    'host_pantomime',
+                    {'solution_word': solution_word, 'words': words, 'category': category},
+                    room=player.sid
+                )
+            else:
+                sio.emit('guess_pantomime', {'words': words, 'category': category}, room=player.sid)
+
+    def pantomime_choice(self, sid, message):
+        # check if in pantomime
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+            raise InvalidMessageException('Got pantomime choice, but not in minigame\n\tsid: {}'.format(sid))
+        if self.pantomime_state is None:
+            raise Exception('pantomime_state is None in minigame')
+
+        # get player
+        player = self.get_player(sid)
+        if player is None:
+            raise InvalidUserException('Could not find player with sid: {}'.format(sid))
+
+        # validate message
+        if not isinstance(message, dict):
+            raise InvalidMessageException('Message is no dictionary')
+        guess = message.get('guess')
+        if guess is None:
+            raise InvalidMessageException(
+                'Got Pantomime guess without key "guess". Message keys: {}'.format(message.keys())
+            )
+        if guess not in self.pantomime_state.words:
+            raise InvalidMessageException(
+                'Got invalid guess "{}". Not in possible words: {}'.format(guess, self.pantomime_state.words)
+            )
+
+        self.pantomime_state.guesses[player.player_id] = guess
+
+    def evaluate_pantomime(self, sio):
+        player_mistakes = []
+        for player in self.players:
+            # skip disconnected players and host player
+            if not player.connected or player.sid == self.get_current_player().sid:
+                continue
+            player_guess = self.pantomime_state.guesses.get(player.player_id)
+            if player_guess is None:
+                player_mistakes.append({'player_id': player.player_id, 'reason': 'time'})
+            elif player_guess != self.pantomime_state.solution_word:
+                player_mistakes.append({'player_id': player.player_id, 'reason': 'choice', 'guess': player_guess})
+
+        success = not bool(player_mistakes)
+
+        message = {
+            'success': success,
+            'mistakes': player_mistakes,
+            'solution_word': self.pantomime_state.solution_word
+        }
+
+        self.send_to_all(sio, 'pantomime_result', message)
+
+        self.pantomime_state = None
+        if success:
+            # go shortcut
+            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+            team_pos = self.get_team_pos()
+            move_distance = team_pos.shortcut_field - team_pos.index + self.turn_state.remaining_move_distance
+            self.turn_state.remaining_move_distance = 0
+            self.handle_movement(sio, move_distance)
+        else:
+            self.turn_state.remaining_move_distance = 0
+            self.end_player_turn(sio)
 
     def send_to_all(self, sio, event, message=None):
         """
@@ -829,7 +893,6 @@ class Game:
         self.send_to_all(self.sio, 'gameover', result)
 
 
-
 def _occasion_matches(left, right):
     if left['type'] != right['type']:
         return False
@@ -842,7 +905,6 @@ def _occasion_matches(left, right):
 class FieldType(str, Enum):
     WALKABLE = 'walkable'
     OCCASION = 'occasion'
-    MINIGAME = 'minigame'
     DEVIL_FIELD = 'devil_field'
     SHORTCUT = 'shortcut'
     Goal = 'goal'

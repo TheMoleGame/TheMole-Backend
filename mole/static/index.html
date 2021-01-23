@@ -54,7 +54,12 @@
       });
 
       $('#start-button').click(function() {
-        socket.emit('start_game', {'token': token, 'test_choices': ['found_clue']});
+        // Normal game start
+        socket.emit('start_game', token);
+        // Test specific choices
+        //socket.emit('start_game', {'token': token, 'test_choices': ['found_clue']});
+        // Test validation
+        //socket.emit('start_game', {'token': token, 'all_proofs': true});
         console.log('game started');
       });
 
@@ -86,11 +91,10 @@
         player_socket.on('solution_clues', data => { console.log(name + ' solution clues:', data) });
 
         player_socket.on('receive_clue', data => {
-          console.log(name + ' received clue:', data)
           if (data != null && data.clue != null) {
             inventory.push(data.clue)
           }
-          console.log(name + ' inventory:', inventory)
+          console.log(name + ' received clue:', data + ' inventory:', inventory)
         });
 
         // occasion handling

@@ -20,14 +20,14 @@ class Player(CharacterInterface):
     def name(self):
         return self._name
 
-    def __init__(self, player_id, name, sid, evidence=None, is_mole=False):
+    def __init__(self, player_id, name, sid, clue=None, is_mole=False):
         self.player_id = player_id
         self._name = name
         self.is_mole = is_mole
 
         self.inventory = []  # type: List[Clue]
-        if evidence is not None:
-            self.inventory.append(evidence)
+        if clue is not None:
+            self.inventory.append(clue)
 
         self.sid = sid
         self.disabled = False

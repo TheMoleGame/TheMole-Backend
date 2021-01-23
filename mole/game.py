@@ -104,7 +104,7 @@ def _random_occasion_choices(test_choices=None):
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos, start_position, test_choices=None):
+    def __init__(self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
@@ -129,9 +129,17 @@ class Game:
             clues_copy.append(deepcopy(clue))
 
         for player_id, player_info in enumerate(player_infos):
-            clue = random.choice(clues_copy)
-            self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
-            clues_copy.remove(clue)
+            if all_proofs is False:
+                # Assign random clue
+                clue = random.choice(clues_copy)
+                self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
+                clues_copy.remove(clue)
+            else:
+                # Assign all clues
+                player = Player(player_id, player_info['name'], player_info['sid'])
+                player.inventory = self.clues
+                self.players.append(player)
+
 
         random.choice(self.players).is_mole = True
 
@@ -153,7 +161,6 @@ class Game:
                     'player_id': player.player_id,
                     'is_mole': player.is_mole,
                     'map': None,  # TODO: remove this
-                    'clue': clues[0],  # TODO: remove this
                     'clues': clues
                 },
                 room=player.sid

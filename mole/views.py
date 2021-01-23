@@ -36,9 +36,10 @@ def start_game(sid, message):
     elif isinstance(message, dict):
         token = message.get('token')
         start_position = message.get('startposition')
+        test_choices = message.get('test_choices')
 
     print('starting game {}'.format(token))
-    games.start_game(sio, sid, token=token, start_position=start_position)
+    games.start_game(sio, sid, token=token, start_position=start_position, test_choices=test_choices)
 
 
 @sio.event

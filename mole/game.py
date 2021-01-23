@@ -72,8 +72,25 @@ class TurnState:
         }
 
 
-def _random_occasion_choices():
-    choices = random.sample(OCCASIONS, 2)
+def _random_occasion_choices(test_choices=None):
+    choices = []
+
+    if test_choices is not None and len(test_choices) >= 1 and test_choices[0] is not None:
+        # Add first test choice
+        choices.append(test_choices[0])
+
+        if len(test_choices) == 1:
+            # Add random choice
+            choices_copy = OCCASIONS.copy()
+            choices_copy.remove(test_choices[0])
+            choices.append(random.choice(choices_copy))
+
+        elif len(test_choices) == 2 and test_choices[1] is not None:
+            # Add second test choice
+            choices.append(test_choices[1])
+    else:
+        # Add random choices
+        choices = random.sample(OCCASIONS, 2)
 
     def _enrich_choice(choice):
         result = {'type': choice}
@@ -87,10 +104,11 @@ def _random_occasion_choices():
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos, start_position):
+    def __init__(self, sio, token, host_sid, player_infos, start_position, test_choices=None):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
+        self.test_choices = test_choices
 
         # Create Evidence combination
         self.clues = self.generate_solution_clues()
@@ -479,7 +497,7 @@ class Game:
             self.end_player_turn(sio)  # TODO: remove this, if minigames are implemented
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
-            occasion_choices = _random_occasion_choices()
+            occasion_choices = _random_occasion_choices(self.test_choices)
             for player in self.players:
                 if self.get_current_player().sid == player.sid:
                     sio.emit(

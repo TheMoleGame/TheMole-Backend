@@ -54,7 +54,7 @@
       });
 
       $('#start-button').click(function() {
-        socket.emit('start_game', token);
+        socket.emit('start_game', {'token': token, 'test_choices': ['found_clue']});
         console.log('game started');
       });
 

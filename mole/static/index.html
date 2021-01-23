@@ -15,7 +15,9 @@
   This is the Mole Project. Have fun :D<br>
   <input id="create-button" type="button" value="Create Game"><br>
   <label id="token-label">Game Token:</label><br>
-  <input id="start-button" type="button" value="Start Game"><br>
+  <input id="start-normal-button" type="button" value="Start normal Game">
+  <input id="start-occasion-button" type="button" value="Start Game with Occasion Test">
+  <input id="start-validation-button" type="button" value="Start Game with Validation Test"><br>
   <input id="join-player" type="button" value="Test Player Join"><br><br>
   <label id="external-label">Join Extern Games:</label><br>
 
@@ -53,13 +55,19 @@
         })
       });
 
-      $('#start-button').click(function() {
+      $('#start-normal-button').click(function() {
         // Normal game start
         socket.emit('start_game', token);
+        console.log('game started');
+      });
+      $('#start-occasion-button').click(function() {
         // Test specific choices
-        //socket.emit('start_game', {'token': token, 'test_choices': ['found_clue']});
+        socket.emit('start_game', {'token': token, 'test_choices': ['found_clue']});
+        console.log('game started');
+      });
+      $('#start-validation-button').click(function() {
         // Test validation
-        //socket.emit('start_game', {'token': token, 'all_proofs': true});
+        socket.emit('start_game', {'token': token, 'all_proofs': true});
         console.log('game started');
       });
 

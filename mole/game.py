@@ -19,6 +19,12 @@ DEFAULT_START_POSITION = 4
 random.seed(time.time())
 
 
+class GameOverReason(Enum):
+    DEFAULT = 0
+    REACHED_END_OF_MAP = 1
+    MORIARTY_CAUGHT = 2
+
+
 class MoveModifier(Enum):
     NORMAL = 0
     HINDER = 1
@@ -244,7 +250,7 @@ class Game:
         for i in range(distance):
             self.team_pos = self.team_pos.next  # get next field
             if self.team_pos is None:
-                self.game_over()  # raise NotImplementedError('End of map reached')
+                self.game_over(GameOverReason.REACHED_END_OF_MAP)  # raise NotImplementedError('End of map reached')
             else:
                 field = self.get_team_pos()
                 if field.type == FieldType.MINIGAME:
@@ -259,10 +265,10 @@ class Game:
             if self.moriarty_pos.next is None:
                 # Should not be possible
                 # raise Exception('Moriarty reached end of map')  # TODO
-                self.game_over() # Maybe allow the Team in the future to stall on the goal field to search for evidences
+                self.game_over(GameOverReason.MORIARTY_CAUGHT) # Maybe allow the Team in the future to stall on the goal field to search for evidences
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
-                self.game_over("Moriarty caught players")
+                self.game_over(GameOverReason.MORIARTY_CAUGHT)
                 # raise Exception('Moriarty caught players')  # TODO
 
         # TODO: remove follower_move, if frontend uses moriarty_move
@@ -530,7 +536,7 @@ class Game:
             self.end_player_turn(sio)
         elif self.get_team_pos().type == FieldType.Goal:
             print("stepped on goal field, index:" + str(self.get_team_pos().index))
-            self.game_over()
+            self.game_over(GameOverReason.REACHED_END_OF_MAP)
         else:
             print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.end_player_turn(sio)
@@ -836,27 +842,31 @@ class Game:
 
         return clues
 
-    def game_over(self, result=None):
-        self.turn_state.game_over()
+    def game_over(self, reason=GameOverReason.DEFAULT):
         # TODO: if mole player won, let everybody guess one last time?
+        self.turn_state.game_over()
+        winner = "Mole"
 
-        if result is None:
-            result = "Mole wins"
+        if reason is GameOverReason.MORIARTY_CAUGHT:
+            reason = "moriarty_caught_team"
 
-            # TODO: Delete?
+        if reason is GameOverReason.DEFAULT or GameOverReason.REACHED_END_OF_MAP:
+            reason = "hindered_team"
+
             # Mole wins if he has verified at least three proofs (Reminder: 3 clues per proof)
-            #if len(self.mole_proofs) >= 3 * 3:
-                #result = "Mole wins"
+            if len(self.mole_proofs) >= 3 * 3:
+                reason = "destroyed_enough_proofs"
 
             # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
             if len(self.team_proofs) >= 4 * 3:
-                result = "Team wins"
+                winner = "Team"
+                reason = "validated_enough_proofs"
 
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
-              '----------------'+result+'------------------------')
-        self.send_to_all(self.sio, 'gameover', result)
+              '----------------' + reason + '------------------------')
+        self.send_to_all(self.sio, 'gameover', {winner: winner, reason: reason})
 
 
 

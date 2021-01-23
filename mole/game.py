@@ -262,7 +262,7 @@ class Game:
                 self.game_over() # Maybe allow the Team in the future to stall on the goal field to search for evidences
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
-                self.game_over("Mole Wins")
+                self.game_over("Moriarty caught players")
                 # raise Exception('Moriarty caught players')  # TODO
 
         # TODO: remove follower_move, if frontend uses moriarty_move
@@ -838,15 +838,20 @@ class Game:
 
     def game_over(self, result=None):
         self.turn_state.game_over()
-        # if mole player won
-        # let everybody guess one last time?
-        # check if any players clues match the goal clues
+        # TODO: if mole player won, let everybody guess one last time?
+
         if result is None:
             result = "Mole wins"
-            for player in self.players:
-                if self.validate_clues(player.inventory):
-                    result = "Team wins"
-                    break
+
+            # TODO: Delete?
+            # Mole wins if he has verified at least three proofs (Reminder: 3 clues per proof)
+            #if len(self.mole_proofs) >= 3 * 3:
+                #result = "Mole wins"
+
+            # Team wins if it has verified at least three proofs (Reminder: 3 clues per proof)
+            if len(self.team_proofs) >= 3 * 3:
+                result = "Team wins"
+
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +

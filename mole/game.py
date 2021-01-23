@@ -848,8 +848,8 @@ class Game:
             #if len(self.mole_proofs) >= 3 * 3:
                 #result = "Mole wins"
 
-            # Team wins if it has verified at least three proofs (Reminder: 3 clues per proof)
-            if len(self.team_proofs) >= 3 * 3:
+            # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
+            if len(self.team_proofs) >= 4 * 3:
                 result = "Team wins"
 
         print('---------------------------------------------\n' +

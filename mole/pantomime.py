@@ -6,7 +6,7 @@ PANTOMIME_DURATION = 60.0 * 1.0  # one minute
 # TODO: create more pantomime categories
 PANTOMIME_WORDS = [
     ('escape_route', ['grotty_canal', 'bright_way', 'cold_street', 'small_path']),
-    # ('escape_vehicle', ['long_boat', 'goofy_unicycle', 'cute_carriage', 'fancy_sled']),
+    ('escape_vehicle', ['long_boat', 'goofy_unicycle', 'cute_carriage', 'fancy_sled']),
 ]
 
 

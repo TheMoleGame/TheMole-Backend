@@ -791,7 +791,7 @@ class Game:
         all_weapon_objects = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                           subtype=ClueSubtype.OBJECT)
         all_weapon_colors = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
-                                                                         subtype=ClueSubtype.COLOR)
+                                                                         subtype=ClueSubtype.COLOR_W)
         all_weapon_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                              subtype=ClueSubtype.CONDITION)
         clues.append(self.evidence_2_clue(random.choice(all_weapon_objects)))
@@ -831,7 +831,7 @@ class Game:
         all_mean_of_escape_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                      subtype=ClueSubtype.MODEL)
         all_mean_of_escape_daytime = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
-                                                                                  subtype=ClueSubtype.COLOR)
+                                                                                  subtype=ClueSubtype.COLOR_ME)
         all_mean_of_escape_districts = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                     subtype=ClueSubtype.ESCAPE_ROUTE)
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_conditions)))

@@ -146,7 +146,6 @@ class Game:
                 player.inventory = self.clues
                 self.players.append(player)
 
-
         random.choice(self.players).is_mole = True
 
         self.turn_state: TurnState = TurnState()
@@ -158,7 +157,6 @@ class Game:
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 
-        # TODO: Serialize Map and send with init packet
         for player in self.players:
             clues = list(map(lambda c: c.__dict__, player.inventory))
             sio.emit(
@@ -166,8 +164,8 @@ class Game:
                 {
                     'player_id': player.player_id,
                     'is_mole': player.is_mole,
-                    'map': None,  # TODO: remove this
-                    'clues': clues
+                    'clues': clues,
+                    'rejoin': False,
                 },
                 room=player.sid
             )
@@ -213,7 +211,8 @@ class Game:
                 'is_mole': player.is_mole,
                 'map': None,  # TODO: remove this
                 'clue': clues[0],  # TODO: remove this
-                'clues': clues
+                'clues': clues,
+                'rejoin': True,
             },
             room=player.sid
         )

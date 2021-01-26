@@ -444,6 +444,12 @@ class Game:
                 room=player.sid
             )
 
+            sio.emit(
+                'secret_move',
+                {'player_id': player.player_id, 'move_name': 'share-clue'},
+                room=self.host_sid
+            )
+
             self.end_player_turn(sio)
 
         elif player_choice.get('type') == 'validate-clues':
@@ -482,6 +488,12 @@ class Game:
                 'receive_clue',
                 {'clue': clue},
                 room=player.sid
+            )
+
+            sio.emit(
+                'secret_move',
+                {'player_id': player.player_id, 'move_name': 'search-clue'},
+                room=self.host_sid
             )
 
             self.end_player_turn(sio)

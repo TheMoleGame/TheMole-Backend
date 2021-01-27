@@ -277,8 +277,6 @@ class Game:
                 self.game_over(GameOverReason.MORIARTY_CAUGHT)
                 # raise Exception('Moriarty caught players')  # TODO
 
-        # TODO: remove follower_move, if frontend uses moriarty_move
-        self.send_to_all(sio, 'follower_move', self.get_moriarty_pos().index)
         self.send_to_all(sio, 'moriarty_move', self.get_moriarty_pos().index)
 
     def send_players_turn(self, sio):

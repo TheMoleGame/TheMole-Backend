@@ -189,6 +189,9 @@ class Game:
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
 
+    def has_connected_player(self):
+        return any(map(lambda player: player.connected, self.players))
+
     def player_disconnect(self, sio, sid):
         player = self.get_player(sid)
         if player is None:
@@ -297,6 +300,8 @@ class Game:
         Removes disabling of all players, that are skipped, because of disable.
         """
         while True:
+            if not self.has_connected_player():
+                break
             if do_moriarty_move:
                 self.moriarty_move(sio)
             do_moriarty_move = True

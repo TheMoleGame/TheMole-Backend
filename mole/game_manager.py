@@ -151,6 +151,10 @@ class GameManager:
 
             print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 
+    def _remove_game(self, token):
+        print('Removing game {}.'.format(token), file=sys.stderr)
+        self.games = {sid: game for sid, game in self.games.items() if game.token != token}
+
     def handle_disconnect(self, sio, sid):
         # remove from pending games
         for pending_game in self.pending_games:
@@ -163,7 +167,10 @@ class GameManager:
         game = self.games.get(sid)
         if game is not None:
             if game.host_sid == sid:
-                # TODO: Host cannot rejoin at the moment
-                print('Host disconnected for game {}'.format(game.token), file=sys.stderr)
+                print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
+                self._remove_game(game.token)
                 return
             game.player_disconnect(sio, sid)
+            if not game.has_connected_player():
+                print('All players disconnected from game {}.'.format(game.token), file=sys.stderr)
+                self._remove_game(game.token)

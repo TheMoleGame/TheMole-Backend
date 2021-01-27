@@ -15,9 +15,11 @@ sio = socketio.Server(async_mode=None, cors_allowed_origins='*')
 basedir = os.path.dirname(os.path.realpath(__file__))
 games = GameManager()
 
+tick_thread = None
+
 
 def tick_games():
-    while True:
+    while games.is_game_running():
         ticked_tokens = set()
         # tick every game only once
         for game in games.games.values():
@@ -26,8 +28,13 @@ def tick_games():
                 ticked_tokens.add(game.token)
         time.sleep(TICK_INTERVAL)
 
+    print('no games running -> stopping tick thread')
+    global tick_thread
+    tick_thread = None
+
 
 def _start_tick_thread():
+    global tick_thread
     tick_thread = threading.Thread(target=tick_games)
     tick_thread.start()
 
@@ -56,9 +63,6 @@ def start_game(sid, message):
     all_proofs = False
     enable_minigames = False
 
-    if not games.is_game_running():
-        _start_tick_thread()
-
     if isinstance(message, str):
         token = message
     elif isinstance(message, dict):
@@ -73,6 +77,9 @@ def start_game(sid, message):
         sio, sid, token=token, start_position=start_position, test_choices=test_choices, all_proofs=all_proofs,
         enable_minigames=enable_minigames
     )
+
+    if tick_thread is None:
+        _start_tick_thread()
 
 
 @sio.event

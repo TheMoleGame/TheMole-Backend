@@ -299,9 +299,7 @@ class Game:
         Moves the moriarty. Sets turn_state.player_id to a not disabled player.
         Removes disabling of all players, that are skipped, because of disable.
         """
-        while True:
-            if not self.has_connected_player():
-                break
+        while self.has_connected_player():
             if do_moriarty_move:
                 self.moriarty_move(sio)
             do_moriarty_move = True

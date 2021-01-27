@@ -750,31 +750,34 @@ class Game:
             self.evaluate_pantomime(sio)
 
     def evaluate_pantomime(self, sio):
-        player_mistakes = []
+        player_results = []
+        overall_success = True
         for player in self.players:
             # skip disconnected players and host player
             if not player.connected or player.sid == self.get_current_player().sid:
                 continue
             player_guess = self.pantomime_state.guesses.get(player.player_id)
-            if player_guess is None:
-                player_mistakes.append({'player_id': player.player_id, 'reason': 'time'})
-            elif player_guess != self.pantomime_state.solution_word:
-                player_mistakes.append({'player_id': player.player_id, 'reason': 'choice', 'guess': player_guess})
-
-        success = not bool(player_mistakes)
+            success = player_guess == self.pantomime_state.solution_word
+            if not success:
+                overall_success = False
+            player_results.append({
+                'player_id': player.player_id,
+                'success': success,
+                'guess': player_guess,
+            })
 
         message = {
-            'success': success,
-            'mistakes': player_mistakes,
+            'success': overall_success,
+            'player_results': player_results,
             'solution_word': self.pantomime_state.solution_word
         }
 
         self.send_to_all(sio, 'pantomime_result', message)
 
         self.pantomime_state = None
-        if success:
+        if overall_success:
             # go shortcut
-            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
             team_pos = self.get_team_pos()
             move_distance = team_pos.shortcut_field - team_pos.index + self.turn_state.remaining_move_distance
             self.turn_state.remaining_move_distance = 0

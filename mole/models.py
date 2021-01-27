@@ -12,7 +12,8 @@ class ClueType(models.TextChoices):
 class ClueSubtype(models.TextChoices):
     CHARACTERISTIC = 'CC', 'Merkmal'
     CLOTHING = 'CG', 'Kleidung'
-    COLOR = 'CR', 'Farbe'
+    COLOR_W = 'CR', 'Farbe'
+    COLOR_ME = 'CLR', 'Farbe'
     CONDITION = 'CN', 'Zustand'
     DAYTIME = 'DE', 'Tageszeit'
     DISTRICT = 'DT', 'Stadtviertel'
@@ -29,7 +30,7 @@ class ClueSubtype(models.TextChoices):
 class Evidence(models.Model):
     name = models.CharField(max_length=200, unique=True)
     type = models.CharField(max_length=2, choices=ClueType.choices, default=ClueType.WEAPON)
-    subtype = models.CharField(max_length=2, choices=ClueSubtype.choices, default=ClueSubtype.OBJECT)
+    subtype = models.CharField(max_length=3, choices=ClueSubtype.choices, default=ClueSubtype.OBJECT)
 
 
 class Clue:

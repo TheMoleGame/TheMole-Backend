@@ -29,10 +29,10 @@ def create_weapons():
         Evidence(name='Hammer', type=ClueType.WEAPON, subtype=ClueSubtype.OBJECT),
 
         # Color
-        Evidence(name='Bronze', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Copper', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Brass', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
-        Evidence(name='Silver', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR),
+        Evidence(name='Bronze', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR_W),
+        Evidence(name='Copper', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR_W),
+        Evidence(name='Brass', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR_W),
+        Evidence(name='Silver', type=ClueType.WEAPON, subtype=ClueSubtype.COLOR_W),
 
         # Condition
         Evidence(name='New', type=ClueType.WEAPON, subtype=ClueSubtype.CONDITION),
@@ -134,10 +134,10 @@ def create_means_of_escape():
         Evidence(name='Horse', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.MODEL),
 
         # Color
-        Evidence(name='Black', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='White', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='Maroon', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
-        Evidence(name='Rust red', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR),
+        Evidence(name='Black', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR_ME),
+        Evidence(name='White', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR_ME),
+        Evidence(name='Maroon', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR_ME),
+        Evidence(name='Rust red', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.COLOR_ME),
 
         # Escape Route
         Evidence(name='North', type=ClueType.MEANS_OF_ESCAPE, subtype=ClueSubtype.ESCAPE_ROUTE),

@@ -19,6 +19,12 @@ DEFAULT_START_POSITION = 4
 random.seed(time.time())
 
 
+class GameOverReason(Enum):
+    DEFAULT = 0
+    REACHED_END_OF_MAP = 1
+    MORIARTY_CAUGHT = 2
+
+
 class MoveModifier(Enum):
     NORMAL = 0
     HINDER = 1
@@ -72,8 +78,25 @@ class TurnState:
         }
 
 
-def _random_occasion_choices():
-    choices = random.sample(OCCASIONS, 2)
+def _random_occasion_choices(test_choices=None):
+    choices = []
+
+    if test_choices is not None and len(test_choices) >= 1 and test_choices[0] is not None:
+        # Add first test choice
+        choices.append(test_choices[0])
+
+        if len(test_choices) == 1:
+            # Add random choice
+            choices_copy = OCCASIONS.copy()
+            choices_copy.remove(test_choices[0])
+            choices.append(random.choice(choices_copy))
+
+        elif len(test_choices) == 2 and test_choices[1] is not None:
+            # Add second test choice
+            choices.append(test_choices[1])
+    else:
+        # Add random choices
+        choices = random.sample(OCCASIONS, 2)
 
     def _enrich_choice(choice):
         result = {'type': choice}
@@ -87,10 +110,11 @@ def _random_occasion_choices():
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos, start_position):
+    def __init__(self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
+        self.test_choices = test_choices
 
         # Create Evidence combination
         self.clues = self.generate_solution_clues()
@@ -111,9 +135,16 @@ class Game:
             clues_copy.append(deepcopy(clue))
 
         for player_id, player_info in enumerate(player_infos):
-            clue = random.choice(clues_copy)
-            self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
-            clues_copy.remove(clue)
+            if all_proofs is None or all_proofs is False:
+                # Assign random clue
+                clue = random.choice(clues_copy)
+                self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
+                clues_copy.remove(clue)
+            else:
+                # Assign all clues
+                player = Player(player_id, player_info['name'], player_info['sid'])
+                player.inventory = self.clues
+                self.players.append(player)
 
         random.choice(self.players).is_mole = True
 
@@ -127,7 +158,6 @@ class Game:
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
         self.debug_game_representation()  # test case debug
 
-        # TODO: Serialize Map and send with init packet
         for player in self.players:
             clues = list(map(lambda c: c.__dict__, player.inventory))
             sio.emit(
@@ -135,9 +165,8 @@ class Game:
                 {
                     'player_id': player.player_id,
                     'is_mole': player.is_mole,
-                    'map': None,  # TODO: remove this
-                    'clue': clues[0],  # TODO: remove this
-                    'clues': clues
+                    'clues': clues,
+                    'rejoin': False,
                 },
                 room=player.sid
             )
@@ -189,7 +218,8 @@ class Game:
                 'is_mole': player.is_mole,
                 'map': None,  # TODO: remove this
                 'clue': clues[0],  # TODO: remove this
-                'clues': clues
+                'clues': clues,
+                'rejoin': True,
             },
             room=player.sid
         )
@@ -226,7 +256,7 @@ class Game:
         for i in range(distance):
             self.team_pos = self.team_pos.next  # get next field
             if self.team_pos is None:
-                self.game_over()  # raise NotImplementedError('End of map reached')
+                self.game_over(GameOverReason.REACHED_END_OF_MAP)  # raise NotImplementedError('End of map reached')
             else:
                 field = self.get_team_pos()
                 if field.type == FieldType.SHORTCUT:
@@ -241,10 +271,10 @@ class Game:
             if self.moriarty_pos.next is None:
                 # Should not be possible
                 # raise Exception('Moriarty reached end of map')  # TODO
-                self.game_over() # Maybe allow the Team in the future to stall on the goal field to search for evidences
+                self.game_over(GameOverReason.MORIARTY_CAUGHT) # Maybe allow the Team in the future to stall on the goal field to search for evidences
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
-                self.game_over("Mole Wins")
+                self.game_over(GameOverReason.MORIARTY_CAUGHT)
                 # raise Exception('Moriarty caught players')  # TODO
 
         # TODO: remove follower_move, if frontend uses moriarty_move
@@ -419,6 +449,12 @@ class Game:
                 room=player.sid
             )
 
+            sio.emit(
+                'secret_move',
+                {'player_id': player.player_id, 'move_name': 'share-clue'},
+                room=self.host_sid
+            )
+
             self.end_player_turn(sio)
 
         elif player_choice.get('type') == 'validate-clues':
@@ -459,6 +495,12 @@ class Game:
                 room=player.sid
             )
 
+            sio.emit(
+                'secret_move',
+                {'player_id': player.player_id, 'move_name': 'search-clue'},
+                room=self.host_sid
+            )
+
             self.end_player_turn(sio)
 
     def handle_movement(self, sio, move_distance: int):
@@ -477,7 +519,7 @@ class Game:
             self.trigger_pantomime(sio)
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
-            occasion_choices = _random_occasion_choices()
+            occasion_choices = _random_occasion_choices(self.test_choices)
             for player in self.players:
                 if self.get_current_player().sid == player.sid:
                     sio.emit(
@@ -494,7 +536,7 @@ class Game:
             self.turn_state.choosing_occasion(occasion_choices)
         elif self.get_team_pos().type == FieldType.Goal:
             print("stepped on goal field, index:" + str(self.get_team_pos().index))
-            self.game_over()
+            self.game_over(GameOverReason.REACHED_END_OF_MAP)
         else:
             print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.end_player_turn(sio)
@@ -830,7 +872,7 @@ class Game:
         all_weapon_objects = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                           subtype=ClueSubtype.OBJECT)
         all_weapon_colors = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
-                                                                         subtype=ClueSubtype.COLOR)
+                                                                         subtype=ClueSubtype.COLOR_W)
         all_weapon_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                              subtype=ClueSubtype.CONDITION)
         clues.append(self.evidence_2_clue(random.choice(all_weapon_objects)))
@@ -870,7 +912,7 @@ class Game:
         all_mean_of_escape_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                      subtype=ClueSubtype.MODEL)
         all_mean_of_escape_daytime = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
-                                                                                  subtype=ClueSubtype.COLOR)
+                                                                                  subtype=ClueSubtype.COLOR_ME)
         all_mean_of_escape_districts = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                     subtype=ClueSubtype.ESCAPE_ROUTE)
         clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_conditions)))
@@ -881,22 +923,31 @@ class Game:
 
         return clues
 
-    def game_over(self, result=None):
+    def game_over(self, reason=GameOverReason.DEFAULT):
+        # TODO: if mole player won, let everybody guess one last time?
         self.turn_state.game_over()
-        # if mole player won
-        # let everybody guess one last time?
-        # check if any players clues match the goal clues
-        if result is None:
-            result = "Mole wins"
-            for player in self.players:
-                if self.validate_clues(player.inventory):
-                    result = "Team wins"
-                    break
+        winner = "Mole"
+
+        if reason is GameOverReason.MORIARTY_CAUGHT:
+            reason = "moriarty_caught_team"
+
+        if reason is GameOverReason.DEFAULT or GameOverReason.REACHED_END_OF_MAP:
+            reason = "hindered_team"
+
+            # Mole wins if he has verified at least three proofs (Reminder: 3 clues per proof)
+            if len(self.mole_proofs) >= 3 * 3:
+                reason = "destroyed_enough_proofs"
+
+            # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
+            if len(self.team_proofs) >= 4 * 3:
+                winner = "Team"
+                reason = "validated_enough_proofs"
+
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
-              '----------------'+result+'------------------------')
-        self.send_to_all(self.sio, 'gameover', result)
+              '----------------' + reason + '------------------------')
+        self.send_to_all(self.sio, 'gameover', {winner: winner, reason: reason})
 
 
 def _occasion_matches(left, right):

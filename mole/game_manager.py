@@ -66,6 +66,9 @@ class GameManager:
         self.taken_tokens.append(token)
         return str(token)
 
+    def is_game_running(self):
+        return bool(self.games)
+
     def create_game(self, host_sid):
         token = self._create_new_token()
         pending_game = PendingGame(host_sid, token)

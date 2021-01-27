@@ -27,8 +27,9 @@ def tick_games():
         time.sleep(TICK_INTERVAL)
 
 
-tick_thread = threading.Thread(target=tick_games)
-tick_thread.start()
+def _start_tick_thread():
+    tick_thread = threading.Thread(target=tick_games)
+    tick_thread.start()
 
 
 def index(_request):
@@ -54,6 +55,9 @@ def start_game(sid, message):
     test_choices = None
     all_proofs = False
     enable_minigames = False
+
+    if not games.is_game_running():
+        _start_tick_thread()
 
     if isinstance(message, str):
         token = message

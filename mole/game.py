@@ -143,7 +143,9 @@ class Game:
             if all_proofs is None or all_proofs is False:
                 # Assign random clue
                 clue = random.choice(clues_copy)
-                self.players.append(Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue)))
+                self.players.append(
+                    Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue))
+                )
                 clues_copy.remove(clue)
             else:
                 # Assign all clues

@@ -110,11 +110,15 @@ def _random_occasion_choices(test_choices=None):
 
 
 class Game:
-    def __init__(self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False):
+    def __init__(
+            self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
+            enable_minigames=False
+    ):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
         self.test_choices = test_choices
+        self.enable_minigames = enable_minigames
 
         # Create Evidence combination
         self.clues = self.generate_solution_clues()
@@ -129,7 +133,8 @@ class Game:
         self.mole_proofs = []
         self.players = []
 
-        # Deep copy of the array so that the clue can be deleted when it is assigned to the players. This guarantees that each player is assigned a different proof
+        # Deep copy of the array so that the clue can be deleted when it is assigned to the players.
+        # This guarantees that each player is assigned a different proof
         clues_copy = []
         for clue in self.clues:
             clues_copy.append(deepcopy(clue))
@@ -256,10 +261,10 @@ class Game:
         for i in range(distance):
             self.team_pos = self.team_pos.next  # get next field
             if self.team_pos is None:
-                self.game_over(GameOverReason.REACHED_END_OF_MAP)  # raise NotImplementedError('End of map reached')
+                self.game_over(GameOverReason.REACHED_END_OF_MAP)
             else:
                 field = self.get_team_pos()
-                if field.type == FieldType.SHORTCUT:
+                if field.type == FieldType.SHORTCUT and self.enable_minigames:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
                     remaining_distance = distance - i - 1
                     return remaining_distance
@@ -269,13 +274,11 @@ class Game:
         num_fields = random.choice([1, 1, 1, 2])
         for i in range(num_fields):
             if self.moriarty_pos.next is None:
-                # Should not be possible
-                # raise Exception('Moriarty reached end of map')  # TODO
-                self.game_over(GameOverReason.MORIARTY_CAUGHT) # Maybe allow the Team in the future to stall on the goal field to search for evidences
+                # TODO: Maybe allow the Team in the future to stall on the goal field to search for evidences
+                self.game_over(GameOverReason.MORIARTY_CAUGHT)
             self.moriarty_pos = self.moriarty_pos.next
             if self.get_moriarty_pos().index == self.get_team_pos().index:
                 self.game_over(GameOverReason.MORIARTY_CAUGHT)
-                # raise Exception('Moriarty caught players')  # TODO
 
         self.send_to_all(sio, 'moriarty_move', self.get_moriarty_pos().index)
 
@@ -511,10 +514,17 @@ class Game:
 
         if self.get_team_pos().type is FieldType.SHORTCUT:
             print("stepped on shortcut, index:" + str(self.get_team_pos().index))
-            if remaining_moves is None:
+            if remaining_moves is None and self.enable_minigames:
                 raise AssertionError('got no remaining moves on shortcut field.')
-            self.turn_state.start_minigame(remaining_moves)
-            self.trigger_pantomime(sio)
+            if self.enable_minigames:
+                self.turn_state.start_minigame(remaining_moves)
+                self.trigger_pantomime(sio)
+            else:
+                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
+                team_pos = self.get_team_pos()
+                move_distance = team_pos.shortcut_field - team_pos.index
+                self.turn_state.remaining_move_distance = 0
+                self.handle_movement(sio, move_distance)
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
             occasion_choices = _random_occasion_choices(self.test_choices)
@@ -535,9 +545,11 @@ class Game:
         elif self.get_team_pos().type == FieldType.Goal:
             print("stepped on goal field, index:" + str(self.get_team_pos().index))
             self.game_over(GameOverReason.REACHED_END_OF_MAP)
-        else:
+        elif self.get_team_pos().type == FieldType.WALKABLE:
             print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.end_player_turn(sio)
+        else:
+            raise Exception('Unknown Field Type: {}'.format(self.get_team_pos().type))
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
         """

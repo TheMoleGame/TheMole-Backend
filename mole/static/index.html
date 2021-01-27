@@ -16,6 +16,7 @@
   <input id="create-button" type="button" value="Create Game"><br>
   <label id="token-label">Game Token:</label><br>
   <input id="start-normal-button" type="button" value="Start normal Game">
+  <input id="start-minigame-button" type="button" value="Start Minigame Test">
   <input id="start-occasion-button" type="button" value="Start Game with Occasion Test">
   <input id="start-validation-button" type="button" value="Start Game with Validation Test"><br>
   <input id="join-player" type="button" value="Test Player Join"><br><br>
@@ -56,7 +57,11 @@
       });
 
       $('#start-normal-button').click(function() {
-        socket.emit('start_game', {token: token, startposition: 14});
+        socket.emit('start_game', {token: token});
+        console.log('game started');
+      });
+      $('#start-minigame-button').click(function() {
+        socket.emit('start_game', {token: token, startposition: 14, enable_minigames: true});
         console.log('game started');
       });
       $('#start-occasion-button').click(function() {

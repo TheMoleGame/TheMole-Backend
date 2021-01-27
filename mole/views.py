@@ -126,3 +126,16 @@ def pantomime_choice(sid, message):
 
     game.pantomime_choice(sio, sid, message)
 
+
+@sio.event
+def pantomime_start(sid, message):
+    game = games.get(sid)
+    if game is None:
+        print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
+        return False
+
+    if message != '':
+        print('ERROR(pantomime_start): message is not an empty string', file=sys.stderr)
+        return False
+
+    game.pantomime_start(sio, sid)

@@ -205,12 +205,18 @@
           player_socket.emit('pantomime_choice', {guess: $('#pantomime-answer').val() })
         });
 
+        const start_pantomime_button = $('<input type="button" value="Start Pantomime">');
+        start_pantomime_button.click(function() {
+          player_socket.emit('pantomime_start', '');
+        });
+
         const body = $("body");
         body.append(dice1_button);
         body.append(dice2_button);
         body.append(dice3_button);
         body.append(player_choice_button);
         body.append(disconnect_button);
+        body.append(start_pantomime_button);
         body.append('<br>');
         body.append(pantomime_label);
         body.append(pantomime_edit_field);

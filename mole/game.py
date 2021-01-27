@@ -11,7 +11,7 @@ from django.db import connections
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
 from mole_backend.settings import DATABASES
-from .pantomime import PANTOMIME_WORDS, PantomimeState, PANTOMIME_DURATION
+from .pantomime import PANTOMIME_WORDS, PantomimeState
 
 OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 DEFAULT_START_POSITION = 4
@@ -181,7 +181,7 @@ class Game:
     def tick(self, sio):
         # check minigame time over
         if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
-            if time.time() > self.pantomime_state.start_time + PANTOMIME_DURATION:
+            if self.pantomime_state.is_timeout():
                 self.evaluate_pantomime(sio)
 
     def _get_player_info(self):
@@ -470,7 +470,15 @@ class Game:
             # Always send back the clues that should be validated
             if successful_validation:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
-                self.send_to_all(self.sio, 'validation_result', {'successful_validation': successful_validation, 'player_id': player.player_id, 'clues': player_choice.get('clues')})
+                self.send_to_all(
+                    self.sio,
+                    'validation_result',
+                    {
+                        'successful_validation': successful_validation,
+                        'player_id': player.player_id,
+                        'clues': player_choice.get('clues')
+                    }
+                )
             else:
                 sio.emit(
                     'validation_result',
@@ -665,10 +673,10 @@ class Game:
         category, words = random.choice(PANTOMIME_WORDS)
 
         solution_word = random.choice(words)
-        self.pantomime_state = PantomimeState(solution_word, words)
+        self.pantomime_state = PantomimeState(solution_word, words, category)
 
         # inform host
-        sio.emit('guess_pantomime', {'words': words, 'category': category}, room=self.host_sid)
+        sio.emit('guess_pantomime', {'words': words, 'category': category, 'start': False}, room=self.host_sid)
         for player in self.players:
             if player.sid == self.get_current_player().sid:
                 sio.emit(
@@ -677,7 +685,34 @@ class Game:
                     room=player.sid
                 )
             else:
-                sio.emit('guess_pantomime', {'words': words, 'category': category}, room=player.sid)
+                sio.emit('guess_pantomime', {'words': words, 'category': category, 'start': False}, room=player.sid)
+
+    def pantomime_start(self, sio, sid):
+        # check if in pantomime
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+            raise InvalidMessageException('Got pantomime start, but not in minigame\n\tsid: {}'.format(sid))
+        if self.pantomime_state is None:
+            raise Exception('pantomime_state is None in minigame')
+
+        # get player
+        player = self.get_player(sid)
+        if player is None:
+            raise InvalidUserException('Could not find player with sid: {}'.format(sid))
+        if player.sid != self.get_current_player().sid:
+            raise InvalidUserException('Got pantomime start from player that is not hosting.')
+        self.pantomime_state.start_timeout()
+
+        for player in self.players:
+            if player.sid != self.get_current_player().sid:
+                sio.emit(
+                    'guess_pantomime',
+                    {
+                        'words': self.pantomime_state.words,
+                        'category': self.pantomime_state.category,
+                        'start': True
+                    },
+                    room=player.sid
+                )
 
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
@@ -685,6 +720,8 @@ class Game:
             raise InvalidMessageException('Got pantomime choice, but not in minigame\n\tsid: {}'.format(sid))
         if self.pantomime_state is None:
             raise Exception('pantomime_state is None in minigame')
+        if not self.pantomime_state.timeout_started():
+            raise InvalidMessageException('game has not started, but got pantomime choice')
 
         # get player
         player = self.get_player(sid)

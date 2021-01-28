@@ -160,6 +160,7 @@ class Game:
         self.pantomime_state: PantomimeState or None = None
 
         self.map = create_2_sections()  # small test map
+        got_start_position = True if start_position is not None else False
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
         self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
@@ -178,7 +179,9 @@ class Game:
                 room=player.sid
             )
 
-        self.send_to_all(sio, 'move', self.get_team_pos().index)
+        if got_start_position:
+            self.send_to_all(sio, 'move', self.get_team_pos().index)
+
         self.send_players_turn(sio)
 
     def tick(self, sio):

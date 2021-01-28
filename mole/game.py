@@ -178,6 +178,7 @@ class Game:
                 room=player.sid
             )
 
+        self.send_to_all(sio, 'move', self.get_team_pos().index)
         self.send_players_turn(sio)
 
     def tick(self, sio):

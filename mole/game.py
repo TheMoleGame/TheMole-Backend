@@ -472,28 +472,24 @@ class Game:
             clues = self.clues_dict_2_object(player_choice.get('clues'))
 
             # Validate only when all clues are available. Guessing is not allowed!
-            # TODO: Wieder einkommentieren!
-            successful_validation = self.validate_clues(clues)
-            # successful_validation = self.validate_clues(clues) if self.validation_allowed(player.inventory, clues) else False
+            validation_allowed, validation_status = self.validation_allowed(player.inventory, clues, player.is_mole)
+            successful_validation = self.validate_clues(clues) if validation_allowed else False
 
             # Always send back the clues that should be validated
             if successful_validation:
+                validation_status = 'new_validation'
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
-                self.send_to_all(
-                    self.sio,
-                    'validation_result',
-                    {
-                        'successful_validation': successful_validation,
-                        'player_id': player.player_id,
-                        'clues': player_choice.get('clues')
-                    }
-                )
-            else:
-                sio.emit(
-                    'validation_result',
-                    {'successful_validation': successful_validation, 'clues': player_choice.get('clues')},
-                    room=player.sid
-                )
+
+            self.send_to_all(
+                self.sio,
+                'validation_result',
+                {
+                    'successful_validation': successful_validation,
+                    'validation_status': validation_status,
+                    'player_id': player.player_id,
+                    'clues': player_choice.get('clues')
+                }
+            )
 
             self.end_player_turn(sio)
 
@@ -868,21 +864,37 @@ class Game:
 
         return converted_clues
 
-    def validation_allowed(self, player_clues, clues):
+    def validation_allowed(self, player_clues, clues, is_mole):
         clue_type = clues[0].type
 
         for clue in clues:
             # The clue type must be the same for all clues
             if clue.type != clue_type:
-                return False
+                return False, 'different_clue_types'
 
             # The clues must be in the players inventory
             result = next((c for c in player_clues if c.name == clue.name), None)
 
             if result is None:
-                return False
+                return False, 'not_in_inventory'
 
-        return True
+        # Check if the clues have already been verified
+        if self.is_not_verified(self, clues, is_mole):
+            return True, 'validation_allowed'
+        else:
+            return False, 'already_verified'
+
+
+    def is_not_verified(self, clues, is_mole):
+        # Check if the verified clues have already been added to the other teams proofs or self proofs
+        for clue in clues:
+            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
+                return True
+            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
+                return True
+
+        return False
+
 
     def validate_clues(self, clues):
         """
@@ -909,11 +921,10 @@ class Game:
         return len(clue_group) == 0
 
     def add_verified_clues_to_proofs(self, clues, is_mole):
-        # Check if the verified clues have already been added to the other teams proofs or self proofs
         for clue in clues:
-            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
+            if is_mole is True:
                 self.mole_proofs.append(clue)
-            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
+            elif is_mole is False:
                 self.team_proofs.append(clue)
 
     def generate_solution_clues(self):

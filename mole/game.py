@@ -1002,7 +1002,7 @@ class Game:
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
               '----------------' + reason + '------------------------')
-        self.send_to_all(self.sio, 'gameover', {winner: winner, reason: reason})
+        self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': reason})
 
 
 def _occasion_matches(left, right):

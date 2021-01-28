@@ -981,7 +981,7 @@ class Game:
     def game_over(self, reason=GameOverReason.DEFAULT):
         # TODO: if mole player won, let everybody guess one last time?
         self.turn_state.game_over()
-        winner = "Mole"
+        winner = "mole"
 
         if reason is GameOverReason.MORIARTY_CAUGHT:
             reason = "moriarty_caught_team"
@@ -995,7 +995,7 @@ class Game:
 
             # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
             if len(self.team_proofs) >= 4 * 3:
-                winner = "Team"
+                winner = "team"
                 reason = "validated_enough_proofs"
 
         print('---------------------------------------------\n' +

@@ -1083,11 +1083,8 @@ def create_2_sections():
     Field.counter = 0
 
     map_dll = pyllist.dllist()  # double linked List
-    #  First Field
-    init_f = Field(FieldType.DEVIL_FIELD)  # devil
-    map_dll.append(init_f)
 
-    for i in range(0, 3):
+    for i in range(4):
         map_dll.append(Field(FieldType.DEVIL_FIELD))
 
     map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
@@ -1100,10 +1097,10 @@ def create_2_sections():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.SHORTCUT, 18))  # id == 14
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 18))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
     map_dll.append(Field(FieldType.OCCASION))

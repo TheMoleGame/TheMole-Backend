@@ -996,10 +996,10 @@ class Game:
         self.turn_state.game_over()
         winner = "mole"
         # Team reached end without evidences and mole has no evidences, presumption of innocence
-        reason = "hindered_team"
+        message = "hindered_team"
 
         if reason is GameOverReason.MORIARTY_CAUGHT:
-            reason = "moriarty_caught_team"
+            message = "moriarty_caught_team"
         elif reason is GameOverReason.DEFAULT or GameOverReason.REACHED_END_OF_MAP:
             # Reminder: We have 5 categories of proofs
             # improvement thoughts:
@@ -1008,18 +1008,18 @@ class Game:
 
             # Mole wins if he has verified at least two proofs (Reminder: 3 clues per proof)
             if len(self.mole_proofs) >= (2 * 3):
-                reason = "destroyed_enough_proofs"
+                message = "destroyed_enough_proofs"
             # Team wins if it has verified at least three proofs (Reminder: 3 clues per proof)
             elif len(self.team_proofs) >= (3 * 3):
                 # story could be such that the remaining proofs can be found by an investigator at the court
                 winner = "team"
-                reason = "validated_enough_proofs"
+                message = "validated_enough_proofs"
 
         print('---------------------------------------------\n' +
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
               '----------------' + reason + '------------------------')
-        self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': reason})
+        self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': message})
 
 
 def _occasion_matches(left, right):

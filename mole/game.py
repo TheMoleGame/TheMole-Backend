@@ -997,19 +997,23 @@ class Game:
         # TODO: if mole player won, let everybody guess one last time?
         self.turn_state.game_over()
         winner = "mole"
+        # Team reached end without evidences and mole has no evidences, presumption of innocence
+        reason = "hindered_team"
 
         if reason is GameOverReason.MORIARTY_CAUGHT:
             reason = "moriarty_caught_team"
+        elif reason is GameOverReason.DEFAULT or GameOverReason.REACHED_END_OF_MAP:
+            # Reminder: We have 5 categories of proofs
+            # improvement thoughts:
+            # Harder but more logical would be to compare the proofs he found with the teams proofs
+            # then subtract the moles proofs from the teams
 
-        if reason is GameOverReason.DEFAULT or GameOverReason.REACHED_END_OF_MAP:
-            reason = "hindered_team"
-
-            # Mole wins if he has verified at least three proofs (Reminder: 3 clues per proof)
-            if len(self.mole_proofs) >= 3 * 3:
+            # Mole wins if he has verified at least two proofs (Reminder: 3 clues per proof)
+            if len(self.mole_proofs) >= (2 * 3):
                 reason = "destroyed_enough_proofs"
-
-            # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
-            if len(self.team_proofs) >= 4 * 3:
+            # Team wins if it has verified at least three proofs (Reminder: 3 clues per proof)
+            elif len(self.team_proofs) >= (3 * 3):
+                # story could be such that the remaining proofs can be found by an investigator at the court
                 winner = "team"
                 reason = "validated_enough_proofs"
 

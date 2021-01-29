@@ -61,7 +61,7 @@ def start_game(sid, message):
     start_position = None
     test_choices = None
     all_proofs = False
-    enable_minigames = False
+    enable_minigames = True
 
     if isinstance(message, str):
         token = message
@@ -70,7 +70,7 @@ def start_game(sid, message):
         start_position = message.get('startposition')
         test_choices = message.get('test_choices')
         all_proofs = message.get('all_proofs')
-        enable_minigames = message.get('enable_minigames', False)
+        enable_minigames = message.get('enable_minigames', True)
 
     print('starting game {}'.format(token))
     games.start_game(

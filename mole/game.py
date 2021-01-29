@@ -879,11 +879,10 @@ class Game:
                 return False, 'not_in_inventory'
 
         # Check if the clues have already been verified
-        if self.is_not_verified(self, clues, is_mole):
+        if self.is_not_verified(clues, is_mole):
             return True, 'validation_allowed'
         else:
             return False, 'already_verified'
-
 
     def is_not_verified(self, clues, is_mole):
         # Check if the verified clues have already been added to the other teams proofs or self proofs
@@ -894,7 +893,6 @@ class Game:
                 return True
 
         return False
-
 
     def validate_clues(self, clues):
         """

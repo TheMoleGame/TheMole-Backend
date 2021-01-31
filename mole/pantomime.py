@@ -1,7 +1,7 @@
 import time
 
 
-PANTOMIME_DURATION = 60.0 * 1.0  # one minute
+PANTOMIME_DURATION = 30
 
 # TODO: create more pantomime categories
 PANTOMIME_WORDS = [

@@ -5,8 +5,7 @@ import time
 
 import socketio
 from django.http import HttpResponse
-from .game_manager import GameManager
-
+from .game_manager import GameManager, JoinGameException
 
 TICK_INTERVAL = 1.0
 
@@ -88,14 +87,26 @@ def join_game(sid, message):
         token = message['token']
         name = message['name']
     except KeyError as e:
-        raise Exception('ERROR: invalid login message: {}'.format(repr(e)))
+        print('ERROR: invalid login message: {}'.format(repr(e)), file=sys.stderr)
+        return {'success': False, 'reason': 'invalid_message'}
     except TypeError:
-        raise Exception('ERROR: message is not an object. Got {} instead'.format(message))
+        print('ERROR: message is not an object. Got {} instead'.format(message), file=sys.stderr)
+        return {'success': False, 'reason': 'invalid_message'}
 
     if not name:
-        raise Exception('ERROR: Cant join with empty name.')
+        print('ERROR: Cant join with empty name.', file=sys.stderr)
+        return {'success': False, 'reason': 'empty_name'}
 
-    games.handle_join(sio, sid, token, name)
+    try:
+        games.handle_join(sio, sid, token, name)
+    except JoinGameException as e:
+        print(
+            'INFO: player join failed:\n\treason: {}\n\ttoken: {}\n\tsid: {}'
+            .format(e.reason.name.lower(), e.token, e.player_sid)
+        )
+        return {'success': False, 'reason': e.reason.name.lower()}
+
+    return {'success': True, 'reason': None}
 
 
 @sio.event

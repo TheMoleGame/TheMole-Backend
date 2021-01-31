@@ -1,3 +1,4 @@
+import enum
 import random
 import sys
 from typing import Dict
@@ -116,34 +117,39 @@ class GameManager:
         for g in self.games.values():
             if g.token == token:
                 game = g
+                break
         if game is None:
-            return False
-        if not game.has_disconnected_player(name):
-            print(
-                'Player failed to join game "{}", because of using unknown name "{}"'
-                .format(game.token, name),
-                file=sys.stderr
+            raise JoinGameException(
+                reason=JoinGameException.Reasons.GAME_NOT_FOUND,
+                sid=sid,
+                token=token,
+                name=name,
             )
-            return False
+        if not game.has_disconnected_player(name):
+            raise JoinGameException(
+                reason=JoinGameException.Reasons.NAME_NOT_FOUND,
+                sid=sid,
+                token=token,
+                name=name,
+            )
         game.player_rejoin(sio, sid, name)
         self.games[sid] = game
-        return True
 
     def handle_join(self, sio, sid, token, name):
         pending_game = self.get_pending_by_token(token)
 
         if pending_game is None:
-            if self.handle_rejoin(sio, sid, token, name):
-                sio.enter_room(sid, token)
-            else:
-                sio.emit('join_failed', 'No game found with token "{}"!'.format(token), room=sid)
-                raise Exception(
-                    'ERROR: join game with token {} could not be found for player with sid {}'.format(token, sid)
-                )
+            self.handle_rejoin(sio, sid, token, name)
+            sio.enter_room(sid, token)
         else:
             if len(pending_game.players) >= 8:
                 sio.emit('join_failed', 'Game "{}" is full!'.format(token), room=sid)
-                raise Exception('ERROR: Player "{}" cannot join game "{}" as it is full.'.format(name, token))
+                raise JoinGameException(
+                    reason=JoinGameException.Reasons.GAME_FULL,
+                    sid=sid,
+                    token=token,
+                    name=name,
+                )
 
             sio.enter_room(sid, pending_game.token)
 
@@ -174,3 +180,17 @@ class GameManager:
             if not game.has_connected_player():
                 print('All players disconnected from game {}.'.format(game.token), file=sys.stderr)
                 self._remove_game(game.token)
+
+
+class JoinGameException(Exception):
+    class Reasons(enum.Enum):
+        GAME_NOT_FOUND = 0
+        GAME_FULL = 1
+        NAME_NOT_FOUND = 2
+
+    def __init__(self, reason, sid=None, token=None, name=None):
+        self.reason = reason
+        self.player_sid = sid
+        self.token = token
+        self.name = name
+        super().__init__('Join game failed: {}'.format(reason.name.lower()))

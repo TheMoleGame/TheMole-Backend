@@ -140,7 +140,7 @@
         });
         player_socket.on('gameover', data => { console.log(name + ' got player infos:', data) });
 
-        player_socket.emit('join_game', {'token': token, 'name': name});
+        player_socket.emit('join_game', {'token': token, 'name': name}, (resp) => { console.log('player join answer', resp) });
         console.log('player "' + name + '" added');
 
         // dice buttons

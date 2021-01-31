@@ -30,16 +30,6 @@ class MoveModifier(Enum):
     HINDER = 1
     SIMPLIFY = 2
 
-    def get_factor(self):
-        if self == MoveModifier.NORMAL:
-            return 1.0
-        elif self == MoveModifier.HINDER:
-            return 0.5
-        elif self == MoveModifier.SIMPLIFY:
-            return 2.0
-        else:
-            raise Exception('move modifier did not match any of its variants')
-
 
 class TurnState:
     class PlayerTurnState(Enum):
@@ -405,8 +395,6 @@ class Game:
 
         if player_choice.get('type') == 'dice':
             move_distance = int(player_choice.get('value'))
-            move_distance = (move_distance - 1) % 3 + 1
-            move_distance = int(move_distance * self.move_modifier.get_factor())
             if self.move_modifier == MoveModifier.HINDER:
                 sio.emit(
                     'occasion_info',

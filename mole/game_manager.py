@@ -56,15 +56,13 @@ class GameManager:
     def __init__(self):
         self.games: Dict[str, Game] = {}  # maps sids to running games
         self.pending_games = []
-        self.taken_tokens = []  # type: list[int]
+        self.available_tokens = list(range(1000, 10000))
 
     def _create_new_token(self) -> str:
-        def _token_possible(t):
-            return t not in self.taken_tokens
-
-        possible_tokens = list(filter(_token_possible, range(1000, 10000)))  # remove all tokens already used
-        token = random.choice(possible_tokens)
-        self.taken_tokens.append(token)
+        if not self.available_tokens:
+            raise Exception('Cant create any more games. No tokens are available')
+        token = random.choice(self.available_tokens)
+        self.available_tokens.remove(token)
         return str(token)
 
     def is_game_running(self):
@@ -100,7 +98,10 @@ class GameManager:
         self.remove_pending_game(token)
 
     def remove_pending_game(self, token):
+        len_before = len(self.pending_games)
         self.pending_games = list(filter(lambda pg: pg.token != token, self.pending_games))
+        if len_before != len(self.pending_games):
+            self.available_tokens.append(int(token))
 
     def get_pending_by_token(self, token):
         for pending_game in self.pending_games:
@@ -159,7 +160,10 @@ class GameManager:
 
     def _remove_game(self, token):
         print('Removing game {}.'.format(token), file=sys.stderr)
+        len_before = len(self.games)
         self.games = {sid: game for sid, game in self.games.items() if game.token != token}
+        if len_before != len(self.games):
+            self.available_tokens.append(int(token))
 
     def handle_disconnect(self, sio, sid):
         # remove from pending games
@@ -168,6 +172,9 @@ class GameManager:
                 if player['sid'] == sid:
                     pending_game.remove_player(sio, sid)
                     break
+            if pending_game.host_sid == sid:
+                self.remove_pending_game(pending_game.token)
+                print('INFO: removing pending game "{}"'.format(pending_game.token), file=sys.stderr)
 
         # remove from running games
         game = self.games.get(sid)

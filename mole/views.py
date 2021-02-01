@@ -101,8 +101,8 @@ def join_game(sid, message):
         games.handle_join(sio, sid, token, name)
     except JoinGameException as e:
         print(
-            'INFO: player join failed:\n\treason: {}\n\ttoken: {}\n\tsid: {}'
-            .format(e.reason.name.lower(), e.token, e.player_sid)
+            'INFO: player join failed:\n\treason: {}\n\ttoken: {}\n\tname: {}\n\tsid: {}'
+            .format(e.reason.name.lower(), e.token, e.name, e.player_sid)
         )
         return {'success': False, 'reason': e.reason.name.lower()}
 

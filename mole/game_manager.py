@@ -152,6 +152,14 @@ class GameManager:
                     name=name,
                 )
 
+            if name.lower() in map(lambda p: p['name'].lower(), pending_game.players):
+                raise JoinGameException(
+                    reason=JoinGameException.Reasons.NAME_DUPLICATION,
+                    sid=sid,
+                    token=token,
+                    name=name,
+                )
+
             sio.enter_room(sid, pending_game.token)
 
             pending_game.add_player(sio, sid, name)
@@ -194,6 +202,7 @@ class JoinGameException(Exception):
         GAME_NOT_FOUND = 0
         GAME_FULL = 1
         NAME_NOT_FOUND = 2
+        NAME_DUPLICATION = 3
 
     def __init__(self, reason, sid=None, token=None, name=None):
         self.reason = reason

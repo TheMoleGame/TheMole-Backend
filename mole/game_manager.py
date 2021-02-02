@@ -60,7 +60,7 @@ class GameManager:
 
     def _create_new_token(self) -> str:
         if not self.available_tokens:
-            raise Exception('Cant create any more games. No tokens are available')
+            raise AllTokensTakenException('Cant create any more games. No tokens are available')
         token = random.choice(self.available_tokens)
         self.available_tokens.remove(token)
         return str(token)
@@ -80,13 +80,13 @@ class GameManager:
         pending_game = self.get_pending_by_token(token)
 
         if pending_game is None:
-            raise Exception('No pending game for token: {}. Maybe the game is already running?'.format(token))
+            raise StartGameException('No pending game for token: {}. Maybe the game is already running?'.format(token))
 
         if len(pending_game.players) < 3:
-            raise Exception('Cannot start game with less than 3 players')
+            raise StartGameException('Cannot start game with less than 3 players')
 
         if not pending_game.host_sid == sid:
-            raise Exception('Invalid token sid combination. Only the host can start the game.')
+            raise StartGameException('Invalid token sid combination. Only the host can start the game.')
 
         game = Game(
             sio, pending_game.token, pending_game.host_sid, pending_game.players, start_position, test_choices,
@@ -210,3 +210,11 @@ class JoinGameException(Exception):
         self.token = token
         self.name = name
         super().__init__('Join game failed: {}'.format(reason.name.lower()))
+
+
+class AllTokensTakenException(Exception):
+    pass
+
+
+class StartGameException(Exception):
+    pass

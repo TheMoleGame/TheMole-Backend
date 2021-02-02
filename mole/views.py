@@ -5,7 +5,9 @@ import time
 
 import socketio
 from django.http import HttpResponse
-from .game_manager import GameManager, JoinGameException
+
+from .game import InvalidMessageException
+from .game_manager import GameManager, JoinGameException, AllTokensTakenException, StartGameException
 
 TICK_INTERVAL = 1.0
 
@@ -44,7 +46,11 @@ def index(_request):
 
 @sio.event
 def create_game(sid, _message):
-    token = games.create_game(sid)
+    try:
+        token = games.create_game(sid)
+    except AllTokensTakenException as e:
+        print(str(e), file=sys.stderr)
+        return False
 
     # game host also joins room for debugging
     sio.enter_room(sid, token)
@@ -72,10 +78,13 @@ def start_game(sid, message):
         enable_minigames = message.get('enable_minigames', True)
 
     print('starting game {}'.format(token))
-    games.start_game(
-        sio, sid, token=token, start_position=start_position, test_choices=test_choices, all_proofs=all_proofs,
-        enable_minigames=enable_minigames
-    )
+    try:
+        games.start_game(
+            sio, sid, token=token, start_position=start_position, test_choices=test_choices, all_proofs=all_proofs,
+            enable_minigames=enable_minigames
+        )
+    except StartGameException as e:
+        print(str(e), file=sys.stderr)
 
     if tick_thread is None:
         _start_tick_thread()
@@ -87,7 +96,7 @@ def join_game(sid, message):
         token = message['token']
         name = message['name']
     except KeyError as e:
-        print('ERROR: invalid login message: {}'.format(repr(e)), file=sys.stderr)
+        print('ERROR: invalid login message: {}'.format(str(e)), file=sys.stderr)
         return {'success': False, 'reason': 'invalid_message'}
     except TypeError:
         print('ERROR: message is not an object. Got {} instead'.format(message), file=sys.stderr)
@@ -122,7 +131,10 @@ def player_choice(sid, message):
         print('ERROR(player_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    game.player_choice(sio, sid, message)
+    try:
+        game.player_choice(sio, sid, message)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)
 
     return True
 
@@ -135,7 +147,10 @@ def player_occasion_choice(sid, message):
         print('ERROR(player_occasion_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    game.player_occasion_choice(sio, sid, message)
+    try:
+        game.player_occasion_choice(sio, sid, message)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)
 
 
 @sio.event
@@ -146,7 +161,10 @@ def pantomime_choice(sid, message):
         print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    game.pantomime_choice(sio, sid, message)
+    try:
+        game.pantomime_choice(sio, sid, message)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)
 
 
 @sio.event
@@ -160,4 +178,7 @@ def pantomime_start(sid, message):
         print('ERROR(pantomime_start): message is not an empty string', file=sys.stderr)
         return False
 
-    game.pantomime_start(sio, sid)
+    try:
+        game.pantomime_start(sio, sid)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)

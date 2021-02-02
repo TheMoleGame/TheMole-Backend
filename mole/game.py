@@ -67,6 +67,14 @@ class TurnState:
             'remaining_move_distance': self.remaining_move_distance,
         }
 
+    def __repr__(self):
+        parts = ['(player_index: {}  state: {}'.format(self.player_index, self.player_turn_state.name)]
+        if self.occasion_choices is not None:
+            parts.append(str(self.occasion_choices))
+        if self.remaining_move_distance:
+            parts.append(str(self.remaining_move_distance))
+        return '  '.join(parts) + ')'
+
 
 def _random_occasion_choices(test_choices=None):
     choices = []
@@ -377,20 +385,20 @@ class Game:
                 'success': true/false,
             }
         """
+        player = self.get_player(sid)
+        player_name = '<unknown>' if player is None else player.name
+
         if not self.players_turn(sid):
-            player = self.get_player(sid)
-            player_name = '<unknown>' if player is None else player.name
-            raise InvalidUserException(
-                'Got invalid event from player "{}".\nturn state: {}\nplayer event: {}'.format(
-                    player_name,
-                    self.turn_state.to_dict(),
-                    player_choice
-                )
+            raise InvalidMessageException(
+                'Got player_choice, but it\'s not his turn.\n\tplayer_name: {}\n\tgame_token: {}'
+                .format(player_name, self.token)
             )
 
         if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYER_CHOOSING:
-            raise InvalidUserException(
-                'Got invalid player_choice message (turn_state: {})'.format(self.turn_state.player_turn_state.name)
+            raise InvalidMessageException(
+                'Got player_choice, but it\'s not the right moment for this message.'
+                '\n\tplayer_name: {}\n\tturn_state: {}\n\tgame_token: {}'
+                .format(player_name, repr(self.turn_state), self.token)
             )
 
         if player_choice.get('type') == 'dice':
@@ -419,12 +427,18 @@ class Game:
             # Get player with whom the clue should be shared
             share_with = next((p for p in self.players if p.player_id == player_choice.get('with')), None)
             if share_with is None:
-                raise InvalidUserException('Got invalid player id (with: {})'.format(player_choice.get('with')))
+                raise InvalidMessageException(
+                    'Got player_choice (share-clue), but share_with player_id is invalid:\n\twith: {}'
+                    .format(player_choice.get('with'))
+                )
 
             # Get clue which should be shared
             clue = next((c for c in player.inventory if c.name == player_choice.get('clue')), None)
             if clue is None:
-                raise InvalidUserException('Got invalid clue name (clue: {})'.format(player_choice.get('clue')))
+                raise InvalidMessageException(
+                    'Got player_choice (share-clue), with invalid clue name (clue: {})'
+                    .format(player_choice.get('clue'))
+                )
 
             # Update sent_to value from players clue
             clue.sent_to.append(share_with.player_id)
@@ -550,7 +564,7 @@ class Game:
             print("stepped on normal field, index:" + str(self.get_team_pos().index))
             self.end_player_turn(sio)
         else:
-            raise Exception('Unknown Field Type: {}'.format(self.get_team_pos().type))
+            raise AssertionError('Unknown Field Type: {}'.format(self.get_team_pos().type))
 
     def player_occasion_choice(self, sio, sid, chosen_occasion: dict):
         """
@@ -590,14 +604,22 @@ class Game:
             }
         """
         print('got player occasion choice: {}'.format(chosen_occasion))
+        player = self.get_player(sid)
+        player_name = '<unknown>' if player is None else player.name
+
         if not self.players_turn(sid):
-            player = self.get_player(sid)
-            player_name = '<unknown>' if player is None else player.name
-            raise InvalidUserException('Got invalid event from player "{}"'.format(player_name))
+            raise InvalidMessageException(
+                'Got player_choice, but it\'s not his turn.\n\tplayer_name: {}\n\tgame_token: {}'
+                .format(player_name, self.token)
+            )
 
         # check whether player was in turn to choose occasion
         if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION:
-            raise InvalidUserException('Got player choose occasion, but player is not in turn to choose occasion')
+            raise InvalidMessageException(
+                'Got player_choice, but it\'s not the right moment for this message.'
+                '\n\tplayer_name: {}\n\tturn_state: {}\n\tgame_token: {}'
+                .format(player_name, repr(self.turn_state), self.token)
+            )
 
         occasion_type = chosen_occasion.get('type')
         if occasion_type is None:
@@ -685,14 +707,14 @@ class Game:
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
             raise InvalidMessageException('Got pantomime start, but not in minigame\n\tsid: {}'.format(sid))
         if self.pantomime_state is None:
-            raise Exception('pantomime_state is None in minigame')
+            raise AssertionError('pantomime_state is None in minigame')
 
         # get player
         player = self.get_player(sid)
         if player is None:
-            raise InvalidUserException('Could not find player with sid: {}'.format(sid))
+            raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
         if player.sid != self.get_current_player().sid:
-            raise InvalidUserException('Got pantomime start from player that is not hosting.')
+            raise InvalidMessageException('Got pantomime start from player that is not hosting.')
         self.pantomime_state.start_timeout()
 
         for player in self.players:
@@ -712,24 +734,24 @@ class Game:
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
             raise InvalidMessageException('Got pantomime choice, but not in minigame\n\tsid: {}'.format(sid))
         if self.pantomime_state is None:
-            raise Exception('pantomime_state is None in minigame')
+            raise AssertionError('pantomime_state is None in minigame')
         if not self.pantomime_state.timeout_started():
             raise InvalidMessageException('game has not started, but got pantomime choice')
 
         # get player
         player = self.get_player(sid)
         if player is None:
-            raise InvalidUserException('Could not find player with sid: {}'.format(sid))
+            raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
         if player.sid == self.get_current_player().sid:
-            raise InvalidUserException('Got pantomime choice from hosting player.')
+            raise InvalidMessageException('Got pantomime choice from hosting player.')
 
         # validate message
         if not isinstance(message, dict):
-            raise InvalidMessageException('Message is no dictionary')
+            raise InvalidMessageException('Got pantomime choice, but message is no dictionary')
         guess = message.get('guess')
         if guess is None:
             raise InvalidMessageException(
-                'Got Pantomime guess without key "guess". Message keys: {}'.format(message.keys())
+                'Got Pantomime choice without key "guess". Message keys: {}'.format(message.keys())
             )
         if guess not in self.pantomime_state.words:
             raise InvalidMessageException(
@@ -1038,10 +1060,6 @@ class Field(dict):
         self.type = field_type                  # type: FieldType
         dict.__setitem__(self, "shortcut", self.shortcut_field)
         dict.__setitem__(self, "field_type", self.type)
-
-
-class InvalidUserException(Exception):
-    pass
 
 
 class InvalidMessageException(Exception):

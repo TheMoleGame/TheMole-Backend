@@ -1029,7 +1029,12 @@ class Game:
               '--------------GAME OVER----------------------\n' +
               '---------------------------------------------\n' +
               '----------------' + str(reason.name) + '------------------------')
-        self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': message})
+
+        mole_id = None
+        for player in self.players:
+            if player.is_mole:
+                mole_id = player.player_id
+        self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': message, 'mole_id': mole_id})
 
 
 def _occasion_matches(left, right):

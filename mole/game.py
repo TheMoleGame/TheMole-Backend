@@ -157,7 +157,7 @@ class Game:
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
         self.pantomime_state: PantomimeState or None = None
 
-        self.map = create_2_sections()  # small test map
+        self.map = create_map()
         got_start_position = True if start_position is not None else False
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
         self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
@@ -1070,42 +1070,7 @@ class InvalidMessageException(Exception):
     pass
 
 
-def small_map_shortcut():
-    # reset counter
-    Field.counter = 0
-
-    map_dll = pyllist.dllist()  # double linked List
-    #  First Field
-    init_f = Field(FieldType.DEVIL_FIELD)  # devil should start here
-    map_dll.append(init_f)
-    for i in range(0, 3):
-        map_dll.append(Field(FieldType.DEVIL_FIELD))
-
-    map_dll.append(Field(FieldType.WALKABLE))  # team - [4] fifth
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 18))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.Goal))
-
-    return map_dll
-
-
-def create_2_sections():
+def create_map():
     # reset counter
     Field.counter = 0
 
@@ -1129,12 +1094,12 @@ def create_2_sections():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     # Second Section
-    map_dll.append(Field(FieldType.WALKABLE))
+    map_dll.append(Field(FieldType.WALKABLE))  # id == 23
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -1156,102 +1121,4 @@ def create_2_sections():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.Goal))
-    return map_dll
-
-
-def create_big_map():
-    # reset counter
-    Field.counter = 0
-
-    map_dll = pyllist.dllist()  # double linked List
-    #  First Field
-    init_f = Field(FieldType.DEVIL_FIELD)  # devil
-    map_dll.append(init_f)
-
-    for i in range(0, 3):
-        map_dll.append(Field(FieldType.DEVIL_FIELD))
-
-    map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 18))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    # Second Section
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 33))
-
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 42))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.Goal))
-
-    # Next Section
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 70))  # 52
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.Goal))  # id=62 ?
-
-    # Shortcut
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, 32))
-#   # Shortcut 2
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, 45))
-#   # Shortcut 3
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, True))
-#   map_dll.append(Field(FieldType.WALKABLE, 57))
-
     return map_dll

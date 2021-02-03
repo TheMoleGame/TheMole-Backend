@@ -1124,5 +1124,11 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
+
+    # TODO: remove this. Only for testing
+    for _ in range(25):
+        map_dll.append(Field(FieldType.WALKABLE))
+
     map_dll.append(Field(FieldType.Goal))
+
     return map_dll

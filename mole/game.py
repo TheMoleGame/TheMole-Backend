@@ -1002,7 +1002,6 @@ class Game:
         return clues
 
     def game_over(self, reason=GameOverReason.DEFAULT):
-        # TODO: if mole player won, let everybody guess one last time?
         self.turn_state.game_over()
         winner = "mole"
         # Team reached end without evidences and mole has no evidences, presumption of innocence
@@ -1019,8 +1018,8 @@ class Game:
             # Mole wins if he has verified at least two proofs (Reminder: 3 clues per proof)
             if len(self.mole_proofs) >= (2 * 3):
                 message = "destroyed_enough_proofs"
-            # Team wins if it has verified at least three proofs (Reminder: 3 clues per proof)
-            elif len(self.team_proofs) >= (3 * 3):
+            # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
+            elif len(self.team_proofs) >= (4 * 3):
                 # story could be such that the remaining proofs can be found by an investigator at the court
                 winner = "team"
                 message = "validated_enough_proofs"

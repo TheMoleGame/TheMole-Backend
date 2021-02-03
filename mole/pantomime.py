@@ -7,16 +7,15 @@ PANTOMIME_WORDS = {
     'easy': {
         'escape_route': [
             ['wide_canal', 'wide_street', 'dark_canal', 'dark_street'],
-            ['dense_forest', 'dense_bushes', 'light_forest', 'light_bushes'],
-            ['small_way', 'small_path', 'big_way', 'big_path'],
+            # ['dense_forest', 'dense_bushes', 'light_forest', 'light_bushes'],
+            # ['small_way', 'small_path', 'big_way', 'big_path'],
             ['old_door', 'old_gate', 'decorated_door', 'decorated_gate'],
-            ['dark_cave', 'dark_tunnel', 'scary_cave', 'scary_tunnel'],
+            # ['dark_cave', 'dark_tunnel', 'scary_cave', 'scary_tunnel'],
         ],
         'escape_vehicle': [
             ['long_boat', 'long_train', 'fast_boat', 'fast_train'],
             ['old_unicycle', 'old_bicycle', 'new_unicycle', 'new_bicycle'],
-            ['big_hot_air_balloon', 'small_hot_air_balloon', 'big_zeppelin', 'small_zeppelin'],
-            ['black_horse', 'white_horse', 'black_donkey', 'white_donkey'],
+            # ['big_hot_air_balloon', 'small_hot_air_balloon', 'big_zeppelin', 'small_zeppelin'],
             ['expensive_carriage', 'narrow_carriage', 'expensive_carry', 'narrow_carry']
         ]
     },
@@ -24,15 +23,18 @@ PANTOMIME_WORDS = {
         'approach': [
             ['creep_quiet', 'crawl_flat', 'climb_fast', 'run_fast'],
             ['comfortable_driving', 'safe_flying', 'brisk_walking', 'fast_sliding'],
+            ['black_horse', 'white_horse', 'black_donkey', 'white_donkey'],
         ],
+        'danger': [
+            ['heavy_hammer', 'hard_pickaxe', 'long_machete', 'sharp_knife'],
+            ['obstructed_path', 'enraged_mob', 'cunning_assassin', 'impenetrable_assembly'],
+        ]
     },
     'hard': {
         'danger': [
             ['spiky_wire_fence', 'hidden_trap_door', 'open_laces', 'glass_lying_around'],
-            ['heavy_hammer', 'hard_pickaxe', 'long_machete', 'sharp_knife'],
             ['loud_pistol', 'quiet_silencer', 'dangerous_murderer', 'scary_follower'],
-            ['nasty_traitor', 'eavesdropping_informer', 'secret_pursuer', 'stupid_agent'],
-            ['obstructed_path', 'enraged_mob', 'cunning_assassin', 'impenetrable_assembly'],
+            ['nasty_traitor', 'eavesdropping_snitch', 'secret_pursuer', 'stupid_agent'],
         ],
         'discovery': [
             ['left_behind_note', 'valid_ticket', 'hidden_shortcut', 'lost_letter'],

@@ -3,10 +3,12 @@ import time
 
 PANTOMIME_DURATION = 30
 
-# TODO: create more pantomime categories
 PANTOMIME_WORDS = [
-    ('escape_route', ['grotty_canal', 'bright_way', 'cold_street', 'small_path']),
-    ('escape_vehicle', ['long_boat', 'goofy_unicycle', 'clean_carriage', 'fancy_sled']),
+    ('escape_route', ['wide_canal', 'wide_street', 'dark_canal', 'dark_street']),
+    ('escape_vehicle', ['long_boat', 'long_train', 'fast_boat', 'fast_train']),
+    ('danger', ['spiky_wire_fence', 'hidden_trap_door', 'open_laces', 'glass_lying_around']),
+    ('approach', ['creep_quiet', 'crawl_flat', 'climb_fast', 'run_fast']),
+    ('discovery', ['left_behind_note', 'valid_ticket', 'hidden_shortcut', 'lost_letter']),
 ]
 
 

@@ -717,7 +717,7 @@ class Game:
 
     def trigger_pantomime(self, sio, difficulty):
         category = self._get_pantomime_category(difficulty)
-        words = PANTOMIME_WORDS[difficulty][category]
+        words = random.choice(PANTOMIME_WORDS[difficulty][category])
         self.pantomime_category_count[difficulty][category] += 1
 
         solution_word = random.choice(words)

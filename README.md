@@ -14,9 +14,6 @@ To install Django and socketio activate your virtualenv and execute `pip install
 2. Install 'psycopg2' package, so Django can use the PostgreSQL database: `pip install psycopg2`
 3. `python manage.py migrate`
 4. `python manage.py createsuperuser`
-   - Username: admin
-   - Email address:
-   - Password: adminadmin
 
 ## Start Backend
 ```bash

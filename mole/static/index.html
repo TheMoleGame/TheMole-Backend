@@ -61,7 +61,7 @@
         console.log('game started');
       });
       $('#start-minigame-button').click(function() {
-        socket.emit('start_game', {token: token, startposition: 14, enable_minigames: true});
+        socket.emit('start_game', {token: token, startposition: 13, enable_minigames: true});
         console.log('game started');
       });
       $('#start-occasion-button').click(function() {
@@ -102,7 +102,10 @@
         player_socket.on('updated_clue', data => { console.log(name + ' got updated clue:', data) });
         player_socket.on('solution_clues', data => { console.log(name + ' solution clues:', data) });
         player_socket.on('guess_pantomime', data => { console.log(name + ' should guess pantomime:', data) });
-        player_socket.on('host_pantomime', data => { console.log(name + ' should host pantomime:', data) });
+        player_socket.on('host_pantomime', data => {
+          console.log(name + ' should host pantomime:', data);
+          player_socket.emit('pantomime_start', '');
+        });
         player_socket.on('pantomime_result', data => { console.log(name + ' got pantomime result:', data) });
 
         player_socket.on('receive_clue', data => {

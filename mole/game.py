@@ -157,6 +157,12 @@ class Game:
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
         self.pantomime_state: PantomimeState or None = None
 
+        self.pantomime_category_count = {}
+        for difficulty, category_list in PANTOMIME_WORDS.items():
+            self.pantomime_category_count[difficulty] = {}
+            for category in category_list:
+                self.pantomime_category_count[difficulty][category] = 0
+
         self.map = create_map()
         got_start_position = True if start_position is not None else False
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
@@ -533,7 +539,7 @@ class Game:
                 raise AssertionError('got no remaining moves on shortcut field.')
             if self.enable_minigames:
                 self.turn_state.start_minigame(remaining_moves)
-                self.trigger_pantomime(sio)
+                self.trigger_pantomime(sio, self.get_team_pos().difficulty)
             else:
                 self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
                 team_pos = self.get_team_pos()
@@ -684,8 +690,18 @@ class Game:
         else:
             raise InvalidMessageException('type of occasion choice is invalid: "{}"'.format(occasion_type))
 
-    def trigger_pantomime(self, sio):
-        category, words = random.choice(PANTOMIME_WORDS)
+    def _get_pantomime_category(self, difficulty):
+        usages = self.pantomime_category_count[difficulty]
+        usages = sorted(usages.items(), key=lambda u: u[1])
+        lowest_usage = usages[0][1]
+        usages = filter(lambda u: u[1] == lowest_usage, usages)
+        category = random.choice(list(usages))[0]
+        return category
+
+    def trigger_pantomime(self, sio, difficulty):
+        category = self._get_pantomime_category(difficulty)
+        words = PANTOMIME_WORDS[difficulty][category]
+        self.pantomime_category_count[difficulty][category] += 1
 
         solution_word = random.choice(words)
         self.pantomime_state = PantomimeState(solution_word, words, category)
@@ -1056,11 +1072,14 @@ class FieldType(str, Enum):
 class Field(dict):
     counter = 0
 
-    def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None):
+    def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None, difficulty=None):
+        if field_type == FieldType.SHORTCUT and difficulty is None:
+            raise AssertionError('cant create SHORTCUT without difficulty level')
         dict.__init__(self, index=Field.counter)
         self.index = Field.counter
         Field.counter = Field.counter + 1
         self.shortcut_field = shortcut_field    # int
+        self.difficulty = difficulty
         self.type = field_type                  # type: FieldType
         dict.__setitem__(self, "shortcut", self.shortcut_field)
         dict.__setitem__(self, "field_type", self.type)
@@ -1089,7 +1108,7 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 18))  # id == 14
+    map_dll.append(Field(FieldType.SHORTCUT, 18, 'easy'))  # id == 14
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -1103,7 +1122,7 @@ def create_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 33))
+    map_dll.append(Field(FieldType.SHORTCUT, 33, 'medium'))
 
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
@@ -1116,7 +1135,7 @@ def create_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 42))
+    map_dll.append(Field(FieldType.SHORTCUT, 42, 'hard'))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))

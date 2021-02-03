@@ -33,6 +33,20 @@ class Player(CharacterInterface):
         self.disabled = False
         self.connected = True
 
+    def add_clue(self, received_from, clue):
+        # Reset received_from and sent_to information
+        clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
+
+        self.inventory.append(clue_copy)
+        return clue_copy
+
+    def check_and_add_clue(self, received_from, clue):
+        for c in self.inventory:
+            if c.name == clue.name:
+                return c
+
+        return self.add_clue(received_from, clue)
+
     def search_hint(self) -> []:
         # TODO
         pass

@@ -107,6 +107,23 @@ def _random_occasion_choices(test_choices=None):
     return list(map(_enrich_choice, choices))
 
 
+def evidence_2_clue(evidence):
+    return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
+
+
+def clues_dict_2_object(clues):
+    """
+    :rtype: list[Evidence]
+    :return: Converted clues
+    """
+    converted_clues = []
+
+    for clue in clues:
+        converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
+
+    return converted_clues
+
+
 class Game:
     def __init__(
             self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
@@ -450,7 +467,7 @@ class Game:
             clue.sent_to.append(share_with.player_id)
 
             # Check if share_with player already has clue
-            share_clue = self.check_and_add_clue(player.player_id, share_with, clue)
+            share_clue = share_with.check_and_add_clue(player.player_id, clue)
 
             # Share clue with share_with player
             share_clue = share_clue.__dict__
@@ -477,7 +494,7 @@ class Game:
 
         elif player_choice.get('type') == 'validate-clues':
             player = self.get_player(sid)
-            clues = self.clues_dict_2_object(player_choice.get('clues'))
+            clues = clues_dict_2_object(player_choice.get('clues'))
 
             # Validate only when all clues are available. Guessing is not allowed!
             validation_allowed, validation_status = self.validation_allowed(player.inventory, clues, player.is_mole)
@@ -507,7 +524,7 @@ class Game:
 
             if player_choice.get('success') is True:
                 clue = self.get_random_missing_clue(player.inventory)
-                self.add_clue(-1, player, clue)
+                player.add_clue(-1, clue)
 
                 clue = clue.__dict__
 
@@ -648,7 +665,7 @@ class Game:
 
             if chosen_occasion.get('success') is True:
                 clue = self.get_random_missing_clue(player.inventory)
-                self.add_clue(-1, player, clue)
+                player.add_clue(-1, clue)
 
                 clue = clue.__dict__
 
@@ -838,21 +855,6 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-    # todo move to player
-    def add_clue(self, received_from, player, clue):
-        # Reset received_from and sent_to information
-        clue_copy = Clue(name=clue.name, type=clue.type, subtype=clue.subtype, received_from=received_from)
-
-        player.inventory.append(clue_copy)
-        return clue_copy
-
-    def check_and_add_clue(self, received_from, player, clue):
-        for c in player.inventory:
-            if c.name == clue.name:
-                return c
-
-        return self.add_clue(received_from, player, clue)
-
     def get_random_missing_clue(self, clues):
         """
         :rtype: Evidence
@@ -872,23 +874,6 @@ class Game:
         for c in self.clues:
             if c.name == clue.name:
                 return c
-
-    # todo move to fassade static
-    def evidence_2_clue(self, evidence):
-        return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
-
-    # todo move to fassade static
-    def clues_dict_2_object(self, clues):
-        """
-        :rtype: list[Evidence]
-        :return: Converted clues
-        """
-        converted_clues = []
-
-        for clue in clues:
-            converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
-
-        return converted_clues
 
     def validation_allowed(self, player_clues, clues, is_mole):
         clue_type = clues[0].type
@@ -969,9 +954,9 @@ class Game:
                                                                          subtype=ClueSubtype.COLOR_W)
         all_weapon_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.WEAPON,
                                                                              subtype=ClueSubtype.CONDITION)
-        clues.append(self.evidence_2_clue(random.choice(all_weapon_objects)))
-        clues.append(self.evidence_2_clue(random.choice(all_weapon_colors)))
-        clues.append(self.evidence_2_clue(random.choice(all_weapon_conditions)))
+        clues.append(evidence_2_clue(random.choice(all_weapon_objects)))
+        clues.append(evidence_2_clue(random.choice(all_weapon_colors)))
+        clues.append(evidence_2_clue(random.choice(all_weapon_conditions)))
 
         all_crime_scene_locations = Evidence.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
                                                                                  subtype=ClueSubtype.LOCATION)
@@ -979,9 +964,9 @@ class Game:
                                                                                    subtype=ClueSubtype.TEMPERATURE)
         all_crime_scene_districts = Evidence.objects.using(db_connection).filter(type=ClueType.CRIME_SCENE,
                                                                                  subtype=ClueSubtype.DISTRICT)
-        clues.append(self.evidence_2_clue(random.choice(all_crime_scene_locations)))
-        clues.append(self.evidence_2_clue(random.choice(all_crime_scene_temperature)))
-        clues.append(self.evidence_2_clue(random.choice(all_crime_scene_districts)))
+        clues.append(evidence_2_clue(random.choice(all_crime_scene_locations)))
+        clues.append(evidence_2_clue(random.choice(all_crime_scene_temperature)))
+        clues.append(evidence_2_clue(random.choice(all_crime_scene_districts)))
 
         all_offender_escape_clothings = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
                                                                                      subtype=ClueSubtype.CLOTHING)
@@ -989,9 +974,9 @@ class Game:
                                                                                  subtype=ClueSubtype.SIZE)
         all_offender_escape_characteristics = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
                                                                                            subtype=ClueSubtype.CHARACTERISTIC)
-        clues.append(self.evidence_2_clue(random.choice(all_offender_escape_clothings)))
-        clues.append(self.evidence_2_clue(random.choice(all_offender_escape_sizes)))
-        clues.append(self.evidence_2_clue(random.choice(all_offender_escape_characteristics)))
+        clues.append(evidence_2_clue(random.choice(all_offender_escape_clothings)))
+        clues.append(evidence_2_clue(random.choice(all_offender_escape_sizes)))
+        clues.append(evidence_2_clue(random.choice(all_offender_escape_characteristics)))
 
         all_time_of_crime_weekdays = Evidence.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
                                                                                   subtype=ClueSubtype.WEEKDAY)
@@ -999,9 +984,9 @@ class Game:
                                                                                   subtype=ClueSubtype.DAYTIME)
         all_time_of_crime_times = Evidence.objects.using(db_connection).filter(type=ClueType.TIME_OF_CRIME,
                                                                                subtype=ClueSubtype.TIME)
-        clues.append(self.evidence_2_clue(random.choice(all_time_of_crime_weekdays)))
-        clues.append(self.evidence_2_clue(random.choice(all_time_of_crime_daytimes)))
-        clues.append(self.evidence_2_clue(random.choice(all_time_of_crime_times)))
+        clues.append(evidence_2_clue(random.choice(all_time_of_crime_weekdays)))
+        clues.append(evidence_2_clue(random.choice(all_time_of_crime_daytimes)))
+        clues.append(evidence_2_clue(random.choice(all_time_of_crime_times)))
 
         all_mean_of_escape_conditions = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                      subtype=ClueSubtype.MODEL)
@@ -1009,9 +994,9 @@ class Game:
                                                                                   subtype=ClueSubtype.COLOR_ME)
         all_mean_of_escape_districts = Evidence.objects.using(db_connection).filter(type=ClueType.MEANS_OF_ESCAPE,
                                                                                     subtype=ClueSubtype.ESCAPE_ROUTE)
-        clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_conditions)))
-        clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_daytime)))
-        clues.append(self.evidence_2_clue(random.choice(all_mean_of_escape_districts)))
+        clues.append(evidence_2_clue(random.choice(all_mean_of_escape_conditions)))
+        clues.append(evidence_2_clue(random.choice(all_mean_of_escape_daytime)))
+        clues.append(evidence_2_clue(random.choice(all_mean_of_escape_districts)))
 
         connections[db_connection].close()
 

@@ -61,7 +61,7 @@
         console.log('game started');
       });
       $('#start-minigame-button').click(function() {
-        socket.emit('start_game', {token: token, startposition: 13, enable_minigames: true});
+        socket.emit('start_game', {token: token, startposition: 13, enable_minigames: true, moriarty_position: 4});
         console.log('game started');
       });
       $('#start-occasion-button').click(function() {

@@ -127,7 +127,7 @@ def clues_dict_2_object(clues):
 class Game:
     def __init__(
             self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
-            enable_minigames=False
+            enable_minigames=False, moriarty_position=0
     ):
         self.host_sid = host_sid
         self.token = token
@@ -184,7 +184,10 @@ class Game:
         got_start_position = True if start_position is not None else False
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
         self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
-        self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(0)
+        self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(moriarty_position)
+
+        if moriarty_position != 0:
+            self._send_moriarty_move(sio)
         self.debug_game_representation()  # test case debug
 
         for player in self.players:
@@ -310,6 +313,9 @@ class Game:
             if self.get_moriarty_pos().index == self.get_team_pos().index:
                 self.game_over(GameOverReason.MORIARTY_CAUGHT)
 
+        self._send_moriarty_move(sio)
+
+    def _send_moriarty_move(self, sio):
         self.send_to_all(sio, 'moriarty_move', self.get_moriarty_pos().index)
 
     def send_players_turn(self, sio):

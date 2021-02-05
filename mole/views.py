@@ -67,6 +67,7 @@ def start_game(sid, message):
     test_choices = None
     all_proofs = False
     enable_minigames = True
+    moriarty_position = 0
 
     if isinstance(message, str):
         token = message
@@ -76,12 +77,13 @@ def start_game(sid, message):
         test_choices = message.get('test_choices')
         all_proofs = message.get('all_proofs')
         enable_minigames = message.get('enable_minigames', True)
+        moriarty_position = message.get('moriarty_position', moriarty_position)
 
     print('starting game {}'.format(token))
     try:
         games.start_game(
             sio, sid, token=token, start_position=start_position, test_choices=test_choices, all_proofs=all_proofs,
-            enable_minigames=enable_minigames
+            enable_minigames=enable_minigames, moriarty_position=moriarty_position
         )
     except StartGameException as e:
         print(str(e), file=sys.stderr)

@@ -75,7 +75,8 @@ class GameManager:
         return pending_game.token
 
     def start_game(
-            self, sio, sid, token, start_position=None, test_choices=None, all_proofs=False, enable_minigames=False
+            self, sio, sid, token, start_position=None, test_choices=None, all_proofs=False, enable_minigames=False,
+            moriarty_position=0
     ):
         pending_game = self.get_pending_by_token(token)
 
@@ -90,7 +91,7 @@ class GameManager:
 
         game = Game(
             sio, pending_game.token, pending_game.host_sid, pending_game.players, start_position, test_choices,
-            all_proofs, enable_minigames
+            all_proofs, enable_minigames, moriarty_position
         )
         for player in pending_game.players:
             self.games[player['sid']] = game

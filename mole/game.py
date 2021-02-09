@@ -1053,7 +1053,7 @@ def _occasion_matches(left, right):
 
 
 class FieldType(str, Enum):
-    WALKABLE = 'WALKABLE'
+    WALKABLE = 'walkable'
     OCCASION = 'occasion'
     DEVIL_FIELD = 'devil_field'
     SHORTCUT = 'shortcut'
@@ -1132,6 +1132,7 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
+    map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))

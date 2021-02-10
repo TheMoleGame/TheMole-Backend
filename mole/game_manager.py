@@ -114,6 +114,12 @@ class GameManager:
     def get(self, sid) -> Game:
         return self.games.get(sid)
 
+    def _get_by_token(self, token) -> Game or None:
+        for game in self.games.values():
+            if game.token == token:
+                return game
+        return None
+
     def handle_rejoin(self, sio, sid, token, name):
         game = None
         for g in self.games.values():
@@ -167,8 +173,16 @@ class GameManager:
 
             print('player "{}" added to game {}'.format(name, pending_game.token), file=sys.stderr)
 
-    def _remove_game(self, token):
+    def _remove_game(self, token, sio):
         print('Removing game {}.'.format(token), file=sys.stderr)
+
+        # disconnect players
+        game = self._get_by_token(token)
+        if game is not None:
+            for player in game.players:
+                sio.disconnect(sid=player.sid)
+
+        # remove game
         len_before = len(self.games)
         self.games = {sid: game for sid, game in self.games.items() if game.token != token}
         if len_before != len(self.games):
@@ -190,12 +204,12 @@ class GameManager:
         if game is not None:
             if game.host_sid == sid:
                 print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
-                self._remove_game(game.token)
+                self._remove_game(game.token, sio)
                 return
             game.player_disconnect(sio, sid)
             if not game.has_connected_player():
                 print('All players disconnected from game {}.'.format(game.token), file=sys.stderr)
-                self._remove_game(game.token)
+                self._remove_game(game.token, sio)
 
 
 class JoinGameException(Exception):

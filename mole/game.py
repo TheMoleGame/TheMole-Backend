@@ -129,36 +129,34 @@ class Game:
         self.enable_minigames = enable_minigames
 
         # Create Evidence combination
-        self.clues = self.generate_solution_clues()
+        self.solution_clues = self.generate_solution_clues()
 
         # TODO: Delete later. Frontend needs this for testing
         clues_dict = []
-        for clue in self.clues:
+        for clue in self.solution_clues:
             clues_dict.append(clue.__dict__)
         self.send_to_all(sio, 'solution_clues', {'clues': clues_dict})
 
-        self.team_proofs = []
-        self.mole_proofs = []
+        self.team_proofs = []  # type: List[Clue]
+        self.mole_proofs = []  # type: List[Clue]
         self.players = []
 
         # Deep copy of the array so that the clue can be deleted when it is assigned to the players.
         # This guarantees that each player is assigned a different proof
-        clues_copy = []
-        for clue in self.clues:
-            clues_copy.append(deepcopy(clue))
+        solution_clues_copy = deepcopy(self.solution_clues)
 
         for player_id, player_info in enumerate(player_infos):
             if all_proofs is None or all_proofs is False:
                 # Assign random clue
-                clue = random.choice(clues_copy)
+                clue = random.choice(solution_clues_copy)
                 self.players.append(
                     Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue))
                 )
-                clues_copy.remove(clue)
+                solution_clues_copy.remove(clue)
             else:
                 # Assign all clues
                 player = Player(player_id, player_info['name'], player_info['sid'])
-                player.inventory = self.clues
+                player.inventory = deepcopy(self.solution_clues)
                 self.players.append(player)
 
         random.choice(self.players).is_mole = True
@@ -518,17 +516,21 @@ class Game:
             player = self.get_player(sid)
             clue = None
 
-            if player_choice.get('success') is True:
+            if player_choice.get('success'):
                 clue = self.get_random_missing_clue(player.inventory)
-                player.add_clue(-1, clue)
+                # clue can be None, if this player knows everything or every category was validated
+                if clue is not None:
+                    player.add_clue(-1, clue)
+                    clue = clue.__dict__
+                else:
+                    print('INFO: search-clue, but no clues left to find')
 
-                clue = clue.__dict__
-
-            sio.emit(
-                'receive_clue',
-                {'clue': clue},
-                room=player.sid
-            )
+            if clue is not None:
+                sio.emit(
+                    'receive_clue',
+                    {'clue': clue},
+                    room=player.sid
+                )
 
             sio.emit(
                 'secret_move',
@@ -845,23 +847,42 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-    def get_random_missing_clue(self, clues):
+    def get_random_missing_clue(self, player_clues):
         """
+        :param player_clues: The clues the player already has
         :rtype: Evidence
         :return: Get a random clue, which the player does not have yet
         """
-        missing_clues = []
+        def _valid_found_clue(find_clue) -> bool:
+            """
+            Returns whether this clue should be findable.
+            It is not findable anymore, if it is already verified.
+            It is not findable anymore, if the player has this clue already.
 
-        for clue in self.clues:
-            c = next((c for c in clues if c.name == clue.name), None)
+            :param find_clue: The clue to inspect
+            :type find_clue: Evidence
+            :return: True or False
+            """
+            # already verified
+            if find_clue.type in map(lambda x: x.type, self.team_proofs):
+                return False
+            if find_clue.type in map(lambda x: x.type, self.mole_proofs):
+                return False
 
-            if c is None:
-                missing_clues.append(clue)
+            if find_clue.name in map(lambda pc: pc.name, player_clues):
+                return False
 
-        return random.choice(missing_clues)
+            return True
+
+        possible_clues = list(filter(_valid_found_clue, self.solution_clues))
+
+        if len(possible_clues) == 0:
+            return None
+
+        return random.choice(possible_clues)
 
     def get_clue_by_name(self, clue):
-        for c in self.clues:
+        for c in self.solution_clues:
             if c.name == clue.name:
                 return c
 
@@ -906,7 +927,7 @@ class Game:
         clue_group = []
 
         # Get all winner clues with requested clue type
-        for clue in self.clues:
+        for clue in self.solution_clues:
             if clue.type == clue_type:
                 clue_group.append(clue)
 

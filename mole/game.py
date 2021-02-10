@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import itertools
 import sys
 import time
 from copy import deepcopy
@@ -499,6 +500,7 @@ class Game:
                 validation_status = 'new_validation'
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
 
+            proofed_types = list(map(lambda p: p.type, itertools.chain(self.team_proofs, self.mole_proofs)))
             self.send_to_all(
                 self.sio,
                 'validation_result',
@@ -506,7 +508,8 @@ class Game:
                     'successful_validation': successful_validation,
                     'validation_status': validation_status,
                     'player_id': player.player_id,
-                    'clues': player_choice.get('clues')
+                    'clues': player_choice.get('clues'),
+                    'proofed_types': proofed_types,
                 }
             )
 

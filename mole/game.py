@@ -1124,7 +1124,7 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 56, 'medium'))
+    map_dll.append(Field(FieldType.SHORTCUT, 57, 'medium'))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))

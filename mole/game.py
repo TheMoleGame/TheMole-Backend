@@ -291,6 +291,7 @@ class Game:
                 field = self.get_team_pos()
                 if field.type == FieldType.SHORTCUT and self.enable_minigames:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
+                    return
 
     def moriarty_move(self, sio):
         num_fields = random.choice([1, 1, 1, 2])

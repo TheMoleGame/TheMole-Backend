@@ -547,6 +547,10 @@ class Game:
         """
         Moves the player while handling turn state, minigames and occasions.
         """
+        if move_distance == 0:
+            self.send_to_all(sio, 'move', self.get_team_pos().index)  # send 0 move event
+            self.end_player_turn(sio)
+            return
         self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 

@@ -437,9 +437,6 @@ class Game:
                     room=self.host_sid
                 )
             self.move_modifier = MoveModifier.NORMAL
-            # be merciful
-            if move_distance == 0:
-                move_distance = 1
             self.handle_movement(sio, move_distance)
 
         elif player_choice.get('type') == 'share-clue':

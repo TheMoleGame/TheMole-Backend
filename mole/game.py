@@ -191,6 +191,7 @@ class Game:
                     'is_mole': player.is_mole,
                     'clues': clues,
                     'rejoin': False,
+                    'proofed_types': [],
                 },
                 room=player.sid
             )
@@ -240,6 +241,7 @@ class Game:
         player_info = list(map(lambda p: {'name': p.name, 'player_id': p.player_id}, self.players))
         sio.emit('player_infos', player_info, room=player.sid)
         clues = list(map(lambda c: c.__dict__, player.inventory))
+        proofed_types = list(map(lambda p: p.type, itertools.chain(self.team_proofs, self.mole_proofs)))
         sio.emit(
             'init',
             {
@@ -249,6 +251,7 @@ class Game:
                 'clue': clues[0],  # TODO: remove this
                 'clues': clues,
                 'rejoin': True,
+                'proofed_types': proofed_types,
             },
             room=player.sid
         )

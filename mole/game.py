@@ -44,12 +44,8 @@ class TurnState:
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
         self.occasion_choices = None
 
-        # This saves the remaining number of fields which will be gone, after a minigame was finished successfully
-        self.remaining_move_distance = 0
-
-    def start_minigame(self, remaining_moves):
+    def start_minigame(self):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
-        self.remaining_move_distance = remaining_moves
 
     def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
@@ -64,15 +60,12 @@ class TurnState:
             'player_index': self.player_index,
             'player_turn_state': self.player_turn_state.name,
             'occasion_choices': self.occasion_choices,
-            'remaining_move_distance': self.remaining_move_distance,
         }
 
     def __repr__(self):
         parts = ['(player_index: {}  state: {}'.format(self.player_index, self.player_turn_state.name)]
         if self.occasion_choices is not None:
             parts.append(str(self.occasion_choices))
-        if self.remaining_move_distance:
-            parts.append(str(self.remaining_move_distance))
         return '  '.join(parts) + ')'
 
 
@@ -230,7 +223,6 @@ class Game:
         if self.get_current_player().sid == sid:
             self.end_player_turn(sio, do_moriarty_move=False)
             self.turn_state.occasion_choices = None
-            self.turn_state.remaining_move_distance = 0
 
         player.connected = False
         sio.emit('player_disconnected', player.player_id, room=self.host_sid)
@@ -299,9 +291,6 @@ class Game:
                 field = self.get_team_pos()
                 if field.type == FieldType.SHORTCUT and self.enable_minigames:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
-                    remaining_distance = distance - i - 1
-                    return remaining_distance
-        return None
 
     def moriarty_move(self, sio):
         num_fields = random.choice([1, 1, 1, 2])
@@ -552,22 +541,18 @@ class Game:
         """
         Moves the player while handling turn state, minigames and occasions.
         """
-
-        remaining_moves = self.move_player(move_distance)
+        self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
         if self.get_team_pos().type is FieldType.SHORTCUT:
             print("stepped on shortcut, index:" + str(self.get_team_pos().index))
-            if remaining_moves is None and self.enable_minigames:
-                raise AssertionError('got no remaining moves on shortcut field.')
             if self.enable_minigames:
-                self.turn_state.start_minigame(remaining_moves)
+                self.turn_state.start_minigame()
                 self.trigger_pantomime(sio, self.get_team_pos().difficulty)
             else:
                 self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
                 team_pos = self.get_team_pos()
                 move_distance = team_pos.shortcut_field - team_pos.index
-                self.turn_state.remaining_move_distance = 0
                 self.handle_movement(sio, move_distance)
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
@@ -833,11 +818,9 @@ class Game:
             # go shortcut
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
             team_pos = self.get_team_pos()
-            move_distance = team_pos.shortcut_field - team_pos.index + self.turn_state.remaining_move_distance
-            self.turn_state.remaining_move_distance = 0
+            move_distance = team_pos.shortcut_field - team_pos.index
             self.handle_movement(sio, move_distance)
         else:
-            self.turn_state.remaining_move_distance = 0
             self.end_player_turn(sio)
 
     def send_to_all(self, sio, event, message=None):
@@ -904,9 +887,11 @@ class Game:
     def is_not_verified(self, clues, is_mole):
         # Check if the verified clues have already been added to the other teams proofs or self proofs
         for clue in clues:
-            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
+            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and\
+                    next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
                 return True
-            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and next((c for c in self.team_proofs if c.name == clue.name), None) is None:
+            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and\
+                    next((c for c in self.team_proofs if c.name == clue.name), None) is None:
                 return True
 
         return False
@@ -978,8 +963,8 @@ class Game:
                                                                                      subtype=ClueSubtype.CLOTHING)
         all_offender_escape_sizes = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
                                                                                  subtype=ClueSubtype.SIZE)
-        all_offender_escape_characteristics = Evidence.objects.using(db_connection).filter(type=ClueType.OFFENDER,
-                                                                                           subtype=ClueSubtype.CHARACTERISTIC)
+        all_offender_escape_characteristics = Evidence.objects.using(db_connection)\
+            .filter(type=ClueType.OFFENDER, subtype=ClueSubtype.CHARACTERISTIC)
         clues.append(evidence_2_clue(random.choice(all_offender_escape_clothings)))
         clues.append(evidence_2_clue(random.choice(all_offender_escape_sizes)))
         clues.append(evidence_2_clue(random.choice(all_offender_escape_characteristics)))

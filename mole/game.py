@@ -883,7 +883,8 @@ class Game:
         for clue in possible_clues:
             weighted_possible_clues.append(clue)
             if not self._player_has_clue(clue.name):
-                weighted_possible_clues.append(clue)
+                for _ in range(3):
+                    weighted_possible_clues.append(clue)
 
         if len(weighted_possible_clues) == 0:
             return None

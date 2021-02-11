@@ -892,7 +892,7 @@ class Game:
         if len(possible_clues) == 0:
             return None
 
-        return random.choice(possible_clues)
+        return deepcopy(random.choice(possible_clues))
 
     def get_clue_by_name(self, clue):
         for c in self.solution_clues:

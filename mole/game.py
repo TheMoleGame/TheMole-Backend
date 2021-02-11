@@ -242,7 +242,7 @@ class Game:
         sio.emit('player_infos', player_info, room=player.sid)
         clues = list(map(lambda c: c.__dict__, player.inventory))
         proofed_types = list(map(
-            lambda p: {'type': p.type, 'from': p.received_from},
+            lambda p: {'type': p.type, 'from': None},  # TODO: fill in from
             itertools.chain(self.team_proofs, self.mole_proofs)
         ))
         sio.emit(
@@ -504,7 +504,7 @@ class Game:
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
 
             proofed_types = list(map(
-                lambda p: {'type': p.type, 'from': p.received_from},
+                lambda p: {'type': p.type, 'from': None},  # TODO: fill in from
                 itertools.chain(self.team_proofs, self.mole_proofs)
             ))
             self.send_to_all(

@@ -241,7 +241,10 @@ class Game:
         player_info = list(map(lambda p: {'name': p.name, 'player_id': p.player_id}, self.players))
         sio.emit('player_infos', player_info, room=player.sid)
         clues = list(map(lambda c: c.__dict__, player.inventory))
-        proofed_types = list(map(lambda p: p.type, itertools.chain(self.team_proofs, self.mole_proofs)))
+        proofed_types = list(map(
+            lambda p: {'type': p.type, 'from': p.received_from},
+            itertools.chain(self.team_proofs, self.mole_proofs)
+        ))
         sio.emit(
             'init',
             {
@@ -500,7 +503,10 @@ class Game:
                 validation_status = 'new_validation'
                 self.add_verified_clues_to_proofs(clues, player.is_mole)
 
-            proofed_types = list(map(lambda p: p.type, itertools.chain(self.team_proofs, self.mole_proofs)))
+            proofed_types = list(map(
+                lambda p: {'type': p.type, 'from': p.received_from},
+                itertools.chain(self.team_proofs, self.mole_proofs)
+            ))
             self.send_to_all(
                 self.sio,
                 'validation_result',

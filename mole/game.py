@@ -9,6 +9,7 @@ import pyllist
 import dj_database_url
 from django.db import connections
 
+from .clues import Clue, clues_dict_2_object, evidence_2_clue, Proof
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
 from mole_backend.settings import DATABASES
@@ -101,23 +102,6 @@ def _random_occasion_choices(test_choices=None):
     return list(map(_enrich_choice, choices))
 
 
-def evidence_2_clue(evidence):
-    return Clue(name=evidence.name, type=evidence.type, subtype=evidence.subtype)
-
-
-def clues_dict_2_object(clues):
-    """
-    :rtype: list[Evidence]
-    :return: Converted clues
-    """
-    converted_clues = []
-
-    for clue in clues:
-        converted_clues.append(Evidence(name=clue['name'], type=clue['type'], subtype=clue['subtype']))
-
-    return converted_clues
-
-
 class Game:
     def __init__(
             self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
@@ -135,11 +119,11 @@ class Game:
         # TODO: Delete later. Frontend needs this for testing
         clues_dict = []
         for clue in self.solution_clues:
-            clues_dict.append(clue.__dict__)
+            clues_dict.append(clue.to_dict())
         self.send_to_all(sio, 'solution_clues', {'clues': clues_dict})
 
-        self.team_proofs = []  # type: List[Clue]
-        self.mole_proofs = []  # type: List[Clue]
+        self.team_proofs = []  # type: List[Proof]
+        self.mole_proofs = []  # type: List[Proof]
         self.players = []
 
         # Deep copy of the array so that the clue can be deleted when it is assigned to the players.
@@ -151,7 +135,7 @@ class Game:
                 # Assign random clue
                 clue = random.choice(solution_clues_copy)
                 self.players.append(
-                    Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue))
+                    Player(player_id, player_info['name'], player_info['sid'], self.get_clue_by_name(clue.name))
                 )
                 solution_clues_copy.remove(clue)
             else:
@@ -183,7 +167,7 @@ class Game:
         self.debug_game_representation()  # test case debug
 
         for player in self.players:
-            clues = list(map(lambda c: c.__dict__, player.inventory))
+            clues = list(map(lambda c: c.to_dict(), player.inventory))
             sio.emit(
                 'init',
                 {
@@ -240,11 +224,8 @@ class Game:
         sio.emit('player_rejoined', player.player_id, room=self.host_sid)
         player_info = list(map(lambda p: {'name': p.name, 'player_id': p.player_id}, self.players))
         sio.emit('player_infos', player_info, room=player.sid)
-        clues = list(map(lambda c: c.__dict__, player.inventory))
-        proofed_types = list(map(
-            lambda p: {'type': p.type, 'from': None},  # TODO: fill in from
-            itertools.chain(self.team_proofs, self.mole_proofs)
-        ))
+        clues = list(map(Clue.to_dict, player.inventory))
+        proofed_types = list(map(Proof.to_dict, self._get_all_proofs()))
         sio.emit(
             'init',
             {
@@ -377,6 +358,12 @@ class Game:
                 return player
         return None
 
+    def get_player_by_id(self, player_id) -> Player or None:
+        for player in self.players:
+            if player.player_id == player_id:
+                return player
+        return None
+
     def player_choice(self, sio, sid, player_choice):
         """
         This event is called, if a player chose one of:
@@ -398,7 +385,7 @@ class Game:
          - validating clue:
             player_choice is in the following form:
             {
-                'type': 'validate-clue',
+                'type': 'validate-clues',
                 'clues': [clue_name1, clue_name2, ...],
             }
 
@@ -443,48 +430,49 @@ class Game:
             self.handle_movement(sio, move_distance)
 
         elif player_choice.get('type') == 'share-clue':
-            player = self.get_player(sid)
+            sharing_player = self.get_player(sid)
 
             # Get player with whom the clue should be shared
-            share_with = next((p for p in self.players if p.player_id == player_choice.get('with')), None)
-            if share_with is None:
+            share_with_player = self.get_player_by_id(player_choice.get('with'))
+            if share_with_player is None:
                 raise InvalidMessageException(
                     'Got player_choice (share-clue), but share_with player_id is invalid:\n\twith: {}'
                     .format(player_choice.get('with'))
                 )
 
             # Get clue which should be shared
-            clue = next((c for c in player.inventory if c.name == player_choice.get('clue')), None)
+            clue = sharing_player.get_clue(player_choice.get('clue'))
             if clue is None:
                 raise InvalidMessageException(
-                    'Got player_choice (share-clue), with invalid clue name (clue: {})'
-                    .format(player_choice.get('clue'))
+                    'Got player_choice (share-clue), with clue name that player does not own'
+                    '\n\tclue: {}\n\tinventory: {}'
+                    .format(player_choice.get('clue'), sharing_player.inventory)
                 )
 
             # Update sent_to value from players clue
-            clue.sent_to.append(share_with.player_id)
+            if share_with_player.player_id not in clue.sent_to:
+                clue.sent_to.append(share_with_player.player_id)
 
             # Check if share_with player already has clue
-            share_clue = share_with.check_and_add_clue(player.player_id, clue)
+            share_clue = share_with_player.check_and_add_clue(sharing_player.player_id, clue)
 
             # Share clue with share_with player
-            share_clue = share_clue.__dict__
             sio.emit(
                 'receive_clue',
-                {'clue': share_clue},
-                room=share_with.sid
+                {'clue': share_clue.to_dict()},
+                room=share_with_player.sid
             )
             # Send updated clue to player
-            clue = clue.__dict__
+            clue = clue.to_dict()
             sio.emit(
                 'updated_clue',
                 {'clue': clue},
-                room=player.sid
+                room=sharing_player.sid
             )
 
             sio.emit(
                 'secret_move',
-                {'player_id': player.player_id, 'move_name': 'share-clue'},
+                {'player_id': sharing_player.player_id, 'move_name': 'share-clue'},
                 room=self.host_sid
             )
 
@@ -495,17 +483,17 @@ class Game:
             clues = clues_dict_2_object(player_choice.get('clues'))
 
             # Validate only when all clues are available. Guessing is not allowed!
-            validation_allowed, validation_status = self.validation_allowed(player.inventory, clues, player.is_mole)
+            validation_allowed, validation_status = self.validation_allowed(player, clues)
             successful_validation = self.validate_clues(clues) if validation_allowed else False
 
             # Always send back the clues that should be validated
             if successful_validation:
                 validation_status = 'new_validation'
-                self.add_verified_clues_to_proofs(clues, player.is_mole)
+                self.add_verified_clues_to_proofs(clues, player)
 
             proofed_types = list(map(
-                lambda p: {'type': p.type, 'from': None},  # TODO: fill in from
-                itertools.chain(self.team_proofs, self.mole_proofs)
+                lambda p: {'type': p.main_type, 'from': p.validation_player},
+                self._get_all_proofs()
             ))
             self.send_to_all(
                 self.sio,
@@ -530,14 +518,13 @@ class Game:
                 # clue can be None, if this player knows everything or every category was validated
                 if clue is not None:
                     player.add_clue(-1, clue)
-                    clue = clue.__dict__
                 else:
                     print('INFO: search-clue, but no clues left to find')
 
             if clue is not None:
                 sio.emit(
                     'receive_clue',
-                    {'clue': clue},
+                    {'clue': clue.to_dict()},
                     room=player.sid
                 )
 
@@ -668,19 +655,18 @@ class Game:
 
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
-            clue = None
 
             if chosen_occasion.get('success') is True:
                 clue = self.get_random_missing_clue(player.inventory)
-                player.add_clue(-1, clue)
+                if clue is not None:
+                    player.add_clue(-1, clue)
+                    clue = clue.to_dict()
 
-                clue = clue.__dict__
-
-            sio.emit(
-                'receive_clue',
-                {'clue': clue},
-                room=player.sid
-            )
+                sio.emit(
+                    'receive_clue',
+                    {'clue': clue},
+                    room=player.sid
+                )
 
             self.end_player_turn(sio)
 
@@ -860,11 +846,11 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
-    def get_random_missing_clue(self, player_clues):
+    def get_random_missing_clue(self, player_clues: List[Clue]) -> Clue or None:
         """
         :param player_clues: The clues the player already has
-        :rtype: Evidence
-        :return: Get a random clue, which the player does not have yet
+        :return: Get a random clue, which the player does not have yet and whose main type was not validated yet.
+                 None, if there is no such clue
         """
         def _valid_found_clue(find_clue) -> bool:
             """
@@ -873,13 +859,11 @@ class Game:
             It is not findable anymore, if the player has this clue already.
 
             :param find_clue: The clue to inspect
-            :type find_clue: Evidence
+            :type find_clue: Clue
             :return: True or False
             """
             # already verified
-            if find_clue.type in map(lambda x: x.type, self.team_proofs):
-                return False
-            if find_clue.type in map(lambda x: x.type, self.mole_proofs):
+            if self.is_already_verified(find_clue.main_type):
                 return False
 
             if find_clue.name in map(lambda pc: pc.name, player_clues):
@@ -894,59 +878,59 @@ class Game:
 
         return random.choice(possible_clues)
 
-    def get_clue_by_name(self, clue):
+    def get_clue_by_name(self, clue_name: str):
         for c in self.solution_clues:
-            if c.name == clue.name:
+            if c.name == clue_name:
                 return c
 
-    def validation_allowed(self, player_clues, clues, is_mole):
-        clue_type = clues[0].type
+    def validation_allowed(self, player: Player, clues: List[Clue]) -> (bool, str):
+        """
+        Checks whether the given clues are in the players inventory.
+
+        :param player: The player that wants to validate
+        :param clues: The list of clues to validate
+        :return: A tuple (success, msg), where success is a bool and msg describes the reasoning behind errors
+        """
+        clue_type = clues[0].main_type
 
         for clue in clues:
             # The clue type must be the same for all clues
-            if clue.type != clue_type:
-                return False, 'different_clue_types'
+            if clue.main_type != clue_type:
+                raise InvalidMessageException('Got different clue main_types which is illegal')
 
             # The clues must be in the players inventory
-            result = next((c for c in player_clues if c.name == clue.name), None)
-
-            if result is None:
+            if player.get_clue(clue.name) is None:
                 return False, 'not_in_inventory'
 
         # Check if the clues have already been verified
-        if self.is_not_verified(clues, is_mole):
-            return True, 'validation_allowed'
-        else:
+        if self.is_already_verified(clue_type):
             return False, 'already_verified'
+        else:
+            return True, 'validation_allowed'
 
-    def is_not_verified(self, clues, is_mole):
+    def _get_all_proofs(self) -> List[Proof]:
+        return list(itertools.chain(self.team_proofs, self.mole_proofs))
+
+    def is_already_verified(self, main_type: str) -> bool:
         # Check if the verified clues have already been added to the other teams proofs or self proofs
-        for clue in clues:
-            if is_mole is True and next((c for c in self.team_proofs if c.name == clue.name), None) is None and\
-                    next((c for c in self.mole_proofs if c.name == clue.name), None) is None:
-                return True
-            elif is_mole is False and next((c for c in self.mole_proofs if c.name == clue.name), None) is None and\
-                    next((c for c in self.team_proofs if c.name == clue.name), None) is None:
-                return True
-
-        return False
+        return main_type in map(lambda p: p.main_type, self._get_all_proofs())
 
     def validate_clues(self, clues):
         """
         :rtype: Bool
         :return: Bool whether the correct clues were found or not
         """
-        clue_type = clues[0].type
+        clue_type = clues[0].main_type
         clue_group = []
 
         # Get all winner clues with requested clue type
         for clue in self.solution_clues:
-            if clue.type == clue_type:
+            if clue.main_type == clue_type:
                 clue_group.append(clue)
 
         # Check if player has all the clues needed
         for clue in clues:
-            if clue.type != clue_type:
+            if clue.main_type != clue_type:
                 return False
 
             result = next((e for e in clue_group if e.name == clue.name), None)
@@ -955,19 +939,18 @@ class Game:
 
         return len(clue_group) == 0
 
-    def add_verified_clues_to_proofs(self, clues, is_mole):
-        for clue in clues:
-            if is_mole is True:
-                self.mole_proofs.append(clue)
-            elif is_mole is False:
-                self.team_proofs.append(clue)
+    def add_verified_clues_to_proofs(self, clues, player: Player):
+        main_type = clues[0].main_type
+        proof = Proof(main_type, player.player_id)
+        if player.is_mole:
+            self.mole_proofs.append(proof)
+        else:
+            self.team_proofs.append(proof)
 
-    def generate_solution_clues(self):
+    def generate_solution_clues(self) -> List[Clue]:
         """
-        :rtype: list[Evidence]
         :return: List of clues to win the game
         """
-
         # Use new database connection
         db_connection = 'game_init{}'.format(self.token)
         DATABASES[db_connection] = dj_database_url.config(conn_max_age=600)

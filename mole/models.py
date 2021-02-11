@@ -33,18 +33,6 @@ class Evidence(models.Model):
     subtype = models.CharField(max_length=3, choices=ClueSubtype.choices, default=ClueSubtype.OBJECT)
 
 
-class Clue:
-    def __init__(self, name, type, subtype, received_from=-1, sent_to=None):
-        self.name = name
-        self.type = type
-        self.subtype = subtype
-        self.received_from = received_from
-        self.sent_to = []
-
-        if sent_to is not None:
-            self.sent_to.append(sent_to)
-
-
 class EventFieldType(models.TextChoices):
     MINIGAME = 'M', 'Minigame'
     OCCASION = 'O', 'Occasion'

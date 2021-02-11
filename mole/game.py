@@ -1025,11 +1025,11 @@ class Game:
             # Harder but more logical would be to compare the proofs he found with the teams proofs
             # then subtract the moles proofs from the teams
 
-            # Mole wins if he has verified at least two proofs (Reminder: 3 clues per proof)
-            if len(self.mole_proofs) >= (2 * 3):
+            # Mole wins if he has verified at least two proofs (Reminder: proof is now single object)
+            if len(self.mole_proofs) >= 2:
                 message = "destroyed_enough_proofs"
-            # Team wins if it has verified at least four proofs (Reminder: 3 clues per proof)
-            elif len(self.team_proofs) >= (4 * 3):
+            # Team wins if it has verified at least four proofs (Reminder: proof is now single object)
+            elif len(self.team_proofs) >= 4:
                 # story could be such that the remaining proofs can be found by an investigator at the court
                 winner = "team"
                 message = "validated_enough_proofs"

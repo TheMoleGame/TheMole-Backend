@@ -441,7 +441,7 @@ class Game:
                 )
 
             # Get clue which should be shared
-            clue = sharing_player.get_clue(player_choice.get('clue'))
+            clue = deepcopy(sharing_player.get_clue(player_choice.get('clue')))
             if clue is None:
                 raise InvalidMessageException(
                     'Got player_choice (share-clue), with clue name that player does not own'

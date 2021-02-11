@@ -846,6 +846,12 @@ class Game:
     def players_turn(self, sid):
         return self.get_current_player().sid == sid
 
+    def _player_has_clue(self, clue_name):
+        for player in self.players:
+            if player.get_clue(clue_name) is not None:
+                return True
+        return False
+
     def get_random_missing_clue(self, player_clues: List[Clue]) -> Clue or None:
         """
         :param player_clues: The clues the player already has
@@ -873,10 +879,16 @@ class Game:
 
         possible_clues = list(filter(_valid_found_clue, self.solution_clues))
 
-        if len(possible_clues) == 0:
+        weighted_possible_clues = []
+        for clue in possible_clues:
+            weighted_possible_clues.append(clue)
+            if not self._player_has_clue(clue.name):
+                weighted_possible_clues.append(clue)
+
+        if len(weighted_possible_clues) == 0:
             return None
 
-        return random.choice(possible_clues)
+        return random.choice(weighted_possible_clues)
 
     def get_clue_by_name(self, clue_name: str):
         for c in self.solution_clues:

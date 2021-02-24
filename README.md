@@ -52,4 +52,4 @@ git push heroku master
 
 ## Access from web
 
-See [here](https://gitlab.rz.htw-berlin.de/s0565666/augmented-boardgame/-/wikis/Serververbindung) for more information.
+See [here](https://github.com/TheMoleGame/TheMole-Backend/wiki/Technisches-Konzept) for more information.

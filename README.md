@@ -52,4 +52,4 @@ git push heroku master
 
 ## Access from web
 
-See [here](https://github.com/TheMoleGame/TheMole-Backend/wiki/Technisches-Konzept) for more information.
+See [here](https://github.com/TheMoleGame/TheMole-Backend/wiki/Serververbindung) for more information.

@@ -9,7 +9,7 @@ To install Django and socketio activate your virtualenv and execute `pip install
 ## Database Setup
 1. Download and install PostgreSQL: https://www.enterprisedb.com/downloads/postgres-postgresql-downloads
 	- Deactivate Stackbuilder
-	- Set up password for superuser (postgres): DsItUrSt20!
+	- Set up password for 
 	- Port: 5432 (Default)
 2. Install 'psycopg2' package, so Django can use the PostgreSQL database: `pip install psycopg2`
 3. `python manage.py migrate`

@@ -3,103 +3,22 @@ import itertools
 import sys
 import time
 from copy import deepcopy
-from enum import Enum
 import random
-import pyllist
 import dj_database_url
 from django.db import connections
 
+from .occasions import _random_occasion_choices
+from .turn_state import TurnState, GameOverReason, MoveModifier
+from .map import Field, FieldType, create_map, pyllist
 from .clues import Clue, clues_dict_2_object, evidence_2_clue, Proof
 from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
 from mole_backend.settings import DATABASES
 from .pantomime import PANTOMIME_WORDS, PantomimeState
 
-OCCASIONS = ['found_clue', 'move_forwards', 'simplify_dicing', 'skip_player', 'hinder_dicing']
 DEFAULT_START_POSITION = 4
 
 random.seed(time.time())
-
-
-class GameOverReason(Enum):
-    DEFAULT = 0
-    REACHED_END_OF_MAP = 1
-    MORIARTY_CAUGHT = 2
-
-
-class MoveModifier(Enum):
-    NORMAL = 0
-    HINDER = 1
-    SIMPLIFY = 2
-
-
-class TurnState:
-    class PlayerTurnState(Enum):
-        PLAYER_CHOOSING = 0
-        PLAYER_CHOOSING_OCCASION = 1
-        PLAYING_MINIGAME = 2
-        DEVIL_MOVE = 3
-        GAME_OVER = 4
-
-    def __init__(self):
-        self.player_index = 0
-        self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
-        self.occasion_choices = None
-
-    def start_minigame(self):
-        self.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
-
-    def choosing_occasion(self, occasion_choices):
-        self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
-        self.occasion_choices = occasion_choices
-
-    def game_over(self):
-        self.player_turn_state = TurnState.PlayerTurnState.GAME_OVER
-        self.occasion_choices = None
-
-    def to_dict(self):
-        return {
-            'player_index': self.player_index,
-            'player_turn_state': self.player_turn_state.name,
-            'occasion_choices': self.occasion_choices,
-        }
-
-    def __repr__(self):
-        parts = ['(player_index: {}  state: {}'.format(self.player_index, self.player_turn_state.name)]
-        if self.occasion_choices is not None:
-            parts.append(str(self.occasion_choices))
-        return '  '.join(parts) + ')'
-
-
-def _random_occasion_choices(test_choices=None):
-    choices = []
-
-    if test_choices is not None and len(test_choices) >= 1 and test_choices[0] is not None:
-        # Add first test choice
-        choices.append(test_choices[0])
-
-        if len(test_choices) == 1:
-            # Add random choice
-            choices_copy = OCCASIONS.copy()
-            choices_copy.remove(test_choices[0])
-            choices.append(random.choice(choices_copy))
-
-        elif len(test_choices) == 2 and test_choices[1] is not None:
-            # Add second test choice
-            choices.append(test_choices[1])
-    else:
-        # Add random choices
-        choices = random.sample(OCCASIONS, 2)
-
-    def _enrich_choice(choice):
-        result = {'type': choice}
-        if choice == 'move_forwards':
-            result['value'] = random.randint(1, 4)
-        elif choice == 'skip_player':
-            result['name'] = None
-        return result
-
-    return list(map(_enrich_choice, choices))
 
 
 class Game:
@@ -1068,128 +987,6 @@ def _occasion_matches(left, right):
     return True
 
 
-class FieldType(str, Enum):
-    WALKABLE = 'walkable'
-    OCCASION = 'occasion'
-    DEVIL_FIELD = 'devil_field'
-    SHORTCUT = 'shortcut'
-    Goal = 'goal'
-
-
-class Field(dict):
-    counter = 0
-
-    def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None, difficulty=None):
-        if field_type == FieldType.SHORTCUT and difficulty is None:
-            raise AssertionError('cant create SHORTCUT without difficulty level')
-        dict.__init__(self, index=Field.counter)
-        self.index = Field.counter
-        Field.counter = Field.counter + 1
-        self.shortcut_field = shortcut_field    # int
-        self.difficulty = difficulty
-        self.type = field_type                  # type: FieldType
-        dict.__setitem__(self, "shortcut", self.shortcut_field)
-        dict.__setitem__(self, "field_type", self.type)
-
-
 class InvalidMessageException(Exception):
     pass
 
-
-def create_map():
-    # reset counter
-    Field.counter = 0
-
-    map_dll = pyllist.dllist()  # double linked List
-
-    for i in range(4):
-        map_dll.append(Field(FieldType.DEVIL_FIELD))
-
-    map_dll.append(Field(FieldType.WALKABLE))  # team - id=4
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))  # was Minigame
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 18, 'easy'))  # id == 14
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    # Second Section
-    map_dll.append(Field(FieldType.WALKABLE))  # id == 23
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 33, 'easy'))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 42, 'medium'))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 57, 'medium'))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 83, 'hard'))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.Goal))
-
-    return map_dll

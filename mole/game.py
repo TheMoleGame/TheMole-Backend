@@ -459,6 +459,12 @@ class Game:
                     room=player.sid
                 )
 
+            if clue2 is not None:
+                sio.emit(
+                    'receive_clue',
+                    {'clue': clue2.to_dict()},
+                    room=player.sid
+                )
             sio.emit(
                 'secret_move',
                 {'player_id': player.player_id, 'move_name': 'search-clue'},

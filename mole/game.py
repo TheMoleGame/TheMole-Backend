@@ -431,6 +431,7 @@ class Game:
         elif player_choice.get('type') == 'search-clue':
             player = self.get_player(sid)
             clue = None
+            clue2 = None
 
             if player_choice.get('doublesuccess'):
                 clue = self.get_random_missing_clue(player.inventory)

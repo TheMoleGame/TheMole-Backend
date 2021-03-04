@@ -432,6 +432,17 @@ class Game:
             player = self.get_player(sid)
             clue = None
 
+            if player_choice.get('doublesuccess'):
+                clue = self.get_random_missing_clue(player.inventory)
+                clue2 = self.get_random_missing_clue(player.inventory)
+                # clue can be None, if this player knows everything or every category was validated
+                if clue is not None:
+                    player.add_clue(-1, clue)
+                if clue2 is not None:
+                    player.add_clue(-1, clue2)
+                else:
+                    print('INFO: search-clue, but no clues left to find')
+
             if player_choice.get('success'):
                 clue = self.get_random_missing_clue(player.inventory)
                 # clue can be None, if this player knows everything or every category was validated

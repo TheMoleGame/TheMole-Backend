@@ -431,6 +431,18 @@ class Game:
         elif player_choice.get('type') == 'search-clue':
             player = self.get_player(sid)
             clue = None
+            clue2 = None
+
+            if player_choice.get('doublesuccess'):
+                clue = self.get_random_missing_clue(player.inventory)
+                clue2 = self.get_random_missing_clue(player.inventory)
+                # clue can be None, if this player knows everything or every category was validated
+                if clue is not None:
+                    player.add_clue(-1, clue)
+                if clue2 is not None:
+                    player.add_clue(-1, clue2)
+                else:
+                    print('INFO: search-clue, but no clues left to find')
 
             if player_choice.get('success'):
                 clue = self.get_random_missing_clue(player.inventory)
@@ -447,6 +459,12 @@ class Game:
                     room=player.sid
                 )
 
+            if clue2 is not None:
+                sio.emit(
+                    'receive_clue',
+                    {'clue': clue2.to_dict()},
+                    room=player.sid
+                )
             sio.emit(
                 'secret_move',
                 {'player_id': player.player_id, 'move_name': 'search-clue'},

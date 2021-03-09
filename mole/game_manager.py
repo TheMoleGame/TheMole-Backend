@@ -202,6 +202,7 @@ class GameManager:
         # remove from running games
         game = self.games.get(sid)
         if game is not None:
+            # TODO: this does not work, as self.games does not contain the host ssid
             if game.host_sid == sid:
                 print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
                 self._remove_game(game.token, sio)

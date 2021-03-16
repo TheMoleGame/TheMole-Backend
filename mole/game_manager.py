@@ -199,18 +199,27 @@ class GameManager:
                 self.remove_pending_game(pending_game.token)
                 print('INFO: removing pending game "{}"'.format(pending_game.token), file=sys.stderr)
 
-        # remove from running games
+        # remove game of host
+        game = self.get_game_by_host_sid(sid)
+        if game is not None:
+            assert game.host_sid == sid
+            print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
+            self._remove_game(game.token, sio)
+            return
+
+        # remove player from running games
         game = self.games.get(sid)
         if game is not None:
-            # TODO: this does not work, as self.games does not contain the host ssid
-            if game.host_sid == sid:
-                print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
-                self._remove_game(game.token, sio)
-                return
             game.player_disconnect(sio, sid)
             if not game.has_connected_player():
                 print('All players disconnected from game {}.'.format(game.token), file=sys.stderr)
                 self._remove_game(game.token, sio)
+
+    def get_game_by_host_sid(self, sid):
+        for game in self.games.values():
+            if game.host_sid == sid:
+                return game
+        return None
 
 
 class JoinGameException(Exception):

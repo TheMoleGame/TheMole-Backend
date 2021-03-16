@@ -20,13 +20,20 @@ tick_thread = None
 
 
 def tick_games():
+    tick_counter = 1
     while games.is_game_running():
         ticked_tokens = set()
+        has_to_sent_ping = tick_counter == 0
+
         # tick every game only once
         for game in games.games.values():
+            if has_to_sent_ping:
+                game.send_ping(sio)
+                has_to_sent_ping = False
             if game.token not in ticked_tokens:
                 game.tick(sio)
                 ticked_tokens.add(game.token)
+        tick_counter = (tick_counter + 1) % 30
         time.sleep(TICK_INTERVAL)
 
     print('no games running -> stopping tick thread')

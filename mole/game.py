@@ -104,6 +104,9 @@ class Game:
 
         self.send_players_turn(sio)
 
+    def send_ping(self, sio):
+        sio.emit('ping', '', room=self.host_sid)
+
     def tick(self, sio):
         # check minigame time over
         if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:

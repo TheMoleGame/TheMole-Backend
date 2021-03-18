@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
+import asyncio
 import itertools
 import sys
 import time
 from copy import deepcopy
 import random
 import dj_database_url
+import requests
 from django.db import connections
 
 from .occasions import _random_occasion_choices
@@ -21,6 +23,12 @@ DEFAULT_START_POSITION = 4
 random.seed(time.time())
 
 
+async def stop_idling():
+    await asyncio.sleep(20*60) # every 20minutes
+    print('get request')
+    requests.get("https://ab-backend.herokuapp.com/")  # localhost") #https://ab-backend.herokuapp.com/
+
+
 class Game:
     def __init__(
             self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
@@ -32,6 +40,7 @@ class Game:
         self.test_choices = test_choices
         self.enable_minigames = enable_minigames
 
+        asyncio.run(stop_idling())
         # Create Evidence combination
         self.solution_clues = self.generate_solution_clues()
 

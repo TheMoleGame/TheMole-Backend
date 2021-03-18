@@ -5,3 +5,5 @@ python-socketio==4.6.1
 eventlet
 pyllist
 python-dotenv
+requests
+asyncio

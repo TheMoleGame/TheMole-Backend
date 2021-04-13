@@ -661,7 +661,16 @@ class Game:
         self.pantomime_state = PantomimeState(solution_word, words, category)
 
         # inform host
-        sio.emit('guess_pantomime', {'words': words, 'category': category, 'start': False}, room=self.host_sid)
+        sio.emit(
+            'guess_pantomime',
+            {
+                'words': words,
+                'category': category,
+                'start': False,
+                'ignored': False,
+            },
+            room=self.host_sid
+        )
         for player in self.players:
             if player.sid == self.get_current_player().sid:
                 sio.emit(
@@ -670,9 +679,18 @@ class Game:
                     room=player.sid
                 )
             else:
-                sio.emit('guess_pantomime', {'words': words, 'category': category, 'start': False}, room=player.sid)
+                sio.emit(
+                    'guess_pantomime',
+                    {
+                        'words': words,
+                        'category': category,
+                        'start': False,
+                        'ignored': False,
+                    },
+                    room=player.sid
+                )
 
-    def pantomime_start(self, sio, sid):
+    def pantomime_start(self, sio, sid, ignored_player):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
             raise InvalidMessageException('Got pantomime start, but not in minigame\n\tsid: {}'.format(sid))
@@ -680,23 +698,35 @@ class Game:
             raise AssertionError('pantomime_state is None in minigame')
 
         # get player
-        player = self.get_player(sid)
-        if player is None:
+        hosting_player = self.get_player(sid)
+        if hosting_player is None:
             raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
-        if player.sid != self.get_current_player().sid:
+        if hosting_player.sid != self.get_current_player().sid:
             raise InvalidMessageException('Got pantomime start from player that is not hosting.')
+
         self.pantomime_state.start_timeout()
 
-        for player in self.players:
-            if player.sid != self.get_current_player().sid:
+        # ignore player
+        if hosting_player.player_id == ignored_player:  # hosting player can not ignore himself
+            print('WARN: hosting player tried to ignore himself', file=sys.stderr)
+        else:
+            if ignored_player is not None:
+                if ignored_player not in map(lambda p: p.player_id, self.players):  # catch unknown player
+                    print('WARN: unknown ignored player id: {}'.format(ignored_player))
+                else:
+                    self.pantomime_state.ignored_player = ignored_player
+
+        for hosting_player in self.players:
+            if hosting_player.sid != self.get_current_player().sid:
                 sio.emit(
                     'guess_pantomime',
                     {
                         'words': self.pantomime_state.words,
                         'category': self.pantomime_state.category,
-                        'start': True
+                        'start': True,
+                        'ignored': hosting_player.player_id == ignored_player,
                     },
-                    room=player.sid
+                    room=hosting_player.sid
                 )
 
     def pantomime_choice(self, sio, sid, message):
@@ -727,11 +757,17 @@ class Game:
             raise InvalidMessageException(
                 'Got invalid guess "{}". Not in possible words: {}'.format(guess, self.pantomime_state.words)
             )
+        if player.player_id == self.pantomime_state.ignored_player:
+            print('WARN: got guess from ignored player', file=sys.stderr)
+            return
 
         self.pantomime_state.guesses[player.player_id] = guess
 
         # evaluate, if everyone has answered
-        if len(self.pantomime_state.guesses) == len(self.players)-1:
+        num_players_to_guess = len(self.players) - 1
+        if self.pantomime_state.ignored_player is not None:
+            num_players_to_guess -= 1
+        if len(self.pantomime_state.guesses) == num_players_to_guess:
             self.evaluate_pantomime(sio)
 
     def evaluate_pantomime(self, sio):
@@ -741,6 +777,15 @@ class Game:
             # skip disconnected players and host player
             if not player.connected or player.sid == self.get_current_player().sid:
                 continue
+            # handle ignored player
+            if player.player_id == self.pantomime_state.ignored_player:
+                player_results.append({
+                    'player_id': player.player_id,
+                    'success': True,
+                    'guess': None,
+                    'ignored': True,
+                })
+                continue
             player_guess = self.pantomime_state.guesses.get(player.player_id)
             success = player_guess == self.pantomime_state.solution_word
             if not success:
@@ -749,6 +794,7 @@ class Game:
                 'player_id': player.player_id,
                 'success': success,
                 'guess': player_guess,
+                'ignored': False,
             })
 
         message = {

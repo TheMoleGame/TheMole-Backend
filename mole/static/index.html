@@ -104,7 +104,7 @@
         player_socket.on('guess_pantomime', data => { console.log(name + ' should guess pantomime:', data) });
         player_socket.on('host_pantomime', data => {
           console.log(name + ' should host pantomime:', data);
-          player_socket.emit('pantomime_start', '');
+          player_socket.emit('pantomime_start', {'ignored_player': 1});
         });
         player_socket.on('pantomime_result', data => { console.log(name + ' got pantomime result:', data) });
 

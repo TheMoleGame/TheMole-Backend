@@ -183,11 +183,17 @@ def pantomime_start(sid, message):
         print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
-    if message != '':
-        print('ERROR(pantomime_start): message is not an empty string', file=sys.stderr)
+    if message != '' and not isinstance(message, dict):
+        print('ERROR(pantomime_start): invalid message: {}'.format(message), file=sys.stderr)
         return False
 
+    ignored_player = None
+    if isinstance(message, dict):
+        ignored_player = message.get('ignored_player')
+        if ignored_player == -1:
+            ignored_player = None
+
     try:
-        game.pantomime_start(sio, sid)
+        game.pantomime_start(sio, sid, ignored_player)
     except InvalidMessageException as e:
         print(str(e), file=sys.stderr)

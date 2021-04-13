@@ -62,6 +62,7 @@ class PantomimeState:
         self.category = category
         self.guesses = {}  # maps player_id to guess
         self.start_time = None
+        self.ignored_player = None
 
     def start_timeout(self):
         self.start_time = _get_time()

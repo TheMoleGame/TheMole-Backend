@@ -117,7 +117,9 @@ class Game:
                 self.evaluate_pantomime(sio)
 
         if self.next_moriarty_move_time < time.time():
-            self.moriarty_move(sio, allow_zero_move=False)
+            if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYING_MINIGAME:
+                self.moriarty_move(sio, allow_zero_move=False)
+
             self.next_moriarty_move_time += _get_moriarty_move_interval()
 
     def _get_player_info(self):

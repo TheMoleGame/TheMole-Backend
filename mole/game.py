@@ -18,6 +18,7 @@ from mole_backend.settings import DATABASES
 from .pantomime import PANTOMIME_WORDS, PantomimeState
 
 DEFAULT_START_POSITION = 4
+MORIARTY_AUTO_MOVE_INTERVAL = (30, 40)
 
 random.seed(time.time())
 
@@ -81,6 +82,7 @@ class Game:
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
         self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(moriarty_position)
+        self.next_moriarty_move_time = time.time() + _get_moriarty_move_interval()
 
         if moriarty_position != 0:
             self._send_moriarty_move(sio)
@@ -113,6 +115,10 @@ class Game:
         if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
             if self.pantomime_state.is_timeout():
                 self.evaluate_pantomime(sio)
+
+        if self.next_moriarty_move_time < time.time():
+            self.moriarty_move(sio, allow_zero_move=False)
+            self.next_moriarty_move_time += _get_moriarty_move_interval()
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -202,20 +208,25 @@ class Game:
                     self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
                     return
 
-    def moriarty_move(self, sio):
+    def moriarty_move(self, sio, allow_zero_move=True):
         # stop idling
         requests.get("https://ab-backend.herokuapp.com/")
 
-        num_fields = random.choice([1, 1, 1, 2])
-        for i in range(num_fields):
-            if self.moriarty_pos.next is None:
-                # TODO: Maybe allow the Team in the future to stall on the goal field to search for evidences
-                self.game_over(GameOverReason.MORIARTY_CAUGHT)
-            self.moriarty_pos = self.moriarty_pos.next
-            if self.get_moriarty_pos().index == self.get_team_pos().index:
-                self.game_over(GameOverReason.MORIARTY_CAUGHT)
+        if allow_zero_move:
+            num_fields = random.choices([0, 1, 2], weights=[5, 4, 1])[0]
+        else:
+            num_fields = random.choices([1, 2], weights=[4, 1])[0]
 
-        self._send_moriarty_move(sio)
+        if num_fields != 0:
+            for i in range(num_fields):
+                if self.moriarty_pos.next is None:
+                    # TODO: Maybe allow the Team in the future to stall on the goal field to search for evidences
+                    self.game_over(GameOverReason.MORIARTY_CAUGHT)
+                self.moriarty_pos = self.moriarty_pos.next
+                if self.get_moriarty_pos().index == self.get_team_pos().index:
+                    self.game_over(GameOverReason.MORIARTY_CAUGHT)
+
+            self._send_moriarty_move(sio)
 
     def _send_moriarty_move(self, sio):
         self.send_to_all(sio, 'moriarty_move', self.get_moriarty_pos().index)
@@ -1047,6 +1058,11 @@ class Game:
             if player.is_mole:
                 mole_id = player.player_id
         self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': message, 'mole_id': mole_id})
+
+
+def _get_moriarty_move_interval():
+    return random.random() * (MORIARTY_AUTO_MOVE_INTERVAL[1] - MORIARTY_AUTO_MOVE_INTERVAL[0]) +\
+           MORIARTY_AUTO_MOVE_INTERVAL[0]
 
 
 def _occasion_matches(left, right):

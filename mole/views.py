@@ -6,7 +6,7 @@ import time
 import socketio
 from django.http import HttpResponse
 
-from .game import InvalidMessageException
+from .game import InvalidMessageException, DifficultyLevel
 from .game_manager import GameManager, JoinGameException, AllTokensTakenException, StartGameException
 
 TICK_INTERVAL = 1.0
@@ -75,6 +75,7 @@ def start_game(sid, message):
     all_proofs = False
     enable_minigames = True
     moriarty_position = 0
+    difficulty = 'easy'
 
     if isinstance(message, str):
         token = message
@@ -85,12 +86,13 @@ def start_game(sid, message):
         all_proofs = message.get('all_proofs')
         enable_minigames = message.get('enable_minigames', True)
         moriarty_position = message.get('moriarty_position', moriarty_position)
+        difficulty = message.get('difficulty', 'medium')
 
     print('starting game {}'.format(token))
     try:
         games.start_game(
             sio, sid, token=token, start_position=start_position, test_choices=test_choices, all_proofs=all_proofs,
-            enable_minigames=enable_minigames, moriarty_position=moriarty_position
+            enable_minigames=enable_minigames, moriarty_position=moriarty_position, difficulty=difficulty
         )
     except StartGameException as e:
         print(str(e), file=sys.stderr)

@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import enum
 import itertools
 import sys
 import time
@@ -23,16 +24,30 @@ MORIARTY_AUTO_MOVE_INTERVAL = (30, 40)
 random.seed(time.time())
 
 
+class DifficultyLevel(enum.Enum):
+    EASY = 0
+    MEDIUM = 1
+    HARD = 2
+
+
+def _parse_difficulty(difficulty):
+    for level in DifficultyLevel:
+        if level.name.lower() == difficulty.lower():
+            return level
+    raise ValueError('Unknown difficulty level: {}'.format(difficulty))
+
+
 class Game:
     def __init__(
             self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
-            enable_minigames=False, moriarty_position=0
+            enable_minigames=False, moriarty_position=0, difficulty='easy'
     ):
         self.host_sid = host_sid
         self.token = token
         self.sio = sio
         self.test_choices = test_choices
         self.enable_minigames = enable_minigames
+        self.difficulty = _parse_difficulty(difficulty)
 
         # Create Evidence combination
         self.solution_clues = self.generate_solution_clues()
@@ -82,7 +97,11 @@ class Game:
         start_position = DEFAULT_START_POSITION if start_position is None else start_position
         self.team_pos: pyllist.dllistnode = self.map.nodeat(start_position)
         self.moriarty_pos: pyllist.dllistnode = self.map.nodeat(moriarty_position)
-        self.next_moriarty_move_time = time.time() + _get_moriarty_move_interval()
+        moriarty_move_interval = self._get_moriarty_move_interval()
+        if moriarty_move_interval is not None:
+            self.next_moriarty_move_time = time.time() + moriarty_move_interval
+        else:
+            self.next_moriarty_move_time = None
 
         if moriarty_position != 0:
             self._send_moriarty_move(sio)
@@ -116,11 +135,11 @@ class Game:
             if self.pantomime_state.is_timeout():
                 self.evaluate_pantomime(sio)
 
-        if self.next_moriarty_move_time < time.time():
+        if self.next_moriarty_move_time is not None and self.next_moriarty_move_time < time.time():
             if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYING_MINIGAME:
                 self.moriarty_move(sio, allow_zero_move=False)
 
-            self.next_moriarty_move_time += _get_moriarty_move_interval()
+            self.next_moriarty_move_time += self._get_moriarty_move_interval()
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -1061,10 +1080,15 @@ class Game:
                 mole_id = player.player_id
         self.send_to_all(self.sio, 'gameover', {'winner': winner, 'reason': message, 'mole_id': mole_id})
 
-
-def _get_moriarty_move_interval():
-    return random.random() * (MORIARTY_AUTO_MOVE_INTERVAL[1] - MORIARTY_AUTO_MOVE_INTERVAL[0]) +\
-           MORIARTY_AUTO_MOVE_INTERVAL[0]
+    def _get_moriarty_move_interval(self):
+        value = random.random() * (MORIARTY_AUTO_MOVE_INTERVAL[1] - MORIARTY_AUTO_MOVE_INTERVAL[0]) + \
+               MORIARTY_AUTO_MOVE_INTERVAL[0]
+        if self.difficulty == DifficultyLevel.EASY:
+            return None
+        elif self.difficulty == DifficultyLevel.MEDIUM:
+            return value * 2.0
+        elif self.difficulty == DifficultyLevel.HARD:
+            return value
 
 
 def _occasion_matches(left, right):

@@ -131,12 +131,12 @@ class Game:
 
     def tick(self, sio):
         # check minigame time over
-        if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+        if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
             if self.pantomime_state.is_timeout():
                 self.evaluate_pantomime(sio)
 
         if self.next_moriarty_move_time is not None and self.next_moriarty_move_time < time.time():
-            if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYING_MINIGAME:
+            if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYING_PANTOMINE:
                 self.moriarty_move(sio, allow_zero_move=False)
 
             self.next_moriarty_move_time += self._get_moriarty_move_interval()
@@ -226,7 +226,7 @@ class Game:
             else:
                 field = self.get_team_pos()
                 if field.type == FieldType.SHORTCUT and self.enable_minigames:
-                    self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
+                    self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_PANTOMINE
                     return
 
     def moriarty_move(self, sio, allow_zero_move=True):
@@ -524,15 +524,11 @@ class Game:
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
         if self.get_team_pos().type is FieldType.SHORTCUT:
-            print("stepped on shortcut, index:" + str(self.get_team_pos().index))
-            if self.enable_minigames:
+            print("stepped on shortcut, index:" + str(self.get_team_pos().index)) # TODO Check game_type from shortcut field 
+            if self.get_team_pos().game_type == TurnState.PlayerTurnState.P:
                 self.turn_state.start_minigame()
                 self.trigger_pantomime(sio, self.get_team_pos().difficulty)
-            else:
-                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
-                team_pos = self.get_team_pos()
-                move_distance = team_pos.shortcut_field - team_pos.index
-                self.handle_movement(sio, move_distance)
+            
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
             occasion_choices = _random_occasion_choices(self.test_choices)
@@ -724,7 +720,7 @@ class Game:
 
     def pantomime_start(self, sio, sid, ignored_player):
         # check if in pantomime
-        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
             raise InvalidMessageException('Got pantomime start, but not in minigame\n\tsid: {}'.format(sid))
         if self.pantomime_state is None:
             raise AssertionError('pantomime_state is None in minigame')
@@ -763,7 +759,7 @@ class Game:
 
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
-        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_MINIGAME:
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
             raise InvalidMessageException('Got pantomime choice, but not in minigame\n\tsid: {}'.format(sid))
         if self.pantomime_state is None:
             raise AssertionError('pantomime_state is None in minigame')

@@ -17,17 +17,18 @@ class TurnState:
     class PlayerTurnState(Enum):
         PLAYER_CHOOSING = 0
         PLAYER_CHOOSING_OCCASION = 1
-        PLAYING_MINIGAME = 2
-        DEVIL_MOVE = 3
-        GAME_OVER = 4
+        PLAYING_PANTOMINE = 2
+        PLAYING_DRAWGAME = 3
+        DEVIL_MOVE = 4
+        GAME_OVER = 5
 
     def __init__(self):
         self.player_index = 0
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
         self.occasion_choices = None
 
-    def start_minigame(self):
-        self.player_turn_state = TurnState.PlayerTurnState.PLAYING_MINIGAME
+    def start_minigame(self, game_type):
+        self.player_turn_state = game_type
 
     def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION

@@ -21,7 +21,7 @@ To install Django and socketio activate your virtualenv and execute `pip install
 
 ## Start Backend
 ```bash
-python3 manage.py runserver
+python manage.py runserver
 ```
 
 ## Setup Heroku

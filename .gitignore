@@ -2,6 +2,8 @@ __pycache__
 .idea
 /db.sqlite3
 /mole/static/admin
+/venv/
+/.vscode/
 
 *.png
 *.env

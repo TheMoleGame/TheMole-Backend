@@ -2,7 +2,7 @@ django
 gunicorn
 django-heroku
 python-socketio==4.6.1
-eventlet
+eventlet==0.29.1
 pyllist
 python-dotenv
 requests

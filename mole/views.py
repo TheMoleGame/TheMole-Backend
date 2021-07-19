@@ -179,10 +179,24 @@ def pantomime_choice(sid, message):
 
 
 @sio.event
+def drawgame_choice(sid, message):
+    game = games.get(sid)
+
+    if game is None:
+        print('ERROR(drawgame_choice): no game found for sid {}'.format(sid), file=sys.stderr)
+        return False
+
+    try:
+        game.drawgame_choice(sio, sid, message)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)
+
+
+@sio.event
 def pantomime_start(sid, message):
     game = games.get(sid)
     if game is None:
-        print('ERROR(pantomime_choice): no game found for sid {}'.format(sid), file=sys.stderr)
+        print('ERROR(pantomime_start): no game found for sid {}'.format(sid), file=sys.stderr)
         return False
 
     if message != '' and not isinstance(message, dict):
@@ -197,5 +211,28 @@ def pantomime_start(sid, message):
 
     try:
         game.pantomime_start(sio, sid, ignored_player)
+    except InvalidMessageException as e:
+        print(str(e), file=sys.stderr)
+
+
+@sio.event
+def drawgame_start(sid, message):
+    game = games.get(sid)
+    if game is None:
+        print('ERROR(drawgame_start): no game found for sid {}'.format(sid), file=sys.stderr)
+        return False
+
+    if message != '' and not isinstance(message, dict):
+        print('ERROR(drawgame_start): invalid message: {}'.format(message), file=sys.stderr)
+        return False
+
+    ignored_player = None
+    if isinstance(message, dict):
+        ignored_player = message.get('ignored_player')
+        if ignored_player == -1:
+            ignored_player = None
+
+    try:
+        game.drawgame_start(sio, sid, ignored_player)
     except InvalidMessageException as e:
         print(str(e), file=sys.stderr)

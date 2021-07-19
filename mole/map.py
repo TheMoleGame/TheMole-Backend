@@ -6,7 +6,7 @@ class FieldType(str, Enum):
     WALKABLE = 'walkable'
     OCCASION = 'occasion'
     DEVIL_FIELD = 'devil_field'
-    SHORTCUT = 'shortcut'
+    MINIGAME = 'minigame'
     Goal = 'goal'
 
 
@@ -14,7 +14,7 @@ class Field(dict):
     counter = 0
 
     def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None, difficulty=None, game_type=None):
-        if field_type == FieldType.SHORTCUT and difficulty is None:
+        if field_type == FieldType.MINIGAME and difficulty is None:
             raise AssertionError('cant create SHORTCUT without difficulty level')
         dict.__init__(self, index=Field.counter)
         self.index = Field.counter
@@ -42,11 +42,11 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 10, 'easy', 'drawgame'))  # was Minigame
+    map_dll.append(Field(FieldType.MINIGAME, 10, 'easy', 'drawgame'))  # was Minigame
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
-    map_dll.append(Field(FieldType.SHORTCUT, 18, 'easy', 'pantomime'))  # id == 14
+    map_dll.append(Field(FieldType.MINIGAME, 18, 'easy', 'pantomime'))  # id == 14
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -60,7 +60,7 @@ def create_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 33, 'easy', 'pantomime'))
+    map_dll.append(Field(FieldType.MINIGAME, 33, 'easy', 'pantomime'))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -72,7 +72,7 @@ def create_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 42, 'medium', 'pantomime'))
+    map_dll.append(Field(FieldType.MINIGAME, 42, 'medium', 'pantomime'))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -85,7 +85,7 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 57, 'medium', 'pantomime'))
+    map_dll.append(Field(FieldType.MINIGAME, 57, 'medium', 'pantomime'))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
@@ -110,7 +110,7 @@ def create_map():
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))
-    map_dll.append(Field(FieldType.SHORTCUT, 83, 'hard', 'pantomime'))
+    map_dll.append(Field(FieldType.MINIGAME, 83, 'hard', 'pantomime'))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.WALKABLE))
     map_dll.append(Field(FieldType.WALKABLE))

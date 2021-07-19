@@ -17,6 +17,7 @@ from .models import Evidence, ClueType, ClueSubtype
 from .game_character import *
 from mole_backend.settings import DATABASES
 from .pantomime import PANTOMIME_WORDS, PantomimeState
+from .drawgame import DRAWGAME_WORDS, DrawgameState
 
 DEFAULT_START_POSITION = 4
 MORIARTY_AUTO_MOVE_INTERVAL = (30, 40)
@@ -85,12 +86,19 @@ class Game:
         self.turn_state: TurnState = TurnState()
         self.move_modifier: MoveModifier = MoveModifier.NORMAL
         self.pantomime_state: PantomimeState or None = None
+        self.drawgame_state: DrawgameState or None = None
 
         self.pantomime_category_count = {}
         for difficulty, category_list in PANTOMIME_WORDS.items():
             self.pantomime_category_count[difficulty] = {}
             for category in category_list:
                 self.pantomime_category_count[difficulty][category] = 0
+
+        self.drawgame_category_count = {}
+        for difficulty, category_list in DRAWGAME_WORDS.items():
+            self.drawgame_category_count[difficulty] = {}
+            for category in category_list:
+                self.drawgame_category_count[difficulty][category] = 0
 
         self.map = create_map()
         got_start_position = True if start_position is not None else False
@@ -134,9 +142,12 @@ class Game:
         if self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
             if self.pantomime_state.is_timeout():
                 self.evaluate_pantomime(sio)
+        elif self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_DRAWGAME:
+            if self.drawgame_state.is_timeout():
+                self.evaluate_drawgame(sio)
 
         if self.next_moriarty_move_time is not None and self.next_moriarty_move_time < time.time():
-            if self.turn_state.player_turn_state != TurnState.PlayerTurnState.PLAYING_PANTOMINE:
+            if not self.turn_state.is_in_minigame():
                 self.moriarty_move(sio, allow_zero_move=False)
 
             self.next_moriarty_move_time += self._get_moriarty_move_interval()
@@ -214,7 +225,7 @@ class Game:
     def move_player(self, distance: int) -> int or None:
         """
         Moves the player over the map. Does not handle occasions.
-        In case a minigame field is trespassed, the move is stopped and True is returned.
+        In case a minigame field is trespassed, the move is stopped.
 
         :param distance: the number of fields to move
         :return: If a minigame field was reached, the number of remaining move distance is returned, otherwise None
@@ -225,8 +236,11 @@ class Game:
                 self.game_over(GameOverReason.REACHED_END_OF_MAP)
             else:
                 field = self.get_team_pos()
-                if field.type == FieldType.SHORTCUT and self.enable_minigames:
-                    self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_PANTOMINE
+                if field.type == FieldType.MINIGAME and self.enable_minigames:
+                    if field.game_type == 'pantomime':
+                        self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_PANTOMINE
+                    elif field.game_type == 'drawgame':
+                        self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_DRAWGAME
                     return
 
     def moriarty_move(self, sio, allow_zero_move=True):
@@ -523,11 +537,14 @@ class Game:
         self.move_player(move_distance)
         self.send_to_all(sio, 'move', self.get_team_pos().index)
 
-        if self.get_team_pos().type is FieldType.SHORTCUT:
-            print("stepped on shortcut, index:" + str(self.get_team_pos().index)) # TODO Check game_type from shortcut field 
-            if self.get_team_pos().game_type == TurnState.PlayerTurnState.P:
-                self.turn_state.start_minigame()
+        if self.get_team_pos().type is FieldType.MINIGAME:
+            print("stepped on shortcut, index:" + str(self.get_team_pos().index))
+            if self.get_team_pos().game_type == 'pantomime':
+                self.turn_state.start_minigame(TurnState.PlayerTurnState.PLAYING_PANTOMINE)
                 self.trigger_pantomime(sio, self.get_team_pos().difficulty)
+            elif self.get_team_pos().game_type == 'drawgame':
+                self.turn_state.start_minigame(TurnState.PlayerTurnState.PLAYING_DRAWGAME)
+                self.trigger_drawgame(sio, self.get_team_pos().difficulty)
             
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field
             print("stepped on occasion, index:" + str(self.get_team_pos().index))
@@ -680,6 +697,14 @@ class Game:
         category = random.choice(list(usages))[0]
         return category
 
+    def _get_drawgame_category(self, difficulty):
+        usages = self.drawgame_category_count[difficulty]
+        usages = sorted(usages.items(), key=lambda u: u[1])
+        lowest_usage = usages[0][1]
+        usages = filter(lambda u: u[1] == lowest_usage, usages)
+        category = random.choice(list(usages))[0]
+        return category
+
     def trigger_pantomime(self, sio, difficulty):
         category = self._get_pantomime_category(difficulty)
         words = random.choice(PANTOMIME_WORDS[difficulty][category])
@@ -709,6 +734,45 @@ class Game:
             else:
                 sio.emit(
                     'guess_pantomime',
+                    {
+                        'words': words,
+                        'category': category,
+                        'start': False,
+                        'ignored': False,
+                    },
+                    room=player.sid
+                )
+
+    def trigger_drawgame(self, sio, difficulty):
+        print('trigger drawgame')
+        category = self._get_drawgame_category(difficulty)
+        words = random.choice(DRAWGAME_WORDS[difficulty][category])
+        self.drawgame_category_count[difficulty][category] += 1
+
+        solution_word = random.choice(words)
+        self.drawgame_state = DrawgameState(solution_word, words, category)
+
+        # inform host
+        sio.emit(
+            'guess_drawgame',
+            {
+                'words': words,
+                'category': category,
+                'start': False,
+                'ignored': False,
+            },
+            room=self.host_sid
+        )
+        for player in self.players:
+            if player.sid == self.get_current_player().sid:
+                sio.emit(
+                    'host_drawgame',
+                    {'solution_word': solution_word, 'words': words, 'category': category},
+                    room=player.sid
+                )
+            else:
+                sio.emit(
+                    'guess_drawgame',
                     {
                         'words': words,
                         'category': category,
@@ -757,6 +821,46 @@ class Game:
                     room=hosting_player.sid
                 )
 
+    def drawgame_start(self, sio, sid, ignored_player):
+        print('starting drawgame')
+        # check if in drawgame
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_DRAWGAME:
+            raise InvalidMessageException('Got drawgame start, but not in minigame\n\tsid: {}'.format(sid))
+        if self.drawgame_state is None:
+            raise AssertionError('drawgame_state is None in minigame')
+
+        # get player
+        hosting_player = self.get_player(sid)
+        if hosting_player is None:
+            raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
+        if hosting_player.sid != self.get_current_player().sid:
+            raise InvalidMessageException('Got drawgame start from player that is not hosting.')
+
+        self.drawgame_state.start_timeout()
+
+        # ignore player
+        if hosting_player.player_id == ignored_player:  # hosting player can not ignore himself
+            print('WARN: hosting player tried to ignore himself', file=sys.stderr)
+        else:
+            if ignored_player is not None:
+                if ignored_player not in map(lambda p: p.player_id, self.players):  # catch unknown player
+                    print('WARN: unknown ignored player id: {}'.format(ignored_player))
+                else:
+                    self.drawgame_state.ignored_player = ignored_player
+
+        for hosting_player in self.players:
+            if hosting_player.sid != self.get_current_player().sid:
+                sio.emit(
+                    'guess_drawgame',
+                    {
+                        'words': self.drawgame_state.words,
+                        'category': self.drawgame_state.category,
+                        'start': True,
+                        'ignored': hosting_player.player_id == ignored_player,
+                    },
+                    room=hosting_player.sid
+                )
+
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
@@ -798,6 +902,47 @@ class Game:
         if len(self.pantomime_state.guesses) == num_players_to_guess:
             self.evaluate_pantomime(sio)
 
+    def drawgame_choice(self, sio, sid, message):
+        # check if in drawgame
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_DRAWGAME:
+            raise InvalidMessageException('Got drawgame choice, but not in minigame\n\tsid: {}'.format(sid))
+        if self.drawgame_state is None:
+            raise AssertionError('drawgame_state is None in minigame')
+        if not self.drawgame_state.timeout_started():
+            raise InvalidMessageException('game has not started, but got drawgame choice')
+
+        # get player
+        player = self.get_player(sid)
+        if player is None:
+            raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
+        if player.sid == self.get_current_player().sid:
+            raise InvalidMessageException('Got drawgame choice from hosting player.')
+
+        # validate message
+        if not isinstance(message, dict):
+            raise InvalidMessageException('Got drawgame choice, but message is no dictionary')
+        guess = message.get('guess')
+        if guess is None:
+            raise InvalidMessageException(
+                'Got drawgame choice without key "guess". Message keys: {}'.format(message.keys())
+            )
+        if guess not in self.drawgame_state.words:
+            raise InvalidMessageException(
+                'Got invalid guess "{}". Not in possible words: {}'.format(guess, self.drawgame_state.words)
+            )
+        if player.player_id == self.drawgame_state.ignored_player:
+            print('WARN: got guess from ignored player', file=sys.stderr)
+            return
+
+        self.drawgame_state.guesses[player.player_id] = guess
+
+        # evaluate, if everyone has answered
+        num_players_to_guess = len(self.players) - 1
+        if self.drawgame_state.ignored_player is not None:
+            num_players_to_guess -= 1
+        if len(self.drawgame_state.guesses) == num_players_to_guess:
+            self.evaluate_drawgame(sio)
+
     def evaluate_pantomime(self, sio):
         player_results = []
         overall_success = True
@@ -838,6 +983,53 @@ class Game:
             # go shortcut
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
             team_pos = self.get_team_pos()
+            move_distance = team_pos.shortcut_field - team_pos.index
+            self.handle_movement(sio, move_distance)
+        else:
+            self.end_player_turn(sio)
+
+    def evaluate_drawgame(self, sio):
+        player_results = []
+        overall_success = True
+        for player in self.players:
+            # skip disconnected players and host player
+            if not player.connected or player.sid == self.get_current_player().sid:
+                continue
+            # handle ignored player
+            if player.player_id == self.drawgame_state.ignored_player:
+                player_results.append({
+                    'player_id': player.player_id,
+                    'success': True,
+                    'guess': None,
+                    'ignored': True,
+                })
+            else:
+                player_guess = self.drawgame_state.guesses.get(player.player_id)
+                success = player_guess == self.drawgame_state.solution_word
+                if not success:
+                    overall_success = False
+                player_results.append({
+                    'player_id': player.player_id,
+                    'success': success,
+                    'guess': player_guess,
+                    'ignored': False,
+                })
+
+        message = {
+            'success': overall_success,
+            'player_results': player_results,
+            'solution_word': self.drawgame_state.solution_word
+        }
+
+        self.send_to_all(sio, 'drawgame_result', message)
+
+        self.drawgame_state = None
+        if overall_success:
+            # go shortcut
+            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
+            team_pos = self.get_team_pos()
+
+            # TODO: dont move shortcut, but receive evidence
             move_distance = team_pos.shortcut_field - team_pos.index
             self.handle_movement(sio, move_distance)
         else:

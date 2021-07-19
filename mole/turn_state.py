@@ -38,6 +38,12 @@ class TurnState:
         self.player_turn_state = TurnState.PlayerTurnState.GAME_OVER
         self.occasion_choices = None
 
+    def is_in_minigame(self):
+        return self.player_turn_state in [
+            TurnState.PlayerTurnState.PLAYING_PANTOMINE,
+            TurnState.PlayerTurnState.PLAYING_DRAWGAME
+        ]
+
     def to_dict(self):
         return {
             'player_index': self.player_index,

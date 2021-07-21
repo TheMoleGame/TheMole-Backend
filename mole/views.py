@@ -236,3 +236,15 @@ def drawgame_start(sid, message):
         game.drawgame_start(sio, sid, ignored_player)
     except InvalidMessageException as e:
         print(str(e), file=sys.stderr)
+
+
+@sio.event
+def drawgame_data(sid, message):
+    game = games.get(sid)
+    if game is None:
+        print('ERROR(drawgame_data): no game found for sid {}'.format(sid), file=sys.stderr)
+        return False
+
+    # TODO: check payload type
+
+    game.forward_drawgame_data(sio, sid, message)

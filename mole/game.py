@@ -861,6 +861,14 @@ class Game:
                     room=hosting_player.sid
                 )
 
+        sio.emit(
+            'desktop_start_drawgame',
+            {
+                'drawing_player_name': hosting_player.name,
+            },
+            room=self.host_sid
+        )
+
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
@@ -1034,6 +1042,26 @@ class Game:
             self.handle_movement(sio, move_distance)
         else:
             self.end_player_turn(sio)
+
+    def forward_drawgame_data(self, sio, sid, message):
+        """
+        Forwards drawgame data to host.
+        """
+        if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_DRAWGAME:
+            raise InvalidMessageException('Got drawgame data, but not in drawgame\n\tsid: {}'.format(sid))
+        if self.drawgame_state is None:
+            raise AssertionError('drawgame_state is None in drawgame')
+        if not self.drawgame_state.timeout_started():
+            raise InvalidMessageException('game has not started, but got drawgame choice')
+
+        # get player
+        player = self.get_player(sid)
+        if player is None:
+            raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
+        if player.sid == self.get_current_player().sid:
+            raise InvalidMessageException('Got drawgame update from hosting player.')
+
+        sio.emit('drawgame_update', message, room=self.host_sid)
 
     def send_to_all(self, sio, event, message=None):
         """

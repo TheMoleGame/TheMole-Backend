@@ -861,6 +861,7 @@ class Game:
                     room=hosting_player.sid
                 )
 
+        print('desktop start drawgame: self.host_sid={}'.format(self.host_sid))
         sio.emit(
             'desktop_start_drawgame',
             {

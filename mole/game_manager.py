@@ -7,13 +7,13 @@ from .game import Game, DifficultyLevel
 
 
 class PendingGame:
-    def __init__(self, host_sid, token):
+    def __init__(self, desktop_sid, token):
         """
-        :type host_sid: str
+        :type desktop_sid: str
         :type token: str
         """
         self.token = token
-        self.host_sid = host_sid
+        self.desktop_sid = desktop_sid
         self.players = []
 
     def _set_player_ids(self):
@@ -68,9 +68,9 @@ class GameManager:
     def is_game_running(self):
         return bool(self.games)
 
-    def create_game(self, host_sid):
+    def create_game(self, desktop_sid):
         token = self._create_new_token()
-        pending_game = PendingGame(host_sid, token)
+        pending_game = PendingGame(desktop_sid, token)
         self.pending_games.append(pending_game)
         return pending_game.token
 
@@ -86,11 +86,11 @@ class GameManager:
         if len(pending_game.players) < 3:
             raise StartGameException('Cannot start game with less than 3 players')
 
-        if not pending_game.host_sid == sid:
+        if not pending_game.desktop_sid == sid:
             raise StartGameException('Invalid token sid combination. Only the host can start the game.')
 
         game = Game(
-            sio, pending_game.token, pending_game.host_sid, pending_game.players, start_position, test_choices,
+            sio, pending_game.token, pending_game.desktop_sid, pending_game.players, start_position, test_choices,
             all_proofs, enable_minigames, moriarty_position, difficulty=difficulty
         )
         for player in pending_game.players:
@@ -195,14 +195,14 @@ class GameManager:
                 if player['sid'] == sid:
                     pending_game.remove_player(sio, sid)
                     break
-            if pending_game.host_sid == sid:
+            if pending_game.desktop_sid == sid:
                 self.remove_pending_game(pending_game.token)
                 print('INFO: removing pending game "{}"'.format(pending_game.token), file=sys.stderr)
 
         # remove game of host
-        game = self.get_game_by_host_sid(sid)
+        game = self.get_game_by_desktop_sid(sid)
         if game is not None:
-            assert game.host_sid == sid
+            assert game.desktop_sid == sid
             print('Host disconnected from game {}.'.format(game.token), file=sys.stderr)
             self._remove_game(game.token, sio)
             return
@@ -215,9 +215,9 @@ class GameManager:
                 print('All players disconnected from game {}.'.format(game.token), file=sys.stderr)
                 self._remove_game(game.token, sio)
 
-    def get_game_by_host_sid(self, sid):
+    def get_game_by_desktop_sid(self, sid):
         for game in self.games.values():
-            if game.host_sid == sid:
+            if game.desktop_sid == sid:
                 return game
         return None
 

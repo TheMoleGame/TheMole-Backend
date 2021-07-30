@@ -40,10 +40,10 @@ def _parse_difficulty(difficulty):
 
 class Game:
     def __init__(
-            self, sio, token, host_sid, player_infos, start_position, test_choices=None, all_proofs=False,
+            self, sio, token, desktop_sid, player_infos, start_position, test_choices=None, all_proofs=False,
             enable_minigames=False, moriarty_position=0, difficulty='easy'
     ):
-        self.host_sid = host_sid
+        self.desktop_sid = desktop_sid
         self.token = token
         self.sio = sio
         self.test_choices = test_choices
@@ -135,7 +135,7 @@ class Game:
         self.send_players_turn(sio)
 
     def send_ping(self, sio):
-        sio.emit('ping', '', room=self.host_sid)
+        sio.emit('ping', '', room=self.desktop_sid)
 
     def tick(self, sio):
         # check minigame time over
@@ -170,7 +170,7 @@ class Game:
             self.turn_state.occasion_choices = None
 
         player.connected = False
-        sio.emit('player_disconnected', player.player_id, room=self.host_sid)
+        sio.emit('player_disconnected', player.player_id, room=self.desktop_sid)
         print('player {} disconnected'.format(player.name))
 
     def player_rejoin(self, sio, sid, name):
@@ -182,7 +182,7 @@ class Game:
         player.sid = sid
         player.connected = True
 
-        sio.emit('player_rejoined', player.player_id, room=self.host_sid)
+        sio.emit('player_rejoined', player.player_id, room=self.desktop_sid)
         player_info = list(map(lambda p: {'name': p.name, 'player_id': p.player_id}, self.players))
         sio.emit('player_infos', player_info, room=player.sid)
         clues = list(map(Clue.to_dict, player.inventory))
@@ -290,7 +290,7 @@ class Game:
                 sio.emit(
                     'occasion_info',
                     {'type': 'unskip_player', 'player_id': self.get_current_player().player_id},
-                    room=self.host_sid
+                    room=self.desktop_sid
                 )
             elif not self.get_current_player().connected:
                 print('skipping player "{}" as he is disconnected'.format(self.get_current_player().name))
@@ -390,13 +390,13 @@ class Game:
                 sio.emit(
                     'occasion_info',
                     {'type': 'unhinder_dicing', 'player_id': self.get_current_player().player_id},
-                    room=self.host_sid
+                    room=self.desktop_sid
                 )
             elif self.move_modifier == MoveModifier.SIMPLIFY:
                 sio.emit(
                     'occasion_info',
                     {'type': 'unsimplify_dicing', 'player_id': self.get_current_player().player_id},
-                    room=self.host_sid
+                    room=self.desktop_sid
                 )
             self.move_modifier = MoveModifier.NORMAL
             self.handle_movement(sio, move_distance)
@@ -445,7 +445,7 @@ class Game:
             sio.emit(
                 'secret_move',
                 {'player_id': sharing_player.player_id, 'move_name': 'share-clue'},
-                room=self.host_sid
+                room=self.desktop_sid
             )
 
             self.end_player_turn(sio)
@@ -521,7 +521,7 @@ class Game:
             sio.emit(
                 'secret_move',
                 {'player_id': player.player_id, 'move_name': 'search-clue'},
-                room=self.host_sid
+                room=self.desktop_sid
             )
 
             self.end_player_turn(sio)
@@ -640,7 +640,7 @@ class Game:
 
         self.turn_state.occasion_choices = None  # reset occasion choices
 
-        sio.emit('occasion_info', chosen_occasion, room=self.host_sid)
+        sio.emit('occasion_info', chosen_occasion, room=self.desktop_sid)
 
         if occasion_type == 'found_clue':
             player = self.get_player(sid)
@@ -722,7 +722,7 @@ class Game:
                 'start': False,
                 'ignored': False,
             },
-            room=self.host_sid
+            room=self.desktop_sid
         )
         for player in self.players:
             if player.sid == self.get_current_player().sid:
@@ -761,7 +761,7 @@ class Game:
                 'start': False,
                 'ignored': False,
             },
-            room=self.host_sid
+            room=self.desktop_sid
         )
         for player in self.players:
             if player.sid == self.get_current_player().sid:
@@ -861,13 +861,13 @@ class Game:
                     room=hosting_player.sid
                 )
 
-        print('desktop start drawgame: self.host_sid={}'.format(self.host_sid))
+        print('desktop start drawgame: self.desktop_sid={}'.format(self.desktop_sid))
         sio.emit(
             'desktop_start_drawgame',
             {
                 'drawing_player_name': hosting_player.name,
             },
-            room=self.host_sid
+            room=self.desktop_sid
         )
 
     def pantomime_choice(self, sio, sid, message):
@@ -1063,7 +1063,7 @@ class Game:
             raise InvalidMessageException('Got drawgame update from hosting player.')
 
         print('drawgame update with message: {}'.format(repr(message)))
-        sio.emit('drawgame_update', message, room=self.host_sid)
+        sio.emit('drawgame_update', message, room=self.desktop_sid)
 
     def send_to_all(self, sio, event, message=None):
         """

@@ -862,6 +862,8 @@ class Game:
                 )
 
         print('desktop start drawgame: self.host_sid={}'.format(self.host_sid))
+        self.send_to_all(sio, 'desktop_start_drawgame', {'drawing_player_name': hosting_player.name})
+        """
         sio.emit(
             'desktop_start_drawgame',
             {
@@ -869,6 +871,7 @@ class Game:
             },
             room=self.host_sid
         )
+        """
 
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime

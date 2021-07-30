@@ -1062,6 +1062,7 @@ class Game:
         if player.sid == self.get_current_player().sid:
             raise InvalidMessageException('Got drawgame update from hosting player.')
 
+        print('drawgame update with message: {}'.format(repr(message)))
         sio.emit('drawgame_update', message, room=self.host_sid)
 
     def send_to_all(self, sio, event, message=None):

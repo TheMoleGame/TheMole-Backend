@@ -1065,8 +1065,9 @@ class Game:
         player = self.get_player(sid)
         if player is None:
             raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
-        if player.sid == self.get_current_player().sid:
-            raise InvalidMessageException('Got drawgame update from hosting player.')
+        # TODO commented out for debug        
+        # if player.sid == self.get_current_player().sid:
+        #     raise InvalidMessageException('Got drawgame update from hosting player.')
 
         print('drawgame update with message: {}'.format(repr(message)))
         sio.emit('drawgame_update', message, room=self.desktop_sid)

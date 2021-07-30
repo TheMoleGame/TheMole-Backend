@@ -870,6 +870,12 @@ class Game:
             room=self.desktop_sid
         )
 
+        # TODO: remove
+        sio.emit(
+            'test_drawgame',
+            room=self.desktop_sid
+        )
+
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:

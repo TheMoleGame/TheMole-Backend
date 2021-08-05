@@ -877,12 +877,6 @@ class Game:
             room=self.desktop_sid
         )
 
-        # TODO: remove
-        sio.emit(
-            'test_drawgame',
-            room=self.desktop_sid
-        )
-
     def pantomime_choice(self, sio, sid, message):
         # check if in pantomime
         if not self.turn_state.player_turn_state == TurnState.PlayerTurnState.PLAYING_PANTOMINE:
@@ -1084,9 +1078,8 @@ class Game:
         player = self.get_player(sid)
         if player is None:
             raise InvalidMessageException('Could not find player with sid: {}'.format(sid))
-        # TODO commented out for debug        
-        # if player.sid == self.get_current_player().sid:
-        #     raise InvalidMessageException('Got drawgame update from hosting player.')
+        if player.sid != self.get_current_player().sid:
+            raise InvalidMessageException('Got drawgame update from not hosting player.')
 
         print('drawgame update with message: {}'.format(repr(message)))
         sio.emit('drawgame_update', message, room=self.desktop_sid)

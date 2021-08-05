@@ -15,14 +15,11 @@ class FieldType(str, Enum):
 
 
 class Field(dict):
-    counter = 0
-
     def __init__(self, field_type=FieldType.WALKABLE, shortcut_field=None, difficulty=None, game_type=None):
         if field_type == FieldType.MINIGAME and difficulty is None:
             raise AssertionError('cant create SHORTCUT without difficulty level')
-        dict.__init__(self, index=Field.counter)
-        self.index = Field.counter
-        Field.counter = Field.counter + 1
+        dict.__init__(self)
+        self.index = -1
         self.shortcut_field = shortcut_field    # int
         self.difficulty = difficulty
         self.type = field_type                  # type: FieldType
@@ -139,5 +136,7 @@ def create_map():
                 difficulty = 'hard'
 
             map_dll[field_index] = Field(FieldType.MINIGAME, 0, difficulty, 'drawgame')
+
+        map_dll[field_index].index = field_index
 
     return map_dll

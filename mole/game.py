@@ -994,7 +994,6 @@ class Game:
 
         self.send_to_all(sio, 'pantomime_result', message)
 
-        self.pantomime_state = None
         if overall_success:
             # go shortcut
             self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
@@ -1003,6 +1002,7 @@ class Game:
             self.handle_movement(sio, move_distance)
         else:
             self.end_player_turn(sio)
+        self.pantomime_state = None
 
     def evaluate_drawgame(self, sio):
         player_results = []
@@ -1039,7 +1039,6 @@ class Game:
 
         self.send_to_all(sio, 'drawgame_result', message)
 
-        self.drawgame_state = None
         if overall_success:
             player = self.get_current_player()
             clue = self.get_random_missing_clue(player.inventory)
@@ -1062,6 +1061,7 @@ class Game:
             self.moriarty_hide_time = time.time()
 
         self.end_player_turn(sio)
+        self.drawgame_state = None
 
     def forward_drawgame_data(self, sio, sid, message):
         """

@@ -236,11 +236,7 @@ class Game:
                 self.game_over(GameOverReason.REACHED_END_OF_MAP)
             else:
                 field = self.get_team_pos()
-                if field.type == FieldType.MINIGAME and self.enable_minigames:
-                    if field.game_type == 'pantomime':
-                        self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_PANTOMINE
-                    elif field.game_type == 'drawgame':
-                        self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_DRAWGAME
+                if field.type == FieldType.MINIGAME and field.game_type == 'pantomime' and self.enable_minigames:
                     return
 
     def moriarty_move(self, sio, allow_zero_move=True):
@@ -540,10 +536,10 @@ class Game:
         if self.get_team_pos().type is FieldType.MINIGAME:
             print("stepped on shortcut, index:" + str(self.get_team_pos().index))
             if self.get_team_pos().game_type == 'pantomime':
-                self.turn_state.start_minigame(TurnState.PlayerTurnState.PLAYING_PANTOMINE)
+                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_PANTOMINE
                 self.trigger_pantomime(sio, self.get_team_pos().difficulty)
             elif self.get_team_pos().game_type == 'drawgame':
-                self.turn_state.start_minigame(TurnState.PlayerTurnState.PLAYING_DRAWGAME)
+                self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYING_DRAWGAME
                 self.trigger_drawgame(sio, self.get_team_pos().difficulty)
             
         elif self.get_team_pos().type == FieldType.OCCASION:  # check occasion field

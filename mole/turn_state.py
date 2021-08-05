@@ -27,9 +27,6 @@ class TurnState:
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING
         self.occasion_choices = None
 
-    def start_minigame(self, game_type):
-        self.player_turn_state = game_type
-
     def choosing_occasion(self, occasion_choices):
         self.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING_OCCASION
         self.occasion_choices = occasion_choices

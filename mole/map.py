@@ -1,5 +1,9 @@
 from enum import Enum
 import pyllist
+import random
+
+
+DRAWGAME_PROBABILITY = 0.1
 
 
 class FieldType(str, Enum):
@@ -122,5 +126,18 @@ def create_map():
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.OCCASION))
     map_dll.append(Field(FieldType.Goal))
+
+    map_len = len(map_dll)
+
+    for field_index, field in enumerate(map_dll):
+        if field.type == FieldType.WALKABLE and random.random() < DRAWGAME_PROBABILITY:
+            if field_index < map_len/3:
+                difficulty = 'easy'
+            elif field_index < map_len/3*2:
+                difficulty = 'medium'
+            else:
+                difficulty = 'hard'
+
+            map_dll[field_index] = Field(FieldType.MINIGAME, 0, difficulty, 'drawgame')
 
     return map_dll

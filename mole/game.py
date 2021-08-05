@@ -855,17 +855,17 @@ class Game:
                 else:
                     self.drawgame_state.ignored_player = ignored_player
 
-        for hosting_player in self.players:
-            if hosting_player.sid != self.get_current_player().sid:
+        for player in self.players:
+            if player.sid != self.get_current_player().sid:
                 sio.emit(
                     'guess_drawgame',
                     {
                         'words': self.drawgame_state.words,
                         'category': self.drawgame_state.category,
                         'start': True,
-                        'ignored': hosting_player.player_id == ignored_player,
+                        'ignored': player.player_id == ignored_player,
                     },
-                    room=hosting_player.sid
+                    room=player.sid
                 )
 
         print('desktop start drawgame: self.desktop_sid={}'.format(self.desktop_sid))

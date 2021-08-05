@@ -21,6 +21,7 @@ from .drawgame import DRAWGAME_WORDS, DrawgameState
 
 DEFAULT_START_POSITION = 4
 MORIARTY_AUTO_MOVE_INTERVAL = (30, 40)
+MORIARTY_HIDE_DURATION = 60*3
 
 random.seed(time.time())
 
@@ -88,6 +89,8 @@ class Game:
         self.pantomime_state: PantomimeState or None = None
         self.drawgame_state: DrawgameState or None = None
 
+        self.moriarty_hide_time = None
+
         self.pantomime_category_count = {}
         for difficulty, category_list in PANTOMIME_WORDS.items():
             self.pantomime_category_count[difficulty] = {}
@@ -151,6 +154,14 @@ class Game:
                 self.moriarty_move(sio, allow_zero_move=False)
 
             self.next_moriarty_move_time += self._get_moriarty_move_interval()
+
+        if self.moriarty_hide_time is not None and time.time() - self.moriarty_hide_time > MORIARTY_HIDE_DURATION:
+            self.moriarty_hide_time = None
+            sio.emit(
+                'moriarty_visibility',
+                {'visible': True},
+                room=self.desktop_sid
+            )
 
     def _get_player_info(self):
         return list(map(lambda p: {'player_id': p.player_id, 'name': p.name}, self.players))
@@ -1036,15 +1047,27 @@ class Game:
 
         self.drawgame_state = None
         if overall_success:
-            # go shortcut
-            self.turn_state.player_turn_state = TurnState.PlayerTurnState.PLAYER_CHOOSING  # this is kinda hacky
-            team_pos = self.get_team_pos()
-
-            # TODO: dont move shortcut, but receive evidence
-            move_distance = team_pos.shortcut_field - team_pos.index
-            self.handle_movement(sio, move_distance)
+            player = self.get_current_player()
+            clue = self.get_random_missing_clue(player.inventory)
+            # clue can be None, if this player knows everything or every category was validated
+            if clue is not None:
+                player.add_clue(-1, clue)
+                sio.emit(
+                    'receive_clue',
+                    {'clue': clue.to_dict()},
+                    room=player.sid
+                )
+            else:
+                print('INFO: evaluate-drawgame, but no clues left to find')
         else:
-            self.end_player_turn(sio)
+            sio.emit(
+                'moriarty_visibility',
+                {'visible': False},
+                room=self.desktop_sid
+            )
+            self.moriarty_hide_time = time.time()
+
+        self.end_player_turn(sio)
 
     def forward_drawgame_data(self, sio, sid, message):
         """

@@ -1,6 +1,6 @@
 # The Mole
 This repository is the backend part of a game called the mole.  
-It was made as a student project for the showtime.  
+It was made as a student project for the student exhibition showtime.  
 For more information see our showtime [page](https://showtime.f4.htw-berlin.de/ws20/master/m1-augmented-boardgame-experience/).
 ![Main game board 05 06](https://user-images.githubusercontent.com/7975579/120891879-3c16d000-c60b-11eb-9483-f800b31cf3cc.png)
 

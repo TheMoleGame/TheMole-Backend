@@ -26,11 +26,12 @@ python3 manage.py runserver
 ```
 
 ## Setup Heroku
-1.  install Heroku [cli](https://devcenter.heroku.com/articles/heroku-cli)
+1.  Install Heroku [cli](https://devcenter.heroku.com/articles/heroku-cli)
 ```bash
 heroku login
-``` 
-2.  set remotes to git repo
+```
+2.  Authenticate via browser
+3.  Set remotes to git repo
 
  ```bash 
 heroku git:remote -a testmapbranch
